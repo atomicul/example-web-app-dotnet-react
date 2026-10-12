@@ -18,6 +18,7 @@ Every API route lives under `/api` (`/api/auth/*`, `/api/todos`).
 - .NET SDK 10, as pinned in `global.json`
 - Node.js 24, as pinned in `frontend/.nvmrc`
 - pnpm, as pinned by `packageManager` in `frontend/package.json`
+- Docker, for the development database
 
 ## Make targets
 
@@ -26,6 +27,7 @@ Every API route lives under `/api` (`/api/auth/*`, `/api/todos`).
 | `make help` | Lists the targets; also what a bare `make` runs |
 | `make install` | Restores the .NET solution and installs the frontend packages |
 | `make dev` | Runs the API on `:5080` with `dotnet watch` and the Vite dev server on `:5173`, which proxies `/api` to the API |
+| `make dev-database` | Runs SQL Server in Docker on `:1433`, keeping its data in the `todoapp-db-data` volume |
 | `make api` | Builds the API, copies its OpenAPI document to `frontend/openapi.json` and regenerates the frontend client |
 | `make build` | Publishes the API to `out/` with the built SPA in `out/wwwroot`; `VERSION=1.2.3` stamps the API assembly version |
 | `make run` | Builds, then serves the API and the SPA together on `:5080` |

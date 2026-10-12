@@ -2,6 +2,10 @@ API_URL ?= http://localhost:5080
 SPA_URL ?= http://localhost:5173
 OUT ?= out
 VERSION ?=
+DB_IMAGE ?= mcr.microsoft.com/mssql/server:2025-latest
+DB_CONTAINER ?= todoapp-db
+DB_PORT ?= 1433
+DB_PASSWORD ?= Dev-Passw0rd
 
 SOLUTION := backend/TodoApp.slnx
 API_PROJECT := backend/TodoApi
@@ -9,7 +13,7 @@ FRONTEND := frontend
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev dev-backend dev-frontend api build run check clean
+.PHONY: help install dev dev-backend dev-frontend dev-database api build run check clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -26,6 +30,11 @@ dev-backend: ## Run only the API with dotnet watch
 
 dev-frontend: ## Run only the Vite dev server
 	API_URL=$(API_URL) pnpm -C $(FRONTEND) dev
+
+dev-database: ## Run SQL Server in Docker for development
+	docker run --rm --init --name $(DB_CONTAINER) --platform linux/amd64 \
+		-e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=$(DB_PASSWORD) \
+		-p $(DB_PORT):1433 -v $(DB_CONTAINER)-data:/var/opt/mssql $(DB_IMAGE)
 
 api: ## Regenerate the frontend client from the API OpenAPI document
 	dotnet build $(API_PROJECT)
