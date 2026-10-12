@@ -26,7 +26,7 @@ Every API route lives under `/api` (`/api/auth/*`, `/api/todos`).
 |---|---|
 | `make help` | Lists the targets; also what a bare `make` runs |
 | `make install` | Restores the .NET solution and tools (`dotnet-ef`) and installs the frontend packages |
-| `make dev` | Runs the API on `:5080` with `dotnet watch` and the Vite dev server on `:5173`, which proxies `/api` to the API |
+| `make dev` | Runs the database, the API on `:5080` with `dotnet watch` once the database is up, and the Vite dev server on `:5173`, which proxies `/api` to the API |
 | `make dev-database` | Runs SQL Server in Docker on `:1433`, keeping its data in the `todoapp-db-data` volume |
 | `make migration NAME=AddTags` | Adds an EF Core migration to `backend/TodoApi/Data/Migrations` after a model change |
 | `make api` | Builds the API, copies its OpenAPI document to `frontend/openapi.json` and regenerates the frontend client |
@@ -39,9 +39,9 @@ Run `make api` after changing an endpoint or contract, and commit the regenerate
 ## Database
 
 The API stores its data in SQL Server through EF Core, reading the `ConnectionStrings:Default` setting. In development,
-run `make dev-database` in one terminal and `make dev` in another; the Makefile points the API at the container
-(`DB_CONNECTION`). In the Development environment the API applies pending migrations from `backend/TodoApi/Data/Migrations`
-on startup.
+`make dev` starts SQL Server in Docker and holds the API back until the container's health check can log in; the
+Makefile points the API at the container (`DB_CONNECTION`). In the Development environment the API applies pending
+migrations from `backend/TodoApi/Data/Migrations` on startup.
 
 Outside Development the API never migrates its database: deployments apply migrations separately, before starting the
 new version. `make run` runs as Production, so it expects the development database to be migrated already, e.g. by a

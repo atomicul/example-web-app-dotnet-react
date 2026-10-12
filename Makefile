@@ -14,7 +14,7 @@ FRONTEND := frontend
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev dev-backend dev-frontend dev-database migration api build run check clean
+.PHONY: help install dev dev-backend dev-frontend dev-database wait-database migration api build run check clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -24,10 +24,10 @@ install: ## Restore the .NET solution and tools and install the frontend package
 	dotnet tool restore
 	pnpm -C $(FRONTEND) install
 
-dev: ## Run the API and the Vite dev server together
-	$(MAKE) -j2 dev-backend dev-frontend
+dev: ## Run the database, the API and the Vite dev server together
+	$(MAKE) -j3 dev-database dev-backend dev-frontend
 
-dev-backend: ## Run only the API with dotnet watch
+dev-backend: wait-database ## Run only the API with dotnet watch, once the database is up
 	SpaUrl=$(SPA_URL) ConnectionStrings__Default="$(DB_CONNECTION)" dotnet watch --project $(API_PROJECT)
 
 dev-frontend: ## Run only the Vite dev server
@@ -36,7 +36,13 @@ dev-frontend: ## Run only the Vite dev server
 dev-database: ## Run SQL Server in Docker for development
 	docker run --rm --init --name $(DB_CONTAINER) --platform linux/amd64 \
 		-e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=$(DB_PASSWORD) \
+		--health-cmd '/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" -b -o /dev/null' \
+		--health-start-period 2m --health-start-interval 1s \
 		-p $(DB_PORT):1433 -v $(DB_CONTAINER)-data:/var/opt/mssql $(DB_IMAGE)
+
+wait-database: ## Wait until the development database container is healthy
+	@echo "Waiting for $(DB_CONTAINER) to accept connections (make dev-database starts it)"
+	@until [ "$$(docker inspect -f '{{.State.Health.Status}}' $(DB_CONTAINER) 2>/dev/null)" = healthy ]; do sleep 1; done
 
 migration: ## Add an EF Core migration named NAME, e.g. make migration NAME=AddTags
 	dotnet ef migrations add $(NAME) --project $(API_PROJECT) --output-dir Data/Migrations
