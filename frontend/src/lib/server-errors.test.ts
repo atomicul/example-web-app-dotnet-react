@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest'
-import { ApiError } from '@/api/fetcher'
+import { ApiError, NetworkError, errorMessage } from '@/api/fetcher'
 import { setServerErrors } from './server-errors'
 
 function errorsFor(error: unknown) {
@@ -41,6 +41,13 @@ describe('setServerErrors', () => {
     expect(errorsFor(new ApiError(500, { title: 'Server broke' }))).toEqual({
       root: 'Server broke',
     })
-    expect(errorsFor(new Error('Offline'))).toEqual({ root: 'Offline' })
+    expect(errorsFor(new NetworkError())).toEqual({
+      root: errorMessage(new NetworkError()),
+    })
+  })
+
+  it('rethrows an error that did not come from a request', () => {
+    const bug = new TypeError('todo is undefined')
+    expect(() => errorsFor(bug)).toThrow(bug)
   })
 })

@@ -1,5 +1,5 @@
 import type { FieldPath, FieldValues, UseFormSetError } from 'react-hook-form'
-import { ApiError, errorMessage } from '@/api/fetcher'
+import { ApiError, NetworkError, errorMessage } from '@/api/fetcher'
 
 type ErrorTarget<T extends FieldValues> = {
   getValues: () => T
@@ -13,12 +13,15 @@ function toFieldName(key: string): string {
 
 /**
  * Shows a failed submission on the form: validation errors for the form's fields go under them,
- * everything else is joined into the form's root error.
+ * other failures of the request go to the form's root error. Any other error is a bug and is rethrown.
  */
 export function setServerErrors<T extends FieldValues>(
   form: ErrorTarget<T>,
   error: unknown,
 ) {
+  if (!(error instanceof ApiError || error instanceof NetworkError)) {
+    throw error
+  }
   const fields = Object.keys(form.getValues())
   const fieldErrors =
     error instanceof ApiError ? Object.entries(error.errors) : []
