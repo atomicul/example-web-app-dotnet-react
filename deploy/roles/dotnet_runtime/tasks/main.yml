@@ -1,0 +1,25 @@
+---
+- name: Install ICU, which the ASP.NET Core runtime needs for globalization
+  ansible.builtin.apt:
+    name: libicu74
+    update_cache: true
+
+- name: Create the ASP.NET Core runtime's directory
+  ansible.builtin.file:
+    path: "{{ dotnet_root }}"
+    state: directory
+    mode: "0755"
+
+- name: Download the ASP.NET Core runtime {{ dotnet_runtime_version }}
+  ansible.builtin.get_url:
+    url: "{{ dotnet_runtime_url }}"
+    dest: /opt/dotnet/{{ dotnet_runtime_archive }}
+    checksum: "{{ dotnet_runtime_checksum }}"
+    mode: "0644"
+
+- name: Unpack the ASP.NET Core runtime
+  ansible.builtin.unarchive:
+    src: /opt/dotnet/{{ dotnet_runtime_archive }}
+    dest: "{{ dotnet_root }}"
+    remote_src: true
+    creates: "{{ dotnet_root }}/dotnet"

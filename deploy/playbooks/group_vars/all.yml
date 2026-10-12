@@ -10,10 +10,18 @@ docker_key_checksum: sha256:1500c1f56fa9e26b9b8f42452a553675796ade0807cdce11975e
 docker_version: 5:29.9.0-1~ubuntu.24.04~noble
 containerd_version: 2.4.1-2~ubuntu.24.04~noble
 
+dotnet_runtime_version: 10.0.12
+dotnet_runtime_archive: aspnetcore-runtime-{{ dotnet_runtime_version }}-linux-x64.tar.gz
+dotnet_runtime_url: https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtime/{{ dotnet_runtime_version }}/{{ dotnet_runtime_archive }}
+dotnet_runtime_checksum: sha512:c489fc3a9dcc85f24f2d52e9a81b46fdf51affc8a360d008dbd5e3b7ce524969adc4a54f555ad13e29b822f59ed1cae9785608cbac2282f2c9c4fda45c21c7d1
+dotnet_root: /opt/dotnet/{{ dotnet_runtime_version }}
+
 # SQL Server's edition: Express is free in production; Standard and Enterprise need a license.
 mssql_edition: Express
 mssql_port: 1433
 
 todoapp_config_dir: /etc/todoapp
+todoapp_install_dir: /opt/todoapp
+todoapp_port: 8080
 todoapp_database: TodoApp
 todoapp_database_login: todoapp

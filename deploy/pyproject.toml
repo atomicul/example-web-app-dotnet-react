@@ -12,6 +12,7 @@ dependencies = [
 [project.scripts]
 generate-certificate = "todoapp_deploy.certificate:main"
 setup-database = "todoapp_deploy.database:main"
+setup-webapp = "todoapp_deploy.webapp:main"
 
 [dependency-groups]
 dev = [

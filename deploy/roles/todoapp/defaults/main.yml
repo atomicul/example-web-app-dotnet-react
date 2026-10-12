@@ -1,0 +1,5 @@
+---
+todoapp_change_database_password: false
+todoapp_change_certificate: false
+todoapp_controller_directory: "{{ lookup('ansible.builtin.env', 'PWD') }}"
+todoapp_default_certificate_path: "{{ inventory_hostname }}-dataprotection.pfx"

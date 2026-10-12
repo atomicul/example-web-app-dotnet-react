@@ -1,0 +1,8 @@
+---
+- name: Install the app's release as a systemd service
+  hosts: all
+  become: true
+  roles:
+    - supported_host
+    - dotnet_runtime
+    - todoapp

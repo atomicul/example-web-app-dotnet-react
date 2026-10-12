@@ -1,0 +1,20 @@
+---
+- name: Ask for the database password
+  ansible.builtin.pause:
+    prompt: Password of the '{{ todoapp_database_login }}' database login, as setup-database showed it
+    echo: false
+  register: todoapp_database_password
+
+- name: Require a database password
+  ansible.builtin.assert:
+    that: todoapp_database_password.user_input | length > 0
+    fail_msg: The database password can't be empty
+    quiet: true
+
+- name: Write the database connection string
+  ansible.builtin.template:
+    src: database.env.j2
+    dest: "{{ todoapp_config_dir }}/database.env"
+    mode: "0600"
+  no_log: true
+  notify: Restart the app

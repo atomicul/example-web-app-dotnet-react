@@ -1,0 +1,80 @@
+---
+- name: Create the app's system user
+  ansible.builtin.user:
+    name: todoapp
+    system: true
+    shell: /usr/sbin/nologin
+    home: /nonexistent
+    create_home: false
+
+- name: Install unzip, to unpack the release
+  ansible.builtin.apt:
+    name: unzip
+
+- name: Create the release's directory
+  ansible.builtin.file:
+    path: "{{ todoapp_install_dir }}/releases/{{ release_tag }}"
+    state: directory
+    mode: "0755"
+
+- name: Download the release {{ release_tag }}
+  ansible.builtin.get_url:
+    url: https://github.com/{{ github_repository }}/releases/download/{{ release_tag }}/{{ github_repository | basename }}-{{ release_tag }}.zip
+    dest: "{{ todoapp_install_dir }}/releases/{{ release_tag }}.zip"
+    mode: "0644"
+
+- name: Unpack the release
+  ansible.builtin.unarchive:
+    src: "{{ todoapp_install_dir }}/releases/{{ release_tag }}.zip"
+    dest: "{{ todoapp_install_dir }}/releases/{{ release_tag }}"
+    remote_src: true
+    creates: "{{ todoapp_install_dir }}/releases/{{ release_tag }}/TodoApi.dll"
+
+- name: Point the app at the release
+  ansible.builtin.file:
+    src: "{{ todoapp_install_dir }}/releases/{{ release_tag }}"
+    dest: "{{ todoapp_install_dir }}/current"
+    state: link
+  notify: Restart the app
+
+- name: Look for the database settings on the host
+  ansible.builtin.stat:
+    path: "{{ todoapp_config_dir }}/database.env"
+  register: todoapp_database_env
+
+- name: Look for the certificate settings on the host
+  ansible.builtin.stat:
+    path: "{{ todoapp_config_dir }}/certificate.env"
+  register: todoapp_certificate_env
+
+- name: Configure the database password
+  ansible.builtin.include_tasks: database.yml
+  when: todoapp_change_database_password | bool or not todoapp_database_env.stat.exists
+
+- name: Configure the Data Protection certificate
+  ansible.builtin.include_tasks: certificate.yml
+  when: todoapp_change_certificate | bool or not todoapp_certificate_env.stat.exists
+
+- name: Install the app's service
+  ansible.builtin.template:
+    src: todoapp.service.j2
+    dest: /etc/systemd/system/todoapp.service
+    mode: "0644"
+  notify: Restart the app
+
+- name: Restart the app if anything changed
+  ansible.builtin.meta: flush_handlers
+
+- name: Start the app now and on boot
+  ansible.builtin.systemd_service:
+    name: todoapp
+    state: started
+    enabled: true
+
+- name: Wait until the app is healthy
+  ansible.builtin.uri:
+    url: http://127.0.0.1:{{ todoapp_port }}/health
+  register: todoapp_health
+  until: todoapp_health.status == 200
+  retries: 30
+  delay: 2
