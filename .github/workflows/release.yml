@@ -51,7 +51,7 @@ jobs:
         run: make install
 
       - name: Build
-        run: make build
+        run: make build VERSION="${GITHUB_REF_NAME#v}"
 
       - name: Zip
         working-directory: out
