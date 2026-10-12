@@ -30,6 +30,22 @@ function notifyMutationError(error: unknown) {
   }
 }
 
+/** A rate-limited query is retried once, other client errors never, and server or network errors up to three times. */
+function shouldRetryQuery(failureCount: number, error: Error) {
+  if (isTooManyRequests(error)) {
+    return failureCount < 1
+  }
+  return !(error instanceof ApiError && error.status < 500) && failureCount < 3
+}
+
+/** Waits as long as a 429 asks, otherwise doubles from one second up to thirty, as React Query does by default. */
+function queryRetryDelay(failureCount: number, error: Error) {
+  if (isTooManyRequests(error) && error.retryAfter) {
+    return error.retryAfter * 1000
+  }
+  return Math.min(1000 * 2 ** failureCount, 30_000)
+}
+
 export const queryClient: QueryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
@@ -61,10 +77,21 @@ export const queryClient: QueryClient = new QueryClient({
   }),
   defaultOptions: {
     queries: {
-      retry: (failureCount, error) =>
-        !(error instanceof ApiError && error.status < 500) && failureCount < 3,
+      retry: shouldRetryQuery,
+      retryDelay: queryRetryDelay,
     },
   },
+})
+
+/** Toasts a rate-limited query as soon as it fails, not only once its retry gives up. */
+queryClient.getQueryCache().subscribe((event) => {
+  if (
+    event.type === 'updated' &&
+    event.action.type === 'failed' &&
+    isTooManyRequests(event.action.error)
+  ) {
+    notifyTooManyRequests(event.action.error)
+  }
 })
 
 export const router = createRouter({
