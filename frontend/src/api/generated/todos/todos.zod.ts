@@ -11,11 +11,8 @@ import * as zod from 'zod';
 /**
  * @summary Lists the current user's todos.
  */
-export const getTodosResponseIdRegExpTwo = new RegExp('^-?(?:0|[1-9]\\d*)$');
-
-
 export const GetTodosResponseItem = zod.object({
-  "id": zod.union([zod.int().describe('Identifier of the todo.'),zod.stringFormat('int32', getTodosResponseIdRegExpTwo).describe('Identifier of the todo.')]).describe('Identifier of the todo.'),
+  "id": zod.int().describe('Identifier of the todo.'),
   "title": zod.string().describe('Short description of the task.'),
   "isComplete": zod.boolean().describe('Whether the task is done.'),
   "dueDate": zod.iso.date().nullable().describe('Optional date the task is due.')
@@ -35,11 +32,8 @@ export const CreateTodoBody = zod.object({
   "dueDate": zod.iso.date().nullish().describe('Optional date the task is due.')
 }).describe('Payload used to create or replace a todo.')
 
-export const createTodoResponseIdRegExpTwo = new RegExp('^-?(?:0|[1-9]\\d*)$');
-
-
 export const CreateTodoResponse = zod.object({
-  "id": zod.union([zod.int().describe('Identifier of the todo.'),zod.stringFormat('int32', createTodoResponseIdRegExpTwo).describe('Identifier of the todo.')]).describe('Identifier of the todo.'),
+  "id": zod.int().describe('Identifier of the todo.'),
   "title": zod.string().describe('Short description of the task.'),
   "isComplete": zod.boolean().describe('Whether the task is done.'),
   "dueDate": zod.iso.date().nullable().describe('Optional date the task is due.')
@@ -52,11 +46,8 @@ export const GetTodoParams = zod.object({
   "id": zod.int().describe('Identifier of the todo.')
 })
 
-export const getTodoResponseIdRegExpTwo = new RegExp('^-?(?:0|[1-9]\\d*)$');
-
-
 export const GetTodoResponse = zod.object({
-  "id": zod.union([zod.int().describe('Identifier of the todo.'),zod.stringFormat('int32', getTodoResponseIdRegExpTwo).describe('Identifier of the todo.')]).describe('Identifier of the todo.'),
+  "id": zod.int().describe('Identifier of the todo.'),
   "title": zod.string().describe('Short description of the task.'),
   "isComplete": zod.boolean().describe('Whether the task is done.'),
   "dueDate": zod.iso.date().nullable().describe('Optional date the task is due.')

@@ -27,13 +27,10 @@ export const PostApiAuthLoginBody = zod.object({
   "twoFactorRecoveryCode": zod.string().nullish()
 })
 
-export const postApiAuthLoginResponseExpiresInRegExpTwo = new RegExp('^-?(?:0|[1-9]\\d*)$');
-
-
 export const PostApiAuthLoginResponse = zod.object({
   "tokenType": zod.string().nullish(),
   "accessToken": zod.string(),
-  "expiresIn": zod.union([zod.int(),zod.stringFormat('int64', postApiAuthLoginResponseExpiresInRegExpTwo)]),
+  "expiresIn": zod.int(),
   "refreshToken": zod.string()
 })
 
@@ -41,13 +38,10 @@ export const PostApiAuthRefreshBody = zod.object({
   "refreshToken": zod.string()
 })
 
-export const postApiAuthRefreshResponseExpiresInRegExpTwo = new RegExp('^-?(?:0|[1-9]\\d*)$');
-
-
 export const PostApiAuthRefreshResponse = zod.object({
   "tokenType": zod.string().nullish(),
   "accessToken": zod.string(),
-  "expiresIn": zod.union([zod.int(),zod.stringFormat('int64', postApiAuthRefreshResponseExpiresInRegExpTwo)]),
+  "expiresIn": zod.int(),
   "refreshToken": zod.string()
 })
 
@@ -87,12 +81,9 @@ export const PostApiAuthManage2faBody = zod.object({
   "forgetMachine": zod.boolean().optional()
 })
 
-export const postApiAuthManage2faResponseRecoveryCodesLeftRegExpTwo = new RegExp('^-?(?:0|[1-9]\\d*)$');
-
-
 export const PostApiAuthManage2faResponse = zod.object({
   "sharedKey": zod.string(),
-  "recoveryCodesLeft": zod.union([zod.int(),zod.stringFormat('int32', postApiAuthManage2faResponseRecoveryCodesLeftRegExpTwo)]),
+  "recoveryCodesLeft": zod.int(),
   "recoveryCodes": zod.array(zod.string()).nullish(),
   "isTwoFactorEnabled": zod.boolean(),
   "isMachineRemembered": zod.boolean()

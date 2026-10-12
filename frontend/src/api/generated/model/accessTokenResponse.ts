@@ -10,7 +10,6 @@ export interface AccessTokenResponse {
   /** @nullable */
   tokenType?: string | null;
   accessToken: string;
-  /** @pattern ^-?(?:0|[1-9]\d*)$ */
-  expiresIn: number | string;
+  expiresIn: number;
   refreshToken: string;
 }

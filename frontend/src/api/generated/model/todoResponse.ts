@@ -10,11 +10,8 @@
  * A todo owned by the current user.
  */
 export interface TodoResponse {
-  /**
-     * Identifier of the todo.
-     * @pattern ^-?(?:0|[1-9]\d*)$
-     */
-  id: number | string;
+  /** Identifier of the todo. */
+  id: number;
   /** Short description of the task. */
   title: string;
   /** Whether the task is done. */

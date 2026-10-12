@@ -8,8 +8,7 @@
 
 export interface TwoFactorResponse {
   sharedKey: string;
-  /** @pattern ^-?(?:0|[1-9]\d*)$ */
-  recoveryCodesLeft: number | string;
+  recoveryCodesLeft: number;
   /** @nullable */
   recoveryCodes?: string[] | null;
   isTwoFactorEnabled: boolean;
