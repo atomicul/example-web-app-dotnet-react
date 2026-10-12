@@ -12,7 +12,8 @@ A per-user todo app: an ASP.NET Core minimal API with Identity, and a React sing
 | `Makefile` | Wires the two projects together; neither one refers to the other |
 
 Every API route lives under `/api` (`/api/auth/*`, `/api/todos`). The one exception is `GET /health`, which answers
-`Healthy` once the API is up, for probes and `make dev`; it is not rate limited.
+`Healthy` once the API is up and can reach its database, and `503 Unhealthy` otherwise, for probes and `make dev`; it
+is not rate limited.
 
 ## Requirements
 
@@ -99,7 +100,7 @@ version (`1.2.3`) and, for stable releases, `1.2`, `1` and `latest`. GitHub show
 page. Build the same image locally with `docker build -t todoapp .`.
 
 The image runs the API and serves the SPA on port `8080` as a non-root user, in the Production environment.
-`GET /health` answers `Healthy` once it is up. It runs one of two commands:
+`GET /health` answers `Healthy` once it is up and can reach the database. It runs one of two commands:
 
 | Command | Does |
 |---|---|

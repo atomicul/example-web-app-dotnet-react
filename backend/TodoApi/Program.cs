@@ -26,7 +26,7 @@ builder.Services.AddKeyedTransient<IEmailSender<IdentityUser>, LoggingEmailSende
 builder.Services.AddTransient<IEmailSender<IdentityUser>, SpaLinkEmailSender>();
 builder.Services.AddTrustedProxies(builder.Configuration);
 builder.Services.AddRateLimits(builder.Configuration);
-builder.Services.AddHealthChecks();
+builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
 
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 builder.Services.AddProblemDetails();
