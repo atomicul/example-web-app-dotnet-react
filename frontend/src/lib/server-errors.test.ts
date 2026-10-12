@@ -1,0 +1,46 @@
+import { describe, expect, it, vi } from 'vitest'
+import { ApiError } from '@/api/fetcher'
+import { setServerErrors } from './server-errors'
+
+function errorsFor(error: unknown) {
+  const setError = vi.fn()
+  setServerErrors(
+    { getValues: () => ({ title: '', dueDate: null }), setError },
+    error,
+  )
+  return Object.fromEntries(
+    setError.mock.calls.map(([field, { message }]) => [field, message]),
+  )
+}
+
+describe('setServerErrors', () => {
+  it('puts validation errors under the fields they name', () => {
+    const error = new ApiError(400, {
+      errors: {
+        Title: ['Too long.', 'Too shouty.'],
+        DueDate: ['In the past.'],
+      },
+    })
+    expect(errorsFor(error)).toEqual({
+      title: 'Too long. Too shouty.',
+      dueDate: 'In the past.',
+    })
+  })
+
+  it('joins validation errors for unknown keys into the root error', () => {
+    const error = new ApiError(400, {
+      errors: { Title: ['Too long.'], Owner: ['Missing.'], '': ['Bad body.'] },
+    })
+    expect(errorsFor(error)).toEqual({
+      title: 'Too long.',
+      root: 'Missing. Bad body.',
+    })
+  })
+
+  it('reports an error without validation errors on the root', () => {
+    expect(errorsFor(new ApiError(500, { title: 'Server broke' }))).toEqual({
+      root: 'Server broke',
+    })
+    expect(errorsFor(new Error('Offline'))).toEqual({ root: 'Offline' })
+  })
+})

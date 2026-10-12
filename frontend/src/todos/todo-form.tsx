@@ -1,22 +1,16 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
-import { ApiError, errorMessage } from '@/api/fetcher'
 import { CreateTodoBody } from '@/api/generated/index.zod'
 import type { TodoRequest, TodoResponse } from '@/api/generated/model'
 import { Button } from '@/components/ui/button'
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { setServerErrors } from '@/lib/server-errors'
 
 type TodoFormProps = {
   todo?: TodoResponse
   submitLabel: string
   onSubmit: (todo: TodoRequest) => Promise<void>
-}
-
-/** Maps a server validation key such as `DueDate` onto the form field it belongs to. */
-function toFormField(key: string): 'title' | 'dueDate' | 'root' {
-  const field = key.charAt(0).toLowerCase() + key.slice(1)
-  return field === 'title' || field === 'dueDate' ? field : 'root'
 }
 
 /** Creates or edits a todo; the server's validation errors show next to their fields. */
@@ -36,14 +30,7 @@ export function TodoForm({ todo, submitLabel, onSubmit }: TodoFormProps) {
       await onSubmit(values)
       form.reset()
     } catch (error) {
-      const fieldErrors =
-        error instanceof ApiError ? Object.entries(error.errors) : []
-      if (fieldErrors.length === 0) {
-        form.setError('root', { message: errorMessage(error) })
-      }
-      for (const [key, messages] of fieldErrors) {
-        form.setError(toFormField(key), { message: messages.join(' ') })
-      }
+      setServerErrors(form, error)
     }
   }
 
