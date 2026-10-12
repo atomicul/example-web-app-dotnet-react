@@ -4,6 +4,7 @@ OUT ?= out
 VERSION ?=
 DB_IMAGE ?= mcr.microsoft.com/mssql/server:2025-latest
 DB_CONTAINER ?= todoapp-db
+DB_VOLUME ?= $(DB_CONTAINER)-data
 DB_PORT ?= 1433
 DB_PASSWORD ?= Dev-Passw0rd
 DB_CONNECTION ?= Server=localhost,$(DB_PORT);Database=TodoApp;User Id=sa;Password=$(DB_PASSWORD);TrustServerCertificate=True
@@ -14,10 +15,10 @@ FRONTEND := frontend
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev dev-backend dev-frontend dev-database wait-database migration api build run check clean
+.PHONY: help install dev dev-backend dev-frontend dev-database reset-dev-database wait-database migration api build run check clean
 
 help: ## Show this help
-	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 install: ## Restore the .NET solution and tools and install the frontend packages
 	dotnet restore $(SOLUTION)
@@ -38,7 +39,10 @@ dev-database: ## Run SQL Server in Docker for development
 		-e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=$(DB_PASSWORD) \
 		--health-cmd '/opt/mssql-tools18/bin/sqlcmd -C -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -Q "SELECT 1" -b -o /dev/null' \
 		--health-start-period 2m --health-start-interval 1s \
-		-p $(DB_PORT):1433 -v $(DB_CONTAINER)-data:/var/opt/mssql $(DB_IMAGE)
+		-p $(DB_PORT):1433 -v $(DB_VOLUME):/var/opt/mssql $(DB_IMAGE)
+
+reset-dev-database: ## Delete the development database volume; stop the database first
+	docker volume rm -f $(DB_VOLUME)
 
 wait-database: ## Wait until the development database container is healthy
 	@echo "Waiting for $(DB_CONTAINER) to accept connections (make dev-database starts it)"
