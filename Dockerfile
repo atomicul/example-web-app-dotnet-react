@@ -11,16 +11,19 @@ RUN pnpm build
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend
 ARG VERSION
 WORKDIR /src
-COPY global.json ./
+COPY global.json dotnet-tools.json ./
 COPY backend/Directory.Build.props backend/Directory.Packages.props backend/
 COPY backend/TodoApi/TodoApi.csproj backend/TodoApi/
-RUN dotnet restore backend/TodoApi
+RUN dotnet tool restore && dotnet restore backend/TodoApi
 COPY backend/TodoApi/ backend/TodoApi/
 RUN dotnet publish backend/TodoApi -c Release -o /app --no-restore ${VERSION:+-p:Version=$VERSION}
+RUN dotnet ef migrations bundle --project backend/TodoApi --configuration Release --output /migrate
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0
+ENV ASPNETCORE_ENVIRONMENT=Production
 WORKDIR /app
 COPY --from=backend /app ./
+COPY --from=backend /migrate /usr/local/bin/migrate
 COPY --from=frontend /src/dist wwwroot/
 USER $APP_UID
 EXPOSE 8080
