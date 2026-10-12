@@ -10,11 +10,11 @@ public static class TodoEndpoints
     {
         var todos = app.MapGroup("/todos").RequireAuthorization().WithTags("Todos");
 
-        todos.MapGet("/", GetAll);
-        todos.MapGet("/{id:int}", GetById);
-        todos.MapPost("/", Create).ProducesValidationProblem();
-        todos.MapPut("/{id:int}", Update).ProducesValidationProblem();
-        todos.MapDelete("/{id:int}", Delete);
+        todos.MapGet("/", GetAll).WithName("GetTodos");
+        todos.MapGet("/{id:int}", GetById).WithName("GetTodo");
+        todos.MapPost("/", Create).WithName("CreateTodo").ProducesValidationProblem();
+        todos.MapPut("/{id:int}", Update).WithName("UpdateTodo").ProducesValidationProblem();
+        todos.MapDelete("/{id:int}", Delete).WithName("DeleteTodo");
 
         return app;
     }
