@@ -19,6 +19,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => options.SignIn.RequireConfirmedEmail = true)
     .AddEntityFrameworkStores<AppDbContext>();
 builder.Services.AddTransient<IEmailSender<IdentityUser>, LoggingEmailSender>();
+builder.Services.AddRateLimits(builder.Configuration);
 
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 builder.Services.AddProblemDetails();
@@ -62,8 +63,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+app.UseRateLimiter();
 
-var api = app.MapGroup("/api");
+var api = app.MapGroup("/api").RequireRateLimiting(RateLimits.Api);
 api.MapAuth();
 api.MapGroup("/v1").MapTodos();
 api.MapFallback(() => TypedResults.NotFound());

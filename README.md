@@ -46,3 +46,11 @@ to its log. Links use the API's `SpaUrl` setting as their origin, or the API's o
 `make dev` sets it to the Vite dev server (`SPA_URL`).
 
 Every page of the SPA except login, registration and email confirmation requires a session.
+
+## Rate limiting
+
+Every `/api` request is limited per client IP, and requests that send an email (registration, resending the
+confirmation link, forgotten passwords and email changes) are held to a stricter limit. Each limit is a fixed window set
+in the API's `RateLimits` setting (`RateLimits:Api` and `RateLimits:Email`, each a `PermitLimit` and a `Window`); the
+defaults in `appsettings.json` are 100 requests and one email a minute. A rejected request gets a
+`429 Too Many Requests` with a `Retry-After` header in seconds.
