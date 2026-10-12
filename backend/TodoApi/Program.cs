@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
@@ -13,6 +14,10 @@ var isGeneratingOpenApiDocument = Assembly.GetEntryAssembly()?.GetName().Name ==
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
+if (!isGeneratingOpenApiDocument)
+{
+    builder.Services.AddDataProtection().PersistKeysToDbContext<AppDbContext>();
+}
 
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => options.SignIn.RequireConfirmedEmail = true)

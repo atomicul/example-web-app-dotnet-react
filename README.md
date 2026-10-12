@@ -75,6 +75,10 @@ the `RegisterRequest` schema of its OpenAPI document, so after changing them, `m
 
 Every page of the SPA except login, registration and email confirmation requires a session.
 
+The app keeps the keys that protect its cookies, bearer tokens and emailed links in the database, so sessions survive
+restarts and redeploys and are shared by every instance. The keys are stored unencrypted, so anyone who can read the
+database can forge sessions; restrict access to it accordingly.
+
 ## Rate limiting
 
 Every `/api` request is limited per client IP, and requests that send an email (registration, resending the
@@ -118,9 +122,6 @@ list items take their index as the last level. Both commands read the same setti
 | `ASPNETCORE_HTTP_PORTS` | `8080` | The port the app listens on inside the container |
 | `ASPNETCORE_ENVIRONMENT` | `Production` | The environment; keep `Production` in deployments |
 | `Logging__LogLevel__Default` | `Information` | The minimum log level |
-
-The app keeps the keys that protect its cookies and bearer tokens inside the container, so recreating the container
-logs every user out.
 
 ### Migrations
 

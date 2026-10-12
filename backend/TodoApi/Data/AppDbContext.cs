@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using System.Security.Claims;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -8,13 +9,15 @@ using TodoApi.Todos;
 namespace TodoApi.Data;
 
 /// <summary>
-/// Identity store plus per-user data. Every <see cref="IOwnedByUser"/> query is filtered to the
-/// authenticated user and new owned rows are stamped with their owner on save.
+/// Identity store, the Data Protection key ring, plus per-user data. Every <see cref="IOwnedByUser"/> query is
+/// filtered to the authenticated user and new owned rows are stamped with their owner on save.
 /// </summary>
 public class AppDbContext(DbContextOptions<AppDbContext> options, IHttpContextAccessor httpContextAccessor)
-    : IdentityDbContext<IdentityUser>(options)
+    : IdentityDbContext<IdentityUser>(options), IDataProtectionKeyContext
 {
     public DbSet<Todo> Todos => Set<Todo>();
+
+    public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
 
     private string? CurrentUserId => httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier);
 

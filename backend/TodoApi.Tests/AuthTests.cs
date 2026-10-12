@@ -1,5 +1,8 @@
 using System.Net;
 using System.Web;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using TodoApi.Data;
 
 namespace TodoApi.Tests;
 
@@ -64,5 +67,16 @@ public class AuthTests(TodoApiFactory factory)
 
         Assert.Equal(HttpStatusCode.OK, duringSession.StatusCode);
         Assert.Equal(HttpStatusCode.Unauthorized, afterLogout.StatusCode);
+    }
+
+    [Fact]
+    public async Task Keys_protecting_sessions_are_kept_in_the_database()
+    {
+        await factory.CreateUserClientAsync();
+
+        using var scope = factory.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+        Assert.True(await db.DataProtectionKeys.AnyAsync(CancellationToken));
     }
 }
