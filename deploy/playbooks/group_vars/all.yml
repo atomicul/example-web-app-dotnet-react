@@ -25,3 +25,12 @@ todoapp_install_dir: /opt/todoapp
 todoapp_port: 8080
 todoapp_database: TodoApp
 todoapp_database_login: todoapp
+
+todoapp_settings:
+  Kestrel:
+    Endpoints:
+      Http:
+        Url: http://*:{{ todoapp_port }}
+  DataProtection:
+    Certificate:
+      Path: "{{ todoapp_config_dir }}/dataprotection.pfx"

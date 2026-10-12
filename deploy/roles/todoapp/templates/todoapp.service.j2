@@ -12,7 +12,6 @@ ExecStart={{ dotnet_root }}/dotnet {{ todoapp_install_dir }}/current/TodoApi.dll
 EnvironmentFile={{ todoapp_config_dir }}/database.env
 EnvironmentFile={{ todoapp_config_dir }}/certificate.env
 Environment=ASPNETCORE_ENVIRONMENT=Production
-Environment=ASPNETCORE_HTTP_PORTS={{ todoapp_port }}
 Environment=DOTNET_ROOT={{ dotnet_root }}
 Restart=on-failure
 RestartSec=5

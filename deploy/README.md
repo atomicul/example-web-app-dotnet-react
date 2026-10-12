@@ -61,11 +61,16 @@ asking for its password. It refuses to overwrite a file.
 
 | Path | Holds |
 |---|---|
+| `/etc/todoapp/appsettings.Production.json` | The app's settings other than secrets, from `todoapp_settings` in `playbooks/group_vars/all.yml`; each release links to it |
 | `/etc/todoapp/database-admin.env` | The `sa` password and connection string, for migrations (root only) |
 | `/etc/todoapp/database.env` | The app's connection string (root only; systemd passes it to the app) |
-| `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's settings (root only) and the PFX (readable by the app) |
+| `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's password (root only) and the PFX (readable by the app) |
 | `/opt/todoapp/releases/<tag>` | Each installed release; `/opt/todoapp/current` links to the one running |
 | `/opt/dotnet/<version>` | The ASP.NET Core runtime |
+
+Environment variables override the JSON file, so the two secrets stay in the `.env` files, which systemd passes to
+the app. To change another setting, such as `TrustedProxies` or `RateLimits` from the
+[root README](../README.md#environment-variables), add it to `todoapp_settings` and run `setup-webapp` again.
 
 `journalctl -u todoapp` shows the app's logs.
 

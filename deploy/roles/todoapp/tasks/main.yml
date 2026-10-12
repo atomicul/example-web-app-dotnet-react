@@ -30,6 +30,19 @@
     remote_src: true
     creates: "{{ todoapp_install_dir }}/releases/{{ release_tag }}/TodoApi.dll"
 
+- name: Write the app's settings
+  ansible.builtin.template:
+    src: appsettings.Production.json.j2
+    dest: "{{ todoapp_config_dir }}/appsettings.Production.json"
+    mode: "0644"
+  notify: Restart the app
+
+- name: Link the host's settings into the release
+  ansible.builtin.file:
+    src: "{{ todoapp_config_dir }}/appsettings.Production.json"
+    dest: "{{ todoapp_install_dir }}/releases/{{ release_tag }}/appsettings.Production.json"
+    state: link
+
 - name: Point the app at the release
   ansible.builtin.file:
     src: "{{ todoapp_install_dir }}/releases/{{ release_tag }}"
