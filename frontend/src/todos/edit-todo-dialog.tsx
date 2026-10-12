@@ -11,13 +11,11 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog'
 import { TodoForm } from './todo-form'
-import { useInvalidateTodos } from './use-invalidate-todos'
 
 export function EditTodoDialog({ todo }: { todo: TodoResponse }) {
   const [open, setOpen] = useState(false)
-  const invalidateTodos = useInvalidateTodos()
   const { mutateAsync: updateTodo } = useUpdateTodo({
-    mutation: { meta: { handlesErrors: true }, onSuccess: invalidateTodos },
+    mutation: { meta: { handlesErrors: true } },
   })
 
   async function save(data: TodoRequest) {

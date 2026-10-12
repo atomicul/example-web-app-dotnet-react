@@ -3,7 +3,6 @@ import { getGetTodosQueryOptions, useCreateTodo } from '@/api/generated'
 import type { TodoRequest } from '@/api/generated/model'
 import { TodoForm } from '@/todos/todo-form'
 import { TodoList } from '@/todos/todo-list'
-import { useInvalidateTodos } from '@/todos/use-invalidate-todos'
 
 export const Route = createFileRoute('/_authenticated/')({
   loader: ({ context }) =>
@@ -12,9 +11,8 @@ export const Route = createFileRoute('/_authenticated/')({
 })
 
 function TodosPage() {
-  const invalidateTodos = useInvalidateTodos()
   const { mutateAsync: createTodo } = useCreateTodo({
-    mutation: { meta: { handlesErrors: true }, onSuccess: invalidateTodos },
+    mutation: { meta: { handlesErrors: true } },
   })
 
   async function add(data: TodoRequest) {

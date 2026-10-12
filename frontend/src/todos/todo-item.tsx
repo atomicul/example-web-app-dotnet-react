@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import { EditTodoDialog } from './edit-todo-dialog'
-import { useInvalidateTodos } from './use-invalidate-todos'
 
 function formatDueDate(dueDate: string) {
   return new Date(`${dueDate}T00:00`).toLocaleDateString(undefined, {
@@ -14,10 +13,8 @@ function formatDueDate(dueDate: string) {
 }
 
 export function TodoItem({ todo }: { todo: TodoResponse }) {
-  const invalidateTodos = useInvalidateTodos()
-  const mutation = { onSettled: invalidateTodos }
-  const update = useUpdateTodo({ mutation })
-  const remove = useDeleteTodo({ mutation })
+  const update = useUpdateTodo()
+  const remove = useDeleteTodo()
 
   function toggle(isComplete: boolean) {
     update.mutate({ id: todo.id, data: { ...todo, isComplete } })

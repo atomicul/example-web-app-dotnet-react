@@ -28,7 +28,7 @@ function notifyMutationError(error: unknown) {
   }
 }
 
-export const queryClient = new QueryClient({
+export const queryClient: QueryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
       if (isTooManyRequests(error)) {
@@ -49,6 +49,7 @@ export const queryClient = new QueryClient({
         notifyMutationError(error)
       }
     },
+    onSettled: () => queryClient.invalidateQueries(),
   }),
   defaultOptions: {
     queries: {
