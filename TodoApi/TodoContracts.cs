@@ -1,15 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using TodoApi.Data;
 
 namespace TodoApi;
-
-public class Todo
-{
-    public int Id { get; set; }
-    public required string Title { get; set; }
-    public bool IsComplete { get; set; }
-    public DateOnly? DueDate { get; set; }
-    public string OwnerId { get; set; } = string.Empty;
-}
 
 /// <summary>Payload used to create or replace a todo.</summary>
 /// <param name="Title">Short description of the task.</param>

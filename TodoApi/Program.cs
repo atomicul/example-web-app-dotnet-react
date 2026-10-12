@@ -1,11 +1,13 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TodoApi;
+using TodoApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 var appName = builder.Configuration["AppName"] ?? builder.Environment.ApplicationName;
 
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("TodoDb"));
 
 builder.Services.AddAuthentication(IdentityConstants.BearerScheme).AddBearerToken(IdentityConstants.BearerScheme);
@@ -45,7 +47,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapGroup("/auth").MapIdentityApi<IdentityUser>().WithTags("Auth");
-app.MapTodos();
+var v1 = app.MapGroup("/v1");
+v1.MapTodos();
 
 app.Lifetime.ApplicationStarted.Register(() =>
     app.Logger.LogInformation("{AppName} is ready to accept traffic on {Urls}", appName, string.Join(", ", app.Urls)));
