@@ -41,9 +41,10 @@ public static class TestUsers
     public static Task<HttpResponseMessage> ConfirmEmailAsync(this HttpClient client, Uri confirmationLink) =>
         client.GetAsync($"/api/auth/confirmEmail{confirmationLink.Query}", CancellationToken);
 
-    public static Task<HttpResponseMessage> LoginAsync(this HttpClient client, string email, bool useCookies = false) =>
+    public static Task<HttpResponseMessage> LoginAsync(
+        this HttpClient client, string email, bool useCookies = false, string password = Password) =>
         client.PostAsJsonAsync(
             $"/api/auth/login?useCookies={useCookies}",
-            new LoginRequest { Email = email, Password = Password },
+            new LoginRequest { Email = email, Password = password },
             CancellationToken);
 }

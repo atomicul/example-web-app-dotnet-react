@@ -1,5 +1,7 @@
 using System.Net;
+using System.Net.Http.Json;
 using System.Web;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using TodoApi.Data;
@@ -42,6 +44,23 @@ public class AuthTests(TodoApiFactory factory)
         var response = await client.LoginAsync(email);
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Login_is_locked_out_after_repeated_failures()
+    {
+        var client = factory.CreateClient();
+        var email = await client.RegisterConfirmedAsync(factory);
+        for (var attempt = 0; attempt < 5; attempt++)
+        {
+            await client.LoginAsync(email, password: "Wr0ng-password");
+        }
+
+        var response = await client.LoginAsync(email);
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>(CancellationToken);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+        Assert.Equal("LockedOut", problem?.Detail);
     }
 
     [Fact]
