@@ -54,8 +54,8 @@ Makefile points the API at the container (`DB_CONNECTION`). In the Development e
 migrations from `backend/TodoApi/Data/Migrations` on startup.
 
 Outside Development the API never migrates its database: deployments apply migrations separately, before starting the
-new version. `make run` runs as Production, so it expects the development database to be migrated already, e.g. by a
-previous `make dev`.
+new version, with the Docker image's `migrate` command (see [Docker image](#docker-image)). `make run` runs as
+Production, so it expects the development database to be migrated already, e.g. by a previous `make dev`.
 
 ## Authentication
 
@@ -87,3 +87,69 @@ Behind a reverse proxy, the client IP and scheme come from its `X-Forwarded-For`
 but only when the proxy is trusted: loopback always is, and `TrustedProxies:Addresses` (IP addresses) and
 `TrustedProxies:Networks` (CIDR ranges) add more. Set them before deploying behind one, or every client shares the
 proxy's limit.
+
+## Docker image
+
+Every semver tag on `main` publishes `ghcr.io/OWNER/REPO`, where `OWNER/REPO` is this repository, tagged with the
+version (`1.2.3`) and, for stable releases, `1.2`, `1` and `latest`. GitHub shows this README on the image's package
+page. Build the same image locally with `docker build -t todoapp .`.
+
+The image runs the API and serves the SPA on port `8080` as a non-root user, in the Production environment.
+`GET /health` answers `Healthy` once it is up. It runs one of two commands:
+
+| Command | Does |
+|---|---|
+| _(default)_ | Serves the app: `docker run -p 8080:8080 -e ConnectionStrings__Default=... ghcr.io/OWNER/REPO:1.2.3` |
+| `migrate` | Applies pending migrations to the database and exits: `docker run --rm -e ConnectionStrings__Default=... ghcr.io/OWNER/REPO:1.2.3 migrate` |
+
+### Environment variables
+
+Every setting in `appsettings.json` can be set as an environment variable: `__` separates the levels of a key, and
+list items take their index as the last level. Both commands read the same settings.
+
+| Variable | Default | Sets |
+|---|---|---|
+| `ConnectionStrings__Default` | _required_ | The SQL Server connection string, e.g. `Server=db;Database=TodoApp;User Id=todo;Password=...;TrustServerCertificate=True` |
+| `SpaUrl` | the API's own origin | The origin of links in emails |
+| `TrustedProxies__Addresses__0`, `__1`, ... | none | IP addresses of reverse proxies whose `X-Forwarded-For` and `X-Forwarded-Proto` are trusted |
+| `TrustedProxies__Networks__0`, `__1`, ... | none | CIDR ranges of trusted reverse proxies, e.g. `172.16.0.0/12` |
+| `RateLimits__Api__PermitLimit`, `RateLimits__Api__Window` | `100`, `00:01:00` | Requests per client IP per window, for every `/api` request |
+| `RateLimits__Email__PermitLimit`, `RateLimits__Email__Window` | `1`, `00:01:00` | The same, for requests that send an email |
+| `ASPNETCORE_HTTP_PORTS` | `8080` | The port the app listens on inside the container |
+| `ASPNETCORE_ENVIRONMENT` | `Production` | The environment; keep `Production` in deployments |
+| `Logging__LogLevel__Default` | `Information` | The minimum log level |
+
+The app keeps the keys that protect its cookies and bearer tokens inside the container, so recreating the container
+logs every user out.
+
+### Migrations
+
+`migrate` is an [EF Core migration bundle](https://learn.microsoft.com/ef/core/managing-schemas/migrations/applying#bundles)
+of the migrations that shipped with the image's version. Run it from the same tag before starting that version. It
+creates the database if it is missing, applies only pending migrations, holds a database lock while it does so that
+concurrent runs wait for each other, and exits non-zero when it fails. Its output says
+`No migrations were applied. The database is already up to date.` when nothing changed.
+
+- `migrate <Migration>` migrates to that migration, reverting the ones after it, e.g. to roll back before deploying an
+  older version; `migrate 0` reverts every migration.
+- `migrate --connection "<connection string>"` overrides `ConnectionStrings__Default`; prefer the environment variable,
+  which keeps the password out of the process list.
+
+From Ansible, run it as a one-off container with the version about to be deployed:
+
+```yaml
+- name: Migrate the database
+  community.docker.docker_container:
+    name: todoapp-migrate
+    image: "ghcr.io/OWNER/REPO:{{ app_version }}"
+    command: migrate
+    detach: false
+    cleanup: true
+    networks:
+      - name: todoapp
+    env:
+      ConnectionStrings__Default: "{{ todoapp_connection_string }}"
+  no_log: true
+  register: migration
+  changed_when: "'No migrations were applied' not in migration.container.Output"
+```
