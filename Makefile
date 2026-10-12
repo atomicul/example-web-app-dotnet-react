@@ -12,6 +12,7 @@ DB_CONNECTION ?= Server=localhost,$(DB_PORT);Database=TodoApp;User Id=sa;Passwor
 SOLUTION := backend/TodoApp.slnx
 API_PROJECT := backend/TodoApi
 FRONTEND := frontend
+DEPLOY := deploy
 
 .DEFAULT_GOAL := help
 
@@ -20,10 +21,11 @@ FRONTEND := frontend
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-install: ## Restore the .NET solution and tools and install the frontend packages
+install: ## Restore the .NET solution and tools and install the frontend and deploy packages
 	dotnet restore $(SOLUTION)
 	dotnet tool restore
 	pnpm -C $(FRONTEND) install
+	uv --directory $(DEPLOY) sync --locked
 
 dev: ## Run the database, the API and the Vite dev server together
 	$(MAKE) -j3 dev-database dev-backend dev-frontend
@@ -70,7 +72,7 @@ build: ## Publish the API to out/ with the built SPA in out/wwwroot
 run: build ## Build, then serve the API and the SPA together
 	cd $(OUT) && ConnectionStrings__Default="$(DB_CONNECTION)" dotnet TodoApi.dll --urls $(API_URL)
 
-check: ## Run formatting, build, pending migration, lint, type checks and tests
+check: ## Run formatting, build, pending migration, lint, type checks and tests of every project
 	dotnet format $(SOLUTION) --verify-no-changes
 	dotnet build $(SOLUTION)
 	dotnet ef migrations has-pending-model-changes --project $(API_PROJECT)
@@ -79,6 +81,10 @@ check: ## Run formatting, build, pending migration, lint, type checks and tests
 	pnpm -C $(FRONTEND) format:check
 	pnpm -C $(FRONTEND) typecheck
 	pnpm -C $(FRONTEND) test
+	uv --directory $(DEPLOY) run ruff format --check
+	uv --directory $(DEPLOY) run ruff check
+	uv --directory $(DEPLOY) run pytest
+	uv --directory $(DEPLOY) run ansible-lint
 
 clean: ## Remove build output, including the backend bin and obj directories
 	rm -rf $(OUT) $(FRONTEND)/dist backend/*/bin backend/*/obj

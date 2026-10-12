@@ -1,0 +1,29 @@
+[project]
+name = "todoapp-deploy"
+version = "0.1.0"
+description = "Sets up the todo app and its database on a single Ubuntu host with Ansible"
+readme = "README.md"
+requires-python = "==3.14.*"
+dependencies = [
+    "ansible-core==2.21.5",
+]
+
+[dependency-groups]
+dev = [
+    "ansible-lint==26.10.0",
+    "pytest==9.1.1",
+    "ruff==0.17.0",
+]
+
+[build-system]
+requires = ["uv_build==0.13.0"]
+build-backend = "uv_build"
+
+[tool.uv]
+required-version = ">=0.9.21"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "SIM", "RUF"]

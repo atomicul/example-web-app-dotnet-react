@@ -33,6 +33,11 @@ jobs:
           cache: pnpm
           cache-dependency-path: frontend/pnpm-lock.yaml
 
+      - uses: astral-sh/setup-uv@v10
+        with:
+          version-file: deploy/pyproject.toml
+          resolution-strategy: lowest
+
       - name: Install
         run: make install
 
