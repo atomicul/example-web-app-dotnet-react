@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import type { z } from 'zod'
 import { errorMessage } from '@/api/fetcher'
-import { PostApiAuthRegisterBody } from '@/api/generated/index.zod'
 import type { LoginRequest } from '@/api/generated/model'
 import { Button } from '@/components/ui/button'
 import {
@@ -13,17 +13,19 @@ import {
 import { Input } from '@/components/ui/input'
 
 type CredentialsFormProps = {
+  schema: z.ZodType<LoginRequest, LoginRequest>
   submitLabel: string
   onSubmit: (credentials: LoginRequest) => Promise<void>
 }
 
 /** Email and password form shared by login and registration; failures show under the fields. */
 export function CredentialsForm({
+  schema,
   submitLabel,
   onSubmit,
 }: CredentialsFormProps) {
   const form = useForm<LoginRequest>({
-    resolver: zodResolver(PostApiAuthRegisterBody),
+    resolver: zodResolver(schema),
     defaultValues: { email: '', password: '' },
   })
   const { errors, isSubmitting } = form.formState

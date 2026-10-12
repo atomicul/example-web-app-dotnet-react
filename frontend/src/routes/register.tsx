@@ -1,5 +1,6 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
+import { PostApiAuthRegisterBody } from '@/api/generated/index.zod'
 import type { LoginRequest } from '@/api/generated/model'
 import { AuthCard } from '@/auth/auth-card'
 import { CredentialsForm } from '@/auth/credentials-form'
@@ -53,7 +54,11 @@ function RegisterPage() {
         </p>
       }
     >
-      <CredentialsForm submitLabel="Create account" onSubmit={submit} />
+      <CredentialsForm
+        schema={PostApiAuthRegisterBody}
+        submitLabel="Create account"
+        onSubmit={submit}
+      />
     </AuthCard>
   )
 }

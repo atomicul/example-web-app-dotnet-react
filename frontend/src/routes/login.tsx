@@ -1,6 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
 import { useState } from 'react'
 import { ApiError, isUnauthorized } from '@/api/fetcher'
+import { PostApiAuthLoginBody } from '@/api/generated/index.zod'
 import type { LoginRequest } from '@/api/generated/model'
 import { AuthCard } from '@/auth/auth-card'
 import { CredentialsForm } from '@/auth/credentials-form'
@@ -57,7 +58,11 @@ function LoginPage() {
       }
     >
       <div className="flex flex-col gap-4">
-        <CredentialsForm submitLabel="Log in" onSubmit={submit} />
+        <CredentialsForm
+          schema={PostApiAuthLoginBody}
+          submitLabel="Log in"
+          onSubmit={submit}
+        />
         {unconfirmedEmail && (
           <ResendConfirmationButton email={unconfirmedEmail} />
         )}
