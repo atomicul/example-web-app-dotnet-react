@@ -1,6 +1,8 @@
+using TodoApi.Data;
+
 namespace TodoApi.Todos;
 
-public class Todo
+public class Todo : IOwnedByUser
 {
     public int Id { get; set; }
     public required string Title { get; set; }
