@@ -22,6 +22,19 @@ export class ApiError extends Error {
   }
 }
 
+/** A message fit for the user, listing every validation error when there are any. */
+export function errorMessage(error: unknown): string {
+  if (error instanceof ApiError) {
+    const messages = Object.values(error.errors).flat()
+    return messages.length > 0 ? messages.join(' ') : error.message
+  }
+  return error instanceof Error ? error.message : 'Something went wrong.'
+}
+
+export function isUnauthorized(error: unknown): boolean {
+  return error instanceof ApiError && error.status === 401
+}
+
 export type ErrorType<_Error> = ApiError
 
 async function readJson(response: Response): Promise<unknown> {
