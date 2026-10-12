@@ -1,7 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import type { z } from 'zod'
-import { errorMessage } from '@/api/fetcher'
 import type { LoginRequest } from '@/api/generated/model'
 import { Button } from '@/components/ui/button'
 import {
@@ -12,6 +11,7 @@ import {
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { describedErrors } from '@/lib/described-errors'
+import { setServerErrors } from '@/lib/server-errors'
 
 type CredentialsFormProps = {
   schema: z.ZodType<LoginRequest, LoginRequest>
@@ -35,7 +35,7 @@ export function CredentialsForm({
     try {
       await onSubmit(credentials)
     } catch (error) {
-      form.setError('root', { message: errorMessage(error) })
+      setServerErrors(form, error)
     }
   }
 
