@@ -1,12 +1,31 @@
-import { QueryCache, QueryClient, hashKey } from '@tanstack/react-query'
+import {
+  MutationCache,
+  QueryCache,
+  QueryClient,
+  hashKey,
+} from '@tanstack/react-query'
 import { createRouter } from '@tanstack/react-router'
-import { ApiError, isUnauthorized } from '@/api/fetcher'
+import { toast } from 'sonner'
+import {
+  ApiError,
+  errorMessage,
+  isTooManyRequests,
+  isUnauthorized,
+} from '@/api/fetcher'
 import { sessionQueryKey } from '@/auth/session'
 import { routeTree } from './routeTree.gen'
+
+/** Every rate-limited request shares one toast, so a burst of them shows only once. */
+function notifyTooManyRequests(error: unknown) {
+  if (isTooManyRequests(error)) {
+    toast.warning(errorMessage(error), { id: 'too-many-requests' })
+  }
+}
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
+      notifyTooManyRequests(error)
       if (
         isUnauthorized(error) &&
         query.queryHash !== hashKey(sessionQueryKey)
@@ -16,6 +35,7 @@ export const queryClient = new QueryClient({
       }
     },
   }),
+  mutationCache: new MutationCache({ onError: notifyTooManyRequests }),
   defaultOptions: {
     queries: {
       retry: (failureCount, error) =>

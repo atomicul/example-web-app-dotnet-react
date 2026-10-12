@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, fetcher } from './fetcher'
+import { ApiError, errorMessage, fetcher } from './fetcher'
 
 function respondWith(response: Response) {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response))
@@ -58,5 +58,25 @@ describe('fetcher', () => {
     const error = await fetcher('/api/v1/todos', {}).catch((e: unknown) => e)
 
     expect(error).toMatchObject({ status: 401, problem: undefined, errors: {} })
+  })
+
+  it('throws an ApiError with the seconds to wait when rate limited', async () => {
+    respondWith(
+      new Response(null, { status: 429, headers: { 'retry-after': '42' } }),
+    )
+
+    const error = await fetcher('/api/v1/todos', {}).catch((e: unknown) => e)
+
+    expect(error).toMatchObject({ status: 429, retryAfter: 42 })
+    expect(errorMessage(error)).toContain('try again in 42 seconds')
+  })
+
+  it('leaves the wait unknown when a 429 has no Retry-After header', async () => {
+    respondWith(new Response(null, { status: 429 }))
+
+    const error = await fetcher('/api/v1/todos', {}).catch((e: unknown) => e)
+
+    expect(error).toMatchObject({ status: 429, retryAfter: undefined })
+    expect(errorMessage(error)).toContain('try again in a moment')
   })
 })

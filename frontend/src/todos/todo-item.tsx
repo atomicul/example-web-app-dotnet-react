@@ -1,6 +1,6 @@
 import { Trash2Icon } from 'lucide-react'
 import { toast } from 'sonner'
-import { errorMessage } from '@/api/fetcher'
+import { errorMessage, isTooManyRequests } from '@/api/fetcher'
 import { useDeleteTodo, useUpdateTodo } from '@/api/generated'
 import type { TodoResponse } from '@/api/generated/model'
 import { Button } from '@/components/ui/button'
@@ -9,8 +9,11 @@ import { cn } from '@/lib/utils'
 import { EditTodoDialog } from './edit-todo-dialog'
 import { useInvalidateTodos } from './use-invalidate-todos'
 
+/** Rate-limited requests are already toasted for every mutation. */
 function notifyError(error: unknown) {
-  toast.error(errorMessage(error))
+  if (!isTooManyRequests(error)) {
+    toast.error(errorMessage(error))
+  }
 }
 
 function formatDueDate(dueDate: string) {
