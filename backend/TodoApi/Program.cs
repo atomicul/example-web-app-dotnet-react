@@ -20,6 +20,7 @@ builder.Services.AddTransient<IEmailSender<IdentityUser>>(services =>
     ActivatorUtilities.CreateInstance<SpaLinkEmailSender>(services, services.GetRequiredService<LoggingEmailSender>()));
 builder.Services.AddTrustedProxies(builder.Configuration);
 builder.Services.AddRateLimits(builder.Configuration);
+builder.Services.AddHealthChecks();
 
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 builder.Services.AddProblemDetails();
@@ -60,6 +61,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 app.UseRateLimiter();
+
+app.MapHealthChecks("/health");
 
 var api = app.MapGroup("/api").RequireRateLimiting(RateLimits.Api);
 api.MapAuth();
