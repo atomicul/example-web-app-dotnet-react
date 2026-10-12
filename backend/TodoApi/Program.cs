@@ -1,5 +1,3 @@
-using Microsoft.AspNetCore.Hosting.Server;
-using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json.Serialization;
@@ -42,15 +40,6 @@ builder.Services.AddOpenApi(options =>
 
 var app = builder.Build();
 
-void OnServerStarted(Action<ICollection<string>> log) =>
-    app.Lifetime.ApplicationStarted.Register(() =>
-    {
-        if (app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()?.Addresses is { } urls)
-        {
-            log(urls);
-        }
-    });
-
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -59,8 +48,8 @@ if (app.Environment.IsDevelopment())
         options.DocumentTitle = appName;
         options.SwaggerEndpoint("/openapi/v1.json", $"{appName} v1");
     });
-    OnServerStarted(urls =>
-        app.Logger.LogInformation("Swagger UI: {SwaggerUrls}", string.Join(", ", urls.Select(url => $"{url}/swagger"))));
+    app.Lifetime.ApplicationStarted.Register(() =>
+        app.Logger.LogInformation("Swagger UI: {SwaggerUrls}", string.Join(", ", app.Urls.Select(url => $"{url}/swagger"))));
 }
 
 app.UseStaticFiles();
@@ -71,8 +60,5 @@ api.MapAuth();
 api.MapTodos();
 api.MapFallback(() => TypedResults.NotFound());
 app.MapFallbackToFile("index.html");
-
-OnServerStarted(urls =>
-    app.Logger.LogInformation("{AppName} is ready to accept traffic on {Urls}", appName, string.Join(", ", urls)));
 
 app.Run();
