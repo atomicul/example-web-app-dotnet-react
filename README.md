@@ -40,4 +40,9 @@ ASP.NET Core Identity accepts two schemes:
   token is ever visible to JavaScript. `POST /api/auth/logout` clears it.
 - **Bearer tokens** for scripts and Swagger UI (`/swagger` in Development).
 
-Every page of the SPA except login and registration requires a session.
+Only users with a confirmed email can log in. Registering sends a link to the SPA's `/confirm-email` page, which
+confirms the address; the login page can send a new link. There is no mail service yet, so the API writes every email
+to its log. Links use the API's `SpaUrl` setting as their origin, or the API's own origin when it is unset;
+`make dev` sets it to the Vite dev server (`SPA_URL`).
+
+Every page of the SPA except login, registration and email confirmation requires a session.

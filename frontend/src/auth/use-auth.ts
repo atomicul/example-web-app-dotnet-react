@@ -28,9 +28,9 @@ export function useAuth() {
     await resetSession()
   }
 
+  /** Creates the account only: Identity emails a confirmation link that must be opened before logging in. */
   async function register(credentials: LoginRequest) {
     await postRegister({ data: credentials })
-    await login(credentials)
   }
 
   async function logout() {

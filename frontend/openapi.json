@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Todo API",
-    "description": "Per-user todo lists secured with ASP.NET Core Identity bearer tokens. Register and log in through the Auth endpoints, then authorize with the returned access token.",
+    "description": "Per-user todo lists secured with ASP.NET Core Identity bearer tokens. Register through the Auth endpoints, confirm your email with the link it sends, then log in and authorize with the returned access token.",
     "version": "1.0.0"
   },
   "paths": {

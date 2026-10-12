@@ -16,7 +16,7 @@ builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("TodoDb"));
 
 builder.Services.AddAuthorization();
-builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => options.SignIn.RequireConfirmedEmail = true)
     .AddEntityFrameworkStores<AppDbContext>();
 builder.Services.AddTransient<IEmailSender<IdentityUser>, LoggingEmailSender>();
 
@@ -30,7 +30,8 @@ builder.Services.AddOpenApi(options =>
     {
         document.Info.Title = appName;
         document.Info.Description = "Per-user todo lists secured with ASP.NET Core Identity bearer tokens. "
-            + "Register and log in through the Auth endpoints, then authorize with the returned access token.";
+            + "Register through the Auth endpoints, confirm your email with the link it sends, "
+            + "then log in and authorize with the returned access token.";
         return Task.CompletedTask;
     });
     options.AddDocumentTransformer<BearerSecurityTransformer>();
