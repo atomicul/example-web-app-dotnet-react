@@ -62,6 +62,7 @@ function LoginPage() {
         <CredentialsForm
           schema={PostApiAuthLoginBody}
           submitLabel="Log in"
+          passwordAutoComplete="current-password"
           onSubmit={submit}
         />
         {unconfirmedEmail && (

@@ -16,6 +16,8 @@ import { setServerErrors } from '@/lib/server-errors'
 type CredentialsFormProps = {
   schema: z.ZodType<LoginRequest, LoginRequest>
   submitLabel: string
+  /** `new-password` lets password managers offer to generate one when signing up. */
+  passwordAutoComplete: 'current-password' | 'new-password'
   onSubmit: (credentials: LoginRequest) => Promise<void>
 }
 
@@ -23,6 +25,7 @@ type CredentialsFormProps = {
 export function CredentialsForm({
   schema,
   submitLabel,
+  passwordAutoComplete,
   onSubmit,
 }: CredentialsFormProps) {
   const form = useForm<LoginRequest>({
@@ -58,7 +61,7 @@ export function CredentialsForm({
           <Input
             id="password"
             type="password"
-            autoComplete="current-password"
+            autoComplete={passwordAutoComplete}
             aria-invalid={!!errors.password}
             {...form.register('password')}
           />

@@ -57,6 +57,7 @@ function RegisterPage() {
       <CredentialsForm
         schema={PostApiAuthRegisterBody}
         submitLabel="Create account"
+        passwordAutoComplete="new-password"
         onSubmit={submit}
       />
     </AuthCard>
