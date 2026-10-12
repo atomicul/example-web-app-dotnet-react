@@ -47,10 +47,13 @@ if (app.Environment.IsDevelopment())
         app.Logger.LogInformation("Swagger UI: {SwaggerUrls}", string.Join(", ", app.Urls.Select(url => $"{url}/swagger"))));
 }
 
+app.UseStaticFiles();
+
 var api = app.MapGroup("/api");
 api.MapAuth();
 api.MapGroup("/v1").MapTodos();
 api.MapFallback(() => TypedResults.NotFound());
+app.MapFallbackToFile("index.html");
 
 app.Lifetime.ApplicationStarted.Register(() =>
     app.Logger.LogInformation("{AppName} is ready to accept traffic on {Urls}", appName, string.Join(", ", app.Urls)));
