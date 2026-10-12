@@ -162,3 +162,9 @@ From Ansible, run it as a one-off container with the version about to be deploye
   register: migration
   changed_when: "'No migrations were applied' not in migration.container.Output"
 ```
+
+## Deploying to a host
+
+`deploy/` sets the app and its database up on a single Ubuntu 24.04 host with Ansible, needing only uv. For each
+release, `uv run setup-database user@host v1.2.3` installs SQL Server and migrates it with the release's image, and
+`uv run setup-webapp user@host v1.2.3` runs the release as a systemd service. See [deploy/README.md](deploy/README.md).
