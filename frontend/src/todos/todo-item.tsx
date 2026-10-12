@@ -1,5 +1,9 @@
 import { Trash2Icon } from 'lucide-react'
-import { useDeleteTodo, useUpdateTodo } from '@/api/generated'
+import {
+  getGetTodosQueryKey,
+  useDeleteTodo,
+  useUpdateTodo,
+} from '@/api/generated'
 import type { TodoResponse } from '@/api/generated/model'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -13,8 +17,9 @@ function formatDueDate(dueDate: string) {
 }
 
 export function TodoItem({ todo }: { todo: TodoResponse }) {
-  const update = useUpdateTodo()
-  const remove = useDeleteTodo()
+  const mutation = { meta: { invalidates: [getGetTodosQueryKey()] } }
+  const update = useUpdateTodo({ mutation })
+  const remove = useDeleteTodo({ mutation })
 
   function toggle(isComplete: boolean) {
     update.mutate({ id: todo.id, data: { ...todo, isComplete } })

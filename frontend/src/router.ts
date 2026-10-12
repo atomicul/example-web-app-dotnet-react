@@ -2,7 +2,9 @@ import {
   MutationCache,
   QueryCache,
   QueryClient,
+  type QueryKey,
   hashKey,
+  matchQuery,
 } from '@tanstack/react-query'
 import { createRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -49,7 +51,13 @@ export const queryClient: QueryClient = new QueryClient({
         notifyMutationError(error)
       }
     },
-    onSettled: () => queryClient.invalidateQueries(),
+    onSettled: (_data, _error, _variables, _onMutateResult, mutation) =>
+      queryClient.invalidateQueries({
+        predicate: (query) =>
+          mutation.meta?.invalidates?.some((queryKey) =>
+            matchQuery({ queryKey }, query),
+          ) ?? true,
+      }),
   }),
   defaultOptions: {
     queries: {
@@ -71,6 +79,8 @@ declare module '@tanstack/react-query' {
     mutationMeta: {
       /** The caller shows the error itself, as a form does under its fields, so it is not toasted. */
       handlesErrors?: boolean
+      /** Key prefixes of the queries the mutation changes, refetched once it settles; every query when left out. */
+      invalidates?: QueryKey[]
     }
   }
 }

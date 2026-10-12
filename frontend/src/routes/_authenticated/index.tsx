@@ -1,5 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { getGetTodosQueryOptions, useCreateTodo } from '@/api/generated'
+import {
+  getGetTodosQueryKey,
+  getGetTodosQueryOptions,
+  useCreateTodo,
+} from '@/api/generated'
 import type { TodoRequest } from '@/api/generated/model'
 import { TodoForm } from '@/todos/todo-form'
 import { TodoList } from '@/todos/todo-list'
@@ -12,7 +16,9 @@ export const Route = createFileRoute('/_authenticated/')({
 
 function TodosPage() {
   const { mutateAsync: createTodo } = useCreateTodo({
-    mutation: { meta: { handlesErrors: true } },
+    mutation: {
+      meta: { handlesErrors: true, invalidates: [getGetTodosQueryKey()] },
+    },
   })
 
   async function add(data: TodoRequest) {
