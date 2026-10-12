@@ -81,7 +81,7 @@ export const getTodos = async ( options?: Parameters<typeof fetcher>[1]): Promis
 
 export const getGetTodosQueryKey = () => {
     return [
-    `/api/v1/todos`
+    'api','v1','todos'
     ] as const;
     }
 
@@ -268,7 +268,7 @@ export const getTodo = async (id: number, options?: Parameters<typeof fetcher>[1
 
 export const getGetTodoQueryKey = (id: number,) => {
     return [
-    `/api/v1/todos/${id}`
+    'api','v1','todos',id
     ] as const;
     }
 

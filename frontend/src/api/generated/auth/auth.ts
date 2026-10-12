@@ -347,7 +347,7 @@ export const mapIdentityApiApiAuthConfirmEmail = async (params: MapIdentityApiAp
 
 export const getMapIdentityApiApiAuthConfirmEmailQueryKey = (params?: MapIdentityApiApiAuthConfirmEmailParams,) => {
     return [
-    `/api/auth/confirmEmail`, ...(params ? [params] : [])
+    'api','auth','confirmEmail', ...(params ? [params] : [])
     ] as const;
     }
 
@@ -765,7 +765,7 @@ export const getApiAuthManageInfo = async ( options?: Parameters<typeof fetcher>
 
 export const getGetApiAuthManageInfoQueryKey = () => {
     return [
-    `/api/auth/manage/info`
+    'api','auth','manage','info'
     ] as const;
     }
 

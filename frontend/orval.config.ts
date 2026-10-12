@@ -12,6 +12,7 @@ export default defineConfig({
       override: {
         mutator: { path: 'src/api/fetcher.ts', name: 'fetcher' },
         fetch: { includeHttpResponseReturnType: false },
+        query: { shouldSplitQueryKey: true },
       },
     },
   },
