@@ -1,6 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Web;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -97,5 +101,42 @@ public class AuthTests(TodoApiFactory factory)
         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
         Assert.True(await db.DataProtectionKeys.AnyAsync(CancellationToken));
+    }
+
+    [Fact]
+    public async Task Keys_are_encrypted_with_the_configured_certificate()
+    {
+        const string password = "Certificate-passw0rd";
+        var certificatePath = Path.GetTempFileName();
+        try
+        {
+            await File.WriteAllBytesAsync(certificatePath, CreateCertificatePfx(password), CancellationToken);
+            await using var server = factory.WithWebHostBuilder(builder => builder
+                .UseSetting("DataProtection:Certificate:Path", certificatePath)
+                .UseSetting("DataProtection:Certificate:Password", password));
+            var keyManager = server.Services.GetRequiredService<IKeyManager>();
+            var activation = DateTimeOffset.UtcNow.AddYears(1);
+
+            var key = keyManager.CreateNewKey(activation, activation.AddDays(90));
+
+            using var scope = server.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var stored = await db.DataProtectionKeys.SingleAsync(row => row.FriendlyName == $"key-{key.KeyId}", CancellationToken);
+            Assert.Contains("EncryptedData", stored.Xml);
+            Assert.DoesNotContain("<value>", stored.Xml);
+            Assert.NotNull(keyManager.GetAllKeys().Single(read => read.KeyId == key.KeyId).Descriptor);
+        }
+        finally
+        {
+            File.Delete(certificatePath);
+        }
+    }
+
+    private static byte[] CreateCertificatePfx(string password)
+    {
+        using var rsa = RSA.Create(2048);
+        var request = new CertificateRequest("CN=TodoApi.Tests", rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+        using var certificate = request.CreateSelfSigned(DateTimeOffset.UtcNow, DateTimeOffset.UtcNow.AddDays(1));
+        return certificate.Export(X509ContentType.Pfx, password);
     }
 }

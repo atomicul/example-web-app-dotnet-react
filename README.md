@@ -77,8 +77,11 @@ the `RegisterRequest` schema of its OpenAPI document, so after changing them, `m
 Every page of the SPA except login, registration and email confirmation requires a session.
 
 The app keeps the keys that protect its cookies, bearer tokens and emailed links in the database, so sessions survive
-restarts and redeploys and are shared by every instance. The keys are stored unencrypted, so anyone who can read the
-database can forge sessions; restrict access to it accordingly.
+restarts and redeploys and are shared by every instance. Without a certificate, the keys are stored unencrypted, so
+anyone who can read the database can forge sessions; restrict access to it accordingly. Setting
+`DataProtection:Certificate:Path` to a PFX file, and `DataProtection:Certificate:Password` to its password, encrypts
+every new key with that certificate. Keys created before stay readable without it until they expire after 90 days.
+Replacing or removing the certificate makes the keys it encrypted unreadable, which logs every user out.
 
 ## Rate limiting
 
@@ -116,6 +119,8 @@ list items take their index as the last level. Both commands read the same setti
 |---|---|---|
 | `ConnectionStrings__Default` | _required_ | The SQL Server connection string, e.g. `Server=db;Database=TodoApp;User Id=todo;Password=...;TrustServerCertificate=True` |
 | `SpaUrl` | the API's own origin | The origin of links in emails |
+| `DataProtection__Certificate__Path` | none | A PFX certificate that encrypts the keys protecting sessions, e.g. mounted read-only and readable by the container's non-root user |
+| `DataProtection__Certificate__Password` | none | The password of that PFX file |
 | `TrustedProxies__Addresses__0`, `__1`, ... | none | IP addresses of reverse proxies whose `X-Forwarded-For` and `X-Forwarded-Proto` are trusted |
 | `TrustedProxies__Networks__0`, `__1`, ... | none | CIDR ranges of trusted reverse proxies, e.g. `172.16.0.0/12` |
 | `RateLimits__Api__PermitLimit`, `RateLimits__Api__Window` | `100`, `00:01:00` | Requests per client IP per window, for every `/api` request |

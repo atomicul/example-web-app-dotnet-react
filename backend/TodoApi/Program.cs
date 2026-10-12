@@ -16,7 +16,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 if (!isGeneratingOpenApiDocument)
 {
-    builder.Services.AddDataProtection().PersistKeysToDbContext<AppDbContext>();
+    builder.Services.AddDataProtection()
+        .PersistKeysToDbContext<AppDbContext>()
+        .ProtectKeysWithConfiguredCertificate(builder.Configuration);
 }
 
 builder.Services.AddAuthorization();
