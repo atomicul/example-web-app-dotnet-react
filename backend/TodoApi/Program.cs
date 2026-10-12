@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using TodoApi;
 using TodoApi.Auth;
@@ -8,6 +9,7 @@ using TodoApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 var appName = builder.Configuration["AppName"] ?? builder.Environment.ApplicationName;
+var isGeneratingOpenApiDocument = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
@@ -44,8 +46,9 @@ app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
-    using (var scope = app.Services.CreateScope())
+    if (!isGeneratingOpenApiDocument)
     {
+        using var scope = app.Services.CreateScope();
         scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
     }
 
