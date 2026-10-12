@@ -35,12 +35,12 @@ public static class TodoEndpoints
     }
 
     /// <summary>Creates a todo owned by the current user.</summary>
-    public static async Task<Created<TodoResponse>> Create(TodoRequest request, AppDbContext db, CancellationToken ct)
+    public static async Task<CreatedAtRoute<TodoResponse>> Create(TodoRequest request, AppDbContext db, CancellationToken ct)
     {
         var todo = new Todo { Title = request.Title, IsComplete = request.IsComplete, DueDate = request.DueDate };
         db.Todos.Add(todo);
         await db.SaveChangesAsync(ct);
-        return TypedResults.Created($"/todos/{todo.Id}", TodoResponse.From(todo));
+        return TypedResults.CreatedAtRoute(TodoResponse.From(todo), "GetTodo", new { id = todo.Id });
     }
 
     /// <summary>Replaces one of the current user's todos.</summary>
