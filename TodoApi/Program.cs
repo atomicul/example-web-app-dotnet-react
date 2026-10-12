@@ -15,6 +15,7 @@ builder.Services.AddAuthorization();
 builder.Services.AddIdentityCore<IdentityUser>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddApiEndpoints();
+builder.Services.AddTransient<IEmailSender<IdentityUser>, LoggingEmailSender>();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddValidation();
