@@ -12,7 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 var appName = builder.Configuration["AppName"] ?? builder.Environment.ApplicationName;
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("TodoDb"));
 
 builder.Services.AddAuthorization();
