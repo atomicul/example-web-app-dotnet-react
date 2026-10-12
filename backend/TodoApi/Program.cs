@@ -15,9 +15,8 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(buil
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => options.SignIn.RequireConfirmedEmail = true)
     .AddEntityFrameworkStores<AppDbContext>();
-builder.Services.AddTransient<LoggingEmailSender>();
-builder.Services.AddTransient<IEmailSender<IdentityUser>>(services =>
-    ActivatorUtilities.CreateInstance<SpaLinkEmailSender>(services, services.GetRequiredService<LoggingEmailSender>()));
+builder.Services.AddKeyedTransient<IEmailSender<IdentityUser>, LoggingEmailSender>(SpaLinkEmailSender.TransportKey);
+builder.Services.AddTransient<IEmailSender<IdentityUser>, SpaLinkEmailSender>();
 builder.Services.AddTrustedProxies(builder.Configuration);
 builder.Services.AddRateLimits(builder.Configuration);
 builder.Services.AddHealthChecks();

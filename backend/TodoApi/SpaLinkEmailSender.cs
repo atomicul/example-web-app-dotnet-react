@@ -10,8 +10,13 @@ namespace TodoApi;
 /// The page lives at the <c>SpaUrl</c> setting, or on the API's own origin when the API serves the SPA itself.
 /// Links reach the transport HTML-encoded, just as Identity hands them over.
 /// </summary>
-public class SpaLinkEmailSender(IEmailSender<IdentityUser> transport, IConfiguration configuration) : IEmailSender<IdentityUser>
+public class SpaLinkEmailSender(
+    [FromKeyedServices(SpaLinkEmailSender.TransportKey)] IEmailSender<IdentityUser> transport,
+    IConfiguration configuration) : IEmailSender<IdentityUser>
 {
+    /// <summary>The service key of the <see cref="IEmailSender{TUser}"/> that delivers the emails.</summary>
+    public const string TransportKey = "transport";
+
     private const string ConfirmEmailPage = "/confirm-email";
 
     public Task SendConfirmationLinkAsync(IdentityUser user, string email, string confirmationLink) =>
