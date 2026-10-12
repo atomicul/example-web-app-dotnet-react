@@ -11,7 +11,7 @@ import {
 type AuthCardProps = {
   title: string
   description: string
-  footer: ReactNode
+  footer?: ReactNode
   children: ReactNode
 }
 
@@ -29,9 +29,11 @@ export function AuthCard({
           <CardDescription>{description}</CardDescription>
         </CardHeader>
         <CardContent>{children}</CardContent>
-        <CardFooter className="text-muted-foreground text-sm">
-          {footer}
-        </CardFooter>
+        {footer && (
+          <CardFooter className="text-muted-foreground text-sm">
+            {footer}
+          </CardFooter>
+        )}
       </Card>
     </main>
   )
