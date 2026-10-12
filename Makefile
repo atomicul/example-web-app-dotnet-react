@@ -48,5 +48,5 @@ check: ## Run formatting, build, lint, type checks and tests
 	pnpm -C $(FRONTEND) typecheck
 	pnpm -C $(FRONTEND) test
 
-clean: ## Remove build output
-	rm -rf $(OUT) $(FRONTEND)/dist
+clean: ## Remove build output, including the backend bin and obj directories
+	rm -rf $(OUT) $(FRONTEND)/dist backend/*/bin backend/*/obj
