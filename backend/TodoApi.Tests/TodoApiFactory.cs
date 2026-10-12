@@ -45,6 +45,14 @@ public class TodoApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             services.AddKeyedSingleton<IEmailSender<IdentityUser>>(SpaLinkEmailSender.TransportKey, Emails));
     }
 
+    /// <summary>
+    /// A separate server over the same database with the given settings on top. Each has its own rate limiter, so its
+    /// requests don't count against other tests.
+    /// </summary>
+    public WebApplicationFactory<Program> WithSettings(Dictionary<string, string?> settings) =>
+        WithWebHostBuilder(builder =>
+            builder.ConfigureAppConfiguration(configuration => configuration.AddInMemoryCollection(settings)));
+
     public override async ValueTask DisposeAsync()
     {
         await base.DisposeAsync();
