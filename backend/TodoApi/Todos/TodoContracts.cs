@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using TodoApi.Data;
 
 namespace TodoApi.Todos;
 

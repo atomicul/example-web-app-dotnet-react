@@ -1,4 +1,4 @@
-namespace TodoApi.Data;
+namespace TodoApi.Todos;
 
 public class Todo
 {
