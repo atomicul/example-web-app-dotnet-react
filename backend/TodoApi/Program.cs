@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TodoApi;
+using TodoApi.Auth;
 using TodoApi.Todos;
 using TodoApi.Data;
 
@@ -11,11 +12,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUser, HttpCurrentUser>();
 builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("TodoDb"));
 
-builder.Services.AddAuthentication(IdentityConstants.BearerScheme).AddBearerToken(IdentityConstants.BearerScheme);
 builder.Services.AddAuthorization();
-builder.Services.AddIdentityCore<IdentityUser>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddApiEndpoints();
+builder.Services.AddIdentityApiEndpoints<IdentityUser>()
+    .AddEntityFrameworkStores<AppDbContext>();
 builder.Services.AddTransient<IEmailSender<IdentityUser>, LoggingEmailSender>();
 
 builder.Services.AddProblemDetails();
@@ -49,7 +48,7 @@ if (app.Environment.IsDevelopment())
 }
 
 var api = app.MapGroup("/api");
-api.MapGroup("/auth").MapIdentityApi<IdentityUser>().WithTags("Auth");
+api.MapAuth();
 api.MapGroup("/v1").MapTodos();
 api.MapFallback(() => TypedResults.NotFound());
 
