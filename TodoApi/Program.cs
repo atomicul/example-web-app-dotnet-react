@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using TodoApi;
+using TodoApi.Todos;
 using TodoApi.Data;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using TodoApi.Data;
 
-namespace TodoApi;
+namespace TodoApi.Todos;
 
 /// <summary>Payload used to create or replace a todo.</summary>
 /// <param name="Title">Short description of the task.</param>

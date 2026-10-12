@@ -2,7 +2,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
 using TodoApi.Data;
 
-namespace TodoApi;
+namespace TodoApi.Todos;
 
 public static class TodoEndpoints
 {
