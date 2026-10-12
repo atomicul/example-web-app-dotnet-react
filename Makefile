@@ -1,4 +1,5 @@
 API_URL ?= http://localhost:5080
+SPA_URL ?= http://localhost:5173
 OUT ?= out
 
 SOLUTION := backend/TodoApp.slnx
@@ -20,7 +21,7 @@ dev: ## Run the API and the Vite dev server together
 	$(MAKE) -j2 dev-backend dev-frontend
 
 dev-backend: ## Run only the API with dotnet watch
-	dotnet watch --project $(API_PROJECT)
+	SpaUrl=$(SPA_URL) dotnet watch --project $(API_PROJECT)
 
 dev-frontend: ## Run only the Vite dev server
 	API_URL=$(API_URL) pnpm -C $(FRONTEND) dev
