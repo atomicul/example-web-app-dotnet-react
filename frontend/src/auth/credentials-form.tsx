@@ -11,6 +11,7 @@ import {
   FieldLabel,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
+import { describedErrors } from '@/lib/described-errors'
 
 type CredentialsFormProps = {
   schema: z.ZodType<LoginRequest, LoginRequest>
@@ -25,7 +26,7 @@ export function CredentialsForm({
   onSubmit,
 }: CredentialsFormProps) {
   const form = useForm<LoginRequest>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(schema, { error: describedErrors(schema) }),
     defaultValues: { email: '', password: '' },
   })
   const { errors, isSubmitting } = form.formState
