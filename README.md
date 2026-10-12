@@ -22,6 +22,7 @@ Every API route lives under `/api` (`/api/auth/*`, `/api/v1/todos`).
 
 | Target | Does |
 |---|---|
+| `make help` | Lists the targets; also what a bare `make` runs |
 | `make install` | Restores the .NET solution and installs the frontend packages |
 | `make dev` | Runs the API on `:5080` with `dotnet watch` and the Vite dev server on `:5173`, which proxies `/api` to the API |
 | `make api` | Builds the API, copies its OpenAPI document to `frontend/openapi.json` and regenerates the frontend client |
