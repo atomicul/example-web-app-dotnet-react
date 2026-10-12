@@ -40,7 +40,7 @@ SQL Server listens on `127.0.0.1` only. It runs as the Express edition, which is
 ### `setup-webapp`
 
 Installs the ASP.NET Core runtime and the release's zip, and runs the app as the `todoapp` systemd service on port
-`8080`, then waits for `/health` to answer `Healthy`. It serves plain HTTP: put a reverse proxy in front of it for
+`80`, then waits for `/health` to answer `Healthy`. It serves plain HTTP: put a reverse proxy in front of it for
 HTTPS, and set the API's `TrustedProxies` (see the [root README](../README.md#rate-limiting)).
 
 It only asks for what the host doesn't have yet:

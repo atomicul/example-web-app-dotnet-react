@@ -22,7 +22,7 @@ mssql_port: 1433
 
 todoapp_config_dir: /etc/todoapp
 todoapp_install_dir: /opt/todoapp
-todoapp_port: 8080
+todoapp_port: 80
 todoapp_database: TodoApp
 todoapp_database_login: todoapp
 
