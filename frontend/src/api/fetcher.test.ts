@@ -20,7 +20,7 @@ describe('fetcher', () => {
   it('resolves the JSON body of a successful response', async () => {
     respondWith(json([{ id: 1, title: 'Buy milk' }], 200))
 
-    await expect(fetcher('/api/v1/todos', {})).resolves.toEqual([
+    await expect(fetcher('/api/todos', {})).resolves.toEqual([
       { id: 1, title: 'Buy milk' },
     ])
   })
@@ -29,7 +29,7 @@ describe('fetcher', () => {
     respondWith(new Response(null, { status: 204 }))
 
     await expect(
-      fetcher('/api/v1/todos/1', { method: 'DELETE' }),
+      fetcher('/api/todos/1', { method: 'DELETE' }),
     ).resolves.toBeUndefined()
   })
 
@@ -40,7 +40,7 @@ describe('fetcher', () => {
     }
     respondWith(json(problem, 400, 'application/problem+json'))
 
-    const error = await fetcher('/api/v1/todos', { method: 'POST' }).catch(
+    const error = await fetcher('/api/todos', { method: 'POST' }).catch(
       (e: unknown) => e,
     )
 
@@ -55,7 +55,7 @@ describe('fetcher', () => {
   it('throws an ApiError without a problem when the error has no body', async () => {
     respondWith(new Response(null, { status: 401 }))
 
-    const error = await fetcher('/api/v1/todos', {}).catch((e: unknown) => e)
+    const error = await fetcher('/api/todos', {}).catch((e: unknown) => e)
 
     expect(error).toMatchObject({ status: 401, problem: undefined, errors: {} })
   })
@@ -65,7 +65,7 @@ describe('fetcher', () => {
       new Response(null, { status: 429, headers: { 'retry-after': '42' } }),
     )
 
-    const error = await fetcher('/api/v1/todos', {}).catch((e: unknown) => e)
+    const error = await fetcher('/api/todos', {}).catch((e: unknown) => e)
 
     expect(error).toMatchObject({ status: 429, retryAfter: 42 })
     expect(errorMessage(error)).toContain('try again in 42 seconds')
@@ -74,7 +74,7 @@ describe('fetcher', () => {
   it('leaves the wait unknown when a 429 has no Retry-After header', async () => {
     respondWith(new Response(null, { status: 429 }))
 
-    const error = await fetcher('/api/v1/todos', {}).catch((e: unknown) => e)
+    const error = await fetcher('/api/todos', {}).catch((e: unknown) => e)
 
     expect(error).toMatchObject({ status: 429, retryAfter: undefined })
     expect(errorMessage(error)).toContain('try again in a moment')

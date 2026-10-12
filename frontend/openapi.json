@@ -395,7 +395,7 @@
         ]
       }
     },
-    "/api/v1/todos": {
+    "/api/todos": {
       "get": {
         "tags": [
           "Todos"
@@ -474,7 +474,7 @@
         ]
       }
     },
-    "/api/v1/todos/{id}": {
+    "/api/todos/{id}": {
       "get": {
         "tags": [
           "Todos"

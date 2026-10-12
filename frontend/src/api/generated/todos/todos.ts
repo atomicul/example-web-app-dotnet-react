@@ -58,7 +58,7 @@ export const getGetTodosUrl = () => {
 
 
 
-  return `/api/v1/todos`
+  return `/api/todos`
 }
 
 /**
@@ -81,7 +81,7 @@ export const getTodos = async ( options?: Parameters<typeof fetcher>[1]): Promis
 
 export const getGetTodosQueryKey = () => {
     return [
-    'api','v1','todos'
+    'api','todos'
     ] as const;
     }
 
@@ -158,7 +158,7 @@ export const getCreateTodoUrl = () => {
 
 
 
-  return `/api/v1/todos`
+  return `/api/todos`
 }
 
 /**
@@ -245,7 +245,7 @@ export const useCreateTodo = <TError = ErrorType<HttpValidationProblemDetails | 
 
 
 
-  return `/api/v1/todos/${id}`
+  return `/api/todos/${id}`
 }
 
 /**
@@ -268,7 +268,7 @@ export const getTodo = async (id: number, options?: Parameters<typeof fetcher>[1
 
 export const getGetTodoQueryKey = (id: number,) => {
     return [
-    'api','v1','todos',id
+    'api','todos',id
     ] as const;
     }
 
@@ -345,7 +345,7 @@ export const getUpdateTodoUrl = (id: number,) => {
 
 
 
-  return `/api/v1/todos/${id}`
+  return `/api/todos/${id}`
 }
 
 /**
@@ -433,7 +433,7 @@ export const useUpdateTodo = <TError = ErrorType<HttpValidationProblemDetails | 
 
 
 
-  return `/api/v1/todos/${id}`
+  return `/api/todos/${id}`
 }
 
 /**

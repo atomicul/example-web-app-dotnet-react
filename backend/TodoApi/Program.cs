@@ -68,7 +68,7 @@ app.UseRateLimiter();
 
 var api = app.MapGroup("/api").RequireRateLimiting(RateLimits.Api);
 api.MapAuth();
-api.MapGroup("/v1").MapTodos();
+api.MapTodos();
 api.MapFallback(() => TypedResults.NotFound());
 app.MapFallbackToFile("index.html");
 
