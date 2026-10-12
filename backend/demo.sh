@@ -35,8 +35,8 @@ api() {
 credentials() { jq -nc --arg email "$1" --arg password "$PASSWORD" '{$email, $password}'; }
 
 register_and_login() {
-  api 200 POST /auth/register '' "$(credentials "$1")"
-  api 200 POST /auth/login '' "$(credentials "$1")"
+  api 200 POST /api/auth/register '' "$(credentials "$1")"
+  api 200 POST /api/auth/login '' "$(credentials "$1")"
 }
 
 step "Register and log in alice and bob (bearer tokens, no cookies)"
@@ -47,37 +47,37 @@ register_and_login "bob-$RUN_ID@example.com"
 BOB_TOKEN=$(jq -r .accessToken <<<"$BODY")
 
 step "Anonymous requests are rejected"
-api 401 GET /todos
+api 401 GET /api/v1/todos
 
 step "Alice creates todos"
-api 201 POST /todos "$ALICE_TOKEN" '{"title":"Buy milk","dueDate":"2099-12-24"}'
+api 201 POST /api/v1/todos "$ALICE_TOKEN" '{"title":"Buy milk","dueDate":"2099-12-24"}'
 MILK_ID=$(jq -r .id <<<"$BODY")
-api 201 POST /todos "$ALICE_TOKEN" '{"title":"Write report","isComplete":false}'
+api 201 POST /api/v1/todos "$ALICE_TOKEN" '{"title":"Write report","isComplete":false}'
 REPORT_ID=$(jq -r .id <<<"$BODY")
 
 step "Invalid payloads return a validation problem"
-api 400 POST /todos "$ALICE_TOKEN" '{"title":""}'
-api 400 POST /todos "$ALICE_TOKEN" "$(jq -nc '{title: ("x" * 201)}')"
-api 400 POST /todos "$ALICE_TOKEN" '{"title":"Pay rent","dueDate":"2020-01-01"}'
+api 400 POST /api/v1/todos "$ALICE_TOKEN" '{"title":""}'
+api 400 POST /api/v1/todos "$ALICE_TOKEN" "$(jq -nc '{title: ("x" * 201)}')"
+api 400 POST /api/v1/todos "$ALICE_TOKEN" '{"title":"Pay rent","dueDate":"2020-01-01"}'
 
 step "Each user only sees their own todos"
-api 200 GET /todos "$ALICE_TOKEN"
-api 200 GET /todos "$BOB_TOKEN"
+api 200 GET /api/v1/todos "$ALICE_TOKEN"
+api 200 GET /api/v1/todos "$BOB_TOKEN"
 
 step "Bob cannot read, change or delete alice's todo"
-api 404 GET "/todos/$MILK_ID" "$BOB_TOKEN"
-api 404 PUT "/todos/$MILK_ID" "$BOB_TOKEN" '{"title":"Hijacked","isComplete":true}'
-api 404 DELETE "/todos/$MILK_ID" "$BOB_TOKEN"
+api 404 GET "/api/v1/todos/$MILK_ID" "$BOB_TOKEN"
+api 404 PUT "/api/v1/todos/$MILK_ID" "$BOB_TOKEN" '{"title":"Hijacked","isComplete":true}'
+api 404 DELETE "/api/v1/todos/$MILK_ID" "$BOB_TOKEN"
 
 step "Alice updates and deletes her todos"
-api 204 PUT "/todos/$MILK_ID" "$ALICE_TOKEN" '{"title":"Buy oat milk","isComplete":true}'
-api 200 GET "/todos/$MILK_ID" "$ALICE_TOKEN"
-api 204 DELETE "/todos/$REPORT_ID" "$ALICE_TOKEN"
-api 200 GET /todos "$ALICE_TOKEN"
+api 204 PUT "/api/v1/todos/$MILK_ID" "$ALICE_TOKEN" '{"title":"Buy oat milk","isComplete":true}'
+api 200 GET "/api/v1/todos/$MILK_ID" "$ALICE_TOKEN"
+api 204 DELETE "/api/v1/todos/$REPORT_ID" "$ALICE_TOKEN"
+api 200 GET /api/v1/todos "$ALICE_TOKEN"
 
 step "Refresh the access token and query the account"
-api 200 POST /auth/refresh '' "$(jq -nc --arg refreshToken "$ALICE_REFRESH" '{$refreshToken}')"
+api 200 POST /api/auth/refresh '' "$(jq -nc --arg refreshToken "$ALICE_REFRESH" '{$refreshToken}')"
 ALICE_TOKEN=$(jq -r .accessToken <<<"$BODY")
-api 200 GET /auth/manage/info "$ALICE_TOKEN"
+api 200 GET /api/auth/manage/info "$ALICE_TOKEN"
 
 step "All checks passed"

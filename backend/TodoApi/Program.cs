@@ -48,9 +48,10 @@ if (app.Environment.IsDevelopment())
         app.Logger.LogInformation("Swagger UI: {SwaggerUrls}", string.Join(", ", app.Urls.Select(url => $"{url}/swagger"))));
 }
 
-app.MapGroup("/auth").MapIdentityApi<IdentityUser>().WithTags("Auth");
-var v1 = app.MapGroup("/v1");
-v1.MapTodos();
+var api = app.MapGroup("/api");
+api.MapGroup("/auth").MapIdentityApi<IdentityUser>().WithTags("Auth");
+api.MapGroup("/v1").MapTodos();
+api.MapFallback(() => TypedResults.NotFound());
 
 app.Lifetime.ApplicationStarted.Register(() =>
     app.Logger.LogInformation("{AppName} is ready to accept traffic on {Urls}", appName, string.Join(", ", app.Urls)));

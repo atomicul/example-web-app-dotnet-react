@@ -19,7 +19,7 @@ public class BearerSecurityTransformer : IOpenApiDocumentTransformer, IOpenApiOp
         {
             Type = SecuritySchemeType.Http,
             Scheme = "bearer",
-            Description = "Access token returned by `POST /auth/login`.",
+            Description = "Access token returned by `POST /api/auth/login`.",
         };
         return Task.CompletedTask;
     }
