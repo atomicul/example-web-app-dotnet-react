@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Walks through the Todo API: registration, bearer login, per-user isolation and validation.
-# Start the API first with: dotnet run --project TodoApi
+# Start the API first with: dotnet run --project backend/TodoApi
 set -euo pipefail
 
 BASE_URL="${BASE_URL:-http://localhost:5080}"
