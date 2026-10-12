@@ -1,0 +1,12 @@
+---
+- name: Require Ubuntu 24.04 on x86_64
+  ansible.builtin.assert:
+    that:
+      - ansible_facts.distribution == 'Ubuntu'
+      - ansible_facts.distribution_version == '24.04'
+      - ansible_facts.architecture == 'x86_64'
+    fail_msg: >-
+      The playbooks support Ubuntu 24.04 on x86_64, which SQL Server and every pinned package are built for; this host
+      runs {{ ansible_facts.distribution }} {{ ansible_facts.distribution_version }} on
+      {{ ansible_facts.architecture }}.
+    quiet: true

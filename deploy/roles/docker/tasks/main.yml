@@ -1,0 +1,33 @@
+---
+- name: Add Docker's signing key
+  ansible.builtin.get_url:
+    url: "{{ docker_key_url }}"
+    dest: /etc/apt/keyrings/docker.asc
+    checksum: "{{ docker_key_checksum }}"
+    mode: "0644"
+
+- name: Add Docker's repository
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/docker.sources
+    mode: "0644"
+    content: |
+      Types: deb
+      URIs: https://download.docker.com/linux/ubuntu
+      Suites: noble
+      Components: stable
+      Architectures: amd64
+      Signed-By: /etc/apt/keyrings/docker.asc
+
+- name: Install Docker
+  ansible.builtin.apt:
+    name:
+      - docker-ce={{ docker_version }}
+      - docker-ce-cli={{ docker_version }}
+      - containerd.io={{ containerd_version }}
+    update_cache: true
+
+- name: Start Docker now and on boot
+  ansible.builtin.systemd_service:
+    name: docker
+    state: started
+    enabled: true

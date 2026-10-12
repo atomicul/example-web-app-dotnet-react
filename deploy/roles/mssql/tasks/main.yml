@@ -1,0 +1,86 @@
+---
+- name: Add Microsoft's signing key
+  ansible.builtin.get_url:
+    url: "{{ microsoft_key_url }}"
+    dest: /etc/apt/keyrings/microsoft.asc
+    checksum: "{{ microsoft_key_checksum }}"
+    mode: "0644"
+
+- name: Add Microsoft's SQL Server and tools repositories
+  ansible.builtin.copy:
+    dest: /etc/apt/sources.list.d/microsoft.sources
+    mode: "0644"
+    content: |
+      Types: deb
+      URIs: https://packages.microsoft.com/ubuntu/24.04/mssql-server-2025 https://packages.microsoft.com/ubuntu/24.04/prod
+      Suites: noble
+      Components: main
+      Architectures: amd64
+      Signed-By: /etc/apt/keyrings/microsoft.asc
+
+- name: Install SQL Server and its command line tools
+  ansible.builtin.apt:
+    name:
+      - mssql-server={{ mssql_server_version }}
+      - mssql-tools18={{ mssql_tools_version }}
+      - msodbcsql18={{ mssql_odbc_version }}
+    update_cache: true
+  environment:
+    ACCEPT_EULA: "Y"
+
+- name: Create the app's configuration directory
+  ansible.builtin.file:
+    path: "{{ todoapp_config_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Keep the generated sa password on the host, for later migrations
+  ansible.builtin.template:
+    src: database-admin.env.j2
+    dest: "{{ todoapp_config_dir }}/database-admin.env"
+    force: false
+    mode: "0600"
+  vars:
+    mssql_generated_sa_password: "{{ lookup('ansible.builtin.env', 'TODOAPP_SA_PASSWORD') }}"
+  no_log: true
+
+- name: Read the sa password
+  ansible.builtin.slurp:
+    src: "{{ todoapp_config_dir }}/database-admin.env"
+  register: mssql_admin_env
+  no_log: true
+
+- name: Remember the sa password for the next tasks
+  ansible.builtin.set_fact:
+    mssql_sa_password: "{{ mssql_admin_env.content | b64decode | regex_search('^MSSQL_SA_PASSWORD=(.*)$', '\\1', multiline=True) | first }}"
+  no_log: true
+
+- name: Set SQL Server up, listening on localhost only, on its first install
+  ansible.builtin.command: /opt/mssql/bin/mssql-conf --noprompt setup
+  args:
+    creates: /var/opt/mssql/data/master.mdf
+  environment:
+    ACCEPT_EULA: "Y"
+    MSSQL_PID: "{{ mssql_edition }}"
+    MSSQL_SA_PASSWORD: "{{ mssql_sa_password }}"
+    MSSQL_IP_ADDRESS: 127.0.0.1
+    MSSQL_TCP_PORT: "{{ mssql_port }}"
+  no_log: true
+
+- name: Start SQL Server now and on boot
+  ansible.builtin.systemd_service:
+    name: mssql-server
+    state: started
+    enabled: true
+
+- name: Wait until SQL Server accepts logins
+  ansible.builtin.command:
+    argv: [/opt/mssql-tools18/bin/sqlcmd, -C, -S, "127.0.0.1,{{ mssql_port }}", -U, sa, -b, -Q, SELECT 1]
+  environment:
+    SQLCMDPASSWORD: "{{ mssql_sa_password }}"
+  register: mssql_ready
+  until: mssql_ready.rc == 0
+  retries: 30
+  delay: 2
+  changed_when: false
+  no_log: true

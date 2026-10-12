@@ -1,0 +1,10 @@
+---
+- name: Set up SQL Server and migrate the app's database to the release
+  hosts: all
+  become: true
+  roles:
+    - supported_host
+    - mssql
+    - docker
+    - migrate
+    - database_login

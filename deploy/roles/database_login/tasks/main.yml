@@ -1,0 +1,76 @@
+---
+- name: Look for the app's login
+  ansible.builtin.command:
+    argv:
+      - /opt/mssql-tools18/bin/sqlcmd
+      - -C
+      - -S
+      - 127.0.0.1,{{ mssql_port }}
+      - -U
+      - sa
+      - -b
+      - -h
+      - "-1"
+      - -W
+      - -Q
+      - SET NOCOUNT ON; SELECT COUNT(*) FROM sys.server_principals WHERE name = N'{{ todoapp_database_login }}'
+  environment:
+    SQLCMDPASSWORD: "{{ mssql_sa_password }}"
+  register: database_login_count
+  changed_when: false
+  no_log: true
+
+- name: Create the app's login with the generated password
+  ansible.builtin.command:
+    argv:
+      - /opt/mssql-tools18/bin/sqlcmd
+      - -C
+      - -S
+      - 127.0.0.1,{{ mssql_port }}
+      - -U
+      - sa
+      - -b
+      - -Q
+      - CREATE LOGIN [{{ todoapp_database_login }}] WITH PASSWORD = N'$(TODOAPP_DATABASE_PASSWORD)'
+  environment:
+    SQLCMDPASSWORD: "{{ mssql_sa_password }}"
+    TODOAPP_DATABASE_PASSWORD: "{{ lookup('ansible.builtin.env', 'TODOAPP_DATABASE_PASSWORD') }}"
+  register: database_login_created
+  when: database_login_count.stdout | trim == '0'
+  changed_when: true
+  no_log: true
+
+- name: Show the app's database password, this once
+  ansible.builtin.debug:
+    msg:
+      - "Created the database login '{{ todoapp_database_login }}' with this password:"
+      - "{{ lookup('ansible.builtin.env', 'TODOAPP_DATABASE_PASSWORD') }}"
+      - It is shown only this once and stored nowhere. Save it; setup-webapp asks for it.
+  when: database_login_count.stdout | trim == '0'
+
+- name: Let the app's login read and write the app's database
+  ansible.builtin.command:
+    argv:
+      - /opt/mssql-tools18/bin/sqlcmd
+      - -C
+      - -S
+      - 127.0.0.1,{{ mssql_port }}
+      - -U
+      - sa
+      - -d
+      - "{{ todoapp_database }}"
+      - -b
+      - -Q
+      - >-
+        IF DATABASE_PRINCIPAL_ID(N'{{ todoapp_database_login }}') IS NULL
+        BEGIN
+          CREATE USER [{{ todoapp_database_login }}] FOR LOGIN [{{ todoapp_database_login }}];
+          ALTER ROLE db_datareader ADD MEMBER [{{ todoapp_database_login }}];
+          ALTER ROLE db_datawriter ADD MEMBER [{{ todoapp_database_login }}];
+          PRINT 'Created';
+        END
+  environment:
+    SQLCMDPASSWORD: "{{ mssql_sa_password }}"
+  register: database_login_user
+  changed_when: "'Created' in database_login_user.stdout"
+  no_log: true

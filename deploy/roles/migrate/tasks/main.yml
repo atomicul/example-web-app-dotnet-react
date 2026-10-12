@@ -1,0 +1,13 @@
+---
+- name: Migrate the database with the image of {{ release_tag }}
+  ansible.builtin.command:
+    argv:
+      - docker
+      - run
+      - --rm
+      - --network=host
+      - --env-file={{ todoapp_config_dir }}/database-admin.env
+      - ghcr.io/{{ image_repository }}:{{ app_version }}
+      - migrate
+  register: migrate_result
+  changed_when: "'No migrations were applied' not in migrate_result.stdout"
