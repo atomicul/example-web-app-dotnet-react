@@ -38,7 +38,6 @@ ASP.NET Core Identity accepts two schemes:
 
 - **Cookies** for the SPA. It logs in with `POST /api/auth/login?useCookies=true` and gets an HttpOnly cookie, so no
   token is ever visible to JavaScript. `POST /api/auth/logout` clears it.
-- **Bearer tokens** for scripts and Swagger UI (`/swagger` in Development). `backend/demo.sh` walks through the
-  API this way.
+- **Bearer tokens** for scripts and Swagger UI (`/swagger` in Development).
 
 Every page of the SPA except login and registration requires a session.
