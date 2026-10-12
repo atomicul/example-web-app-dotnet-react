@@ -44,3 +44,16 @@ jobs:
           make api
           git status --porcelain
           test -z "$(git status --porcelain)"
+
+  image:
+    if: ${{ !startsWith(github.ref, 'refs/tags/') }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Check the Docker image builds
+        uses: docker/build-push-action@v7
+        with:
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
