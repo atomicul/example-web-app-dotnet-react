@@ -1,6 +1,7 @@
 API_URL ?= http://localhost:5080
 SPA_URL ?= http://localhost:5173
 OUT ?= out
+VERSION ?=
 
 SOLUTION := backend/TodoApp.slnx
 API_PROJECT := backend/TodoApi
@@ -33,7 +34,7 @@ api: ## Regenerate the frontend client from the API OpenAPI document
 
 build: ## Publish the API to out/ with the built SPA in out/wwwroot
 	rm -rf $(OUT)
-	dotnet publish $(API_PROJECT) -c Release -o $(OUT)
+	dotnet publish $(API_PROJECT) -c Release -o $(OUT) $(if $(VERSION),-p:Version=$(VERSION))
 	pnpm -C $(FRONTEND) build
 	mkdir -p $(OUT)/wwwroot
 	cp -R $(FRONTEND)/dist/. $(OUT)/wwwroot/
