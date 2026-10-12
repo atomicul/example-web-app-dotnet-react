@@ -14,9 +14,11 @@ import type { LoginRequest } from '@/api/generated/model'
 export function useAuth() {
   const queryClient = useQueryClient()
   const router = useRouter()
-  const { mutateAsync: postLogin } = usePostApiAuthLogin()
+  const showsErrorsInForm = { mutation: { meta: { handlesErrors: true } } }
+  const { mutateAsync: postLogin } = usePostApiAuthLogin(showsErrorsInForm)
   const { mutateAsync: postLogout } = usePostApiAuthLogout()
-  const { mutateAsync: postRegister } = usePostApiAuthRegister()
+  const { mutateAsync: postRegister } =
+    usePostApiAuthRegister(showsErrorsInForm)
 
   async function resetSession() {
     queryClient.removeQueries()

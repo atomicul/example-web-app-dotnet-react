@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { errorMessage, isTooManyRequests } from '@/api/fetcher'
+import { isTooManyRequests } from '@/api/fetcher'
 import { usePostApiAuthResendConfirmationEmail } from '@/api/generated'
 import { Button } from '@/components/ui/button'
 import { useCooldown } from '@/lib/use-cooldown'
@@ -9,7 +9,7 @@ const EMAIL_COOLDOWN_SECONDS = 60
 
 /**
  * Asks Identity to email a new confirmation link to the given address, then waits out the API's
- * email limit. A rate-limited request is toasted for every mutation, so it only restarts the wait.
+ * email limit. Failures are toasted for every mutation, so a rate-limited one only restarts the wait.
  */
 export function ResendConfirmationButton({ email }: { email: string }) {
   const cooldown = useCooldown()
@@ -22,8 +22,6 @@ export function ResendConfirmationButton({ email }: { email: string }) {
       onError: (error) => {
         if (isTooManyRequests(error)) {
           cooldown.start(error.retryAfter ?? EMAIL_COOLDOWN_SECONDS)
-        } else {
-          toast.error(errorMessage(error))
         }
       },
     },

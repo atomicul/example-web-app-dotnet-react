@@ -14,7 +14,7 @@ export const Route = createFileRoute('/_authenticated/')({
 function TodosPage() {
   const invalidateTodos = useInvalidateTodos()
   const { mutateAsync: createTodo } = useCreateTodo({
-    mutation: { onSuccess: invalidateTodos },
+    mutation: { meta: { handlesErrors: true }, onSuccess: invalidateTodos },
   })
 
   async function add(data: TodoRequest) {

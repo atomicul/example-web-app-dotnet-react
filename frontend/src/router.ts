@@ -16,16 +16,24 @@ import { sessionQueryKey } from '@/auth/session'
 import { routeTree } from './routeTree.gen'
 
 /** Every rate-limited request shares one toast, so a burst of them shows only once. */
-function notifyTooManyRequests(error: unknown) {
+function notifyTooManyRequests(error: ApiError) {
+  toast.warning(errorMessage(error), { id: 'too-many-requests' })
+}
+
+function notifyMutationError(error: unknown) {
   if (isTooManyRequests(error)) {
-    toast.warning(errorMessage(error), { id: 'too-many-requests' })
+    notifyTooManyRequests(error)
+  } else {
+    toast.error(errorMessage(error))
   }
 }
 
 export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error, query) => {
-      notifyTooManyRequests(error)
+      if (isTooManyRequests(error)) {
+        notifyTooManyRequests(error)
+      }
       if (
         isUnauthorized(error) &&
         query.queryHash !== hashKey(sessionQueryKey)
@@ -35,7 +43,13 @@ export const queryClient = new QueryClient({
       }
     },
   }),
-  mutationCache: new MutationCache({ onError: notifyTooManyRequests }),
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _onMutateResult, mutation) => {
+      if (!mutation.meta?.handlesErrors) {
+        notifyMutationError(error)
+      }
+    },
+  }),
   defaultOptions: {
     queries: {
       retry: (failureCount, error) =>
@@ -50,6 +64,15 @@ export const router = createRouter({
   defaultPreload: 'intent',
   scrollRestoration: true,
 })
+
+declare module '@tanstack/react-query' {
+  interface Register {
+    mutationMeta: {
+      /** The caller shows the error itself, as a form does under its fields, so it is not toasted. */
+      handlesErrors?: boolean
+    }
+  }
+}
 
 declare module '@tanstack/react-router' {
   interface Register {

@@ -17,7 +17,7 @@ export function EditTodoDialog({ todo }: { todo: TodoResponse }) {
   const [open, setOpen] = useState(false)
   const invalidateTodos = useInvalidateTodos()
   const { mutateAsync: updateTodo } = useUpdateTodo({
-    mutation: { onSuccess: invalidateTodos },
+    mutation: { meta: { handlesErrors: true }, onSuccess: invalidateTodos },
   })
 
   async function save(data: TodoRequest) {
