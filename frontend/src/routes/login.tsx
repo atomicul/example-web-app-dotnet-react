@@ -8,6 +8,7 @@ import { CredentialsForm } from '@/auth/credentials-form'
 import { publicSearchSchema, redirectWhenSignedIn } from '@/auth/public-route'
 import { ResendConfirmationButton } from '@/auth/resend-confirmation-button'
 import { useAuth } from '@/auth/use-auth'
+import { FormError } from '@/lib/server-errors'
 
 export const Route = createFileRoute('/login')({
   validateSearch: publicSearchSchema,
@@ -36,10 +37,10 @@ function LoginPage() {
     } catch (error) {
       if (isEmailUnconfirmed(error)) {
         setUnconfirmedEmail(credentials.email)
-        throw new Error('Confirm your email before logging in.')
+        throw new FormError('Confirm your email before logging in.')
       }
       throw isUnauthorized(error)
-        ? new Error('Invalid email or password.')
+        ? new FormError('Invalid email or password.')
         : error
     }
   }

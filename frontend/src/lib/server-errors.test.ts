@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import { ApiError, NetworkError, errorMessage } from '@/api/fetcher'
-import { setServerErrors } from './server-errors'
+import { FormError, setServerErrors } from './server-errors'
 
 function errorsFor(error: unknown) {
   const setError = vi.fn()
@@ -43,6 +43,12 @@ describe('setServerErrors', () => {
     })
     expect(errorsFor(new NetworkError())).toEqual({
       root: errorMessage(new NetworkError()),
+    })
+  })
+
+  it("reports a FormError's message on the root", () => {
+    expect(errorsFor(new FormError('Invalid email or password.'))).toEqual({
+      root: 'Invalid email or password.',
     })
   })
 
