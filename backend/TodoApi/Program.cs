@@ -18,6 +18,7 @@ builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => options.SignIn
 builder.Services.AddTransient<LoggingEmailSender>();
 builder.Services.AddTransient<IEmailSender<IdentityUser>>(services =>
     ActivatorUtilities.CreateInstance<SpaLinkEmailSender>(services, services.GetRequiredService<LoggingEmailSender>()));
+builder.Services.AddTrustedProxies(builder.Configuration);
 builder.Services.AddRateLimits(builder.Configuration);
 
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
@@ -39,6 +40,8 @@ builder.Services.AddOpenApi(options =>
 });
 
 var app = builder.Build();
+
+app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {

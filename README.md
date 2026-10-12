@@ -54,3 +54,8 @@ confirmation link, forgotten passwords and email changes) are held to a stricter
 in the API's `RateLimits` setting (`RateLimits:Api` and `RateLimits:Email`, each a `PermitLimit` and a `Window`); the
 defaults in `appsettings.json` are 100 requests and one email a minute. A rejected request gets a
 `429 Too Many Requests` with a `Retry-After` header in seconds.
+
+Behind a reverse proxy, the client IP and scheme come from its `X-Forwarded-For` and `X-Forwarded-Proto` headers,
+but only when the proxy is trusted: loopback always is, and `TrustedProxies:Addresses` (IP addresses) and
+`TrustedProxies:Networks` (CIDR ranges) add more. Set them before deploying behind one, or every client shares the
+proxy's limit.
