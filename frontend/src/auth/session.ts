@@ -1,5 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
-import { isUnauthorized } from '@/api/fetcher'
+import { ApiError, isUnauthorized } from '@/api/fetcher'
 import {
   getGetApiAuthManageInfoQueryKey,
   getGetApiAuthManageInfoQueryOptions,
@@ -7,14 +7,19 @@ import {
 
 export const sessionQueryKey = getGetApiAuthManageInfoQueryKey()
 
-/** Resolves the signed-in user, or null when the session cookie is missing or expired. */
+/** Identity answers 404 when the cookie outlives its user, as after the API restarts with an empty database. */
+function isStaleSession(error: unknown) {
+  return error instanceof ApiError && error.status === 404
+}
+
+/** Resolves the signed-in user, or null when the session cookie is missing, expired or stale. */
 export async function fetchSession(queryClient: QueryClient) {
   try {
     return await queryClient.ensureQueryData(
       getGetApiAuthManageInfoQueryOptions(),
     )
   } catch (error) {
-    if (isUnauthorized(error)) {
+    if (isUnauthorized(error) || isStaleSession(error)) {
       return null
     }
     throw error
