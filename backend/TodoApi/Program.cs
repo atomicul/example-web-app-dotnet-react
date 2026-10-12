@@ -17,7 +17,9 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDataba
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => options.SignIn.RequireConfirmedEmail = true)
     .AddEntityFrameworkStores<AppDbContext>();
-builder.Services.AddTransient<IEmailSender<IdentityUser>, LoggingEmailSender>();
+builder.Services.AddTransient<LoggingEmailSender>();
+builder.Services.AddTransient<IEmailSender<IdentityUser>>(services =>
+    ActivatorUtilities.CreateInstance<SpaLinkEmailSender>(services, services.GetRequiredService<LoggingEmailSender>()));
 builder.Services.AddRateLimits(builder.Configuration);
 
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
