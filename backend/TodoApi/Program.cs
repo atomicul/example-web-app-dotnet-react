@@ -10,7 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 var appName = builder.Configuration["AppName"] ?? builder.Environment.ApplicationName;
 
 builder.Services.AddHttpContextAccessor();
-builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("TodoDb"));
+builder.Services.AddDbContext<AppDbContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("Default")));
 
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => options.SignIn.RequireConfirmedEmail = true)
@@ -43,6 +43,11 @@ app.UseForwardedHeaders();
 
 if (app.Environment.IsDevelopment())
 {
+    using (var scope = app.Services.CreateScope())
+    {
+        scope.ServiceProvider.GetRequiredService<AppDbContext>().Database.Migrate();
+    }
+
     app.MapOpenApi();
     app.UseSwaggerUI(options =>
     {

@@ -6,6 +6,7 @@ DB_IMAGE ?= mcr.microsoft.com/mssql/server:2025-latest
 DB_CONTAINER ?= todoapp-db
 DB_PORT ?= 1433
 DB_PASSWORD ?= Dev-Passw0rd
+DB_CONNECTION ?= Server=localhost,$(DB_PORT);Database=TodoApp;User Id=sa;Password=$(DB_PASSWORD);TrustServerCertificate=True
 
 SOLUTION := backend/TodoApp.slnx
 API_PROJECT := backend/TodoApi
@@ -18,15 +19,16 @@ FRONTEND := frontend
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-install: ## Restore the .NET solution and install the frontend packages
+install: ## Restore the .NET solution and tools and install the frontend packages
 	dotnet restore $(SOLUTION)
+	dotnet tool restore
 	pnpm -C $(FRONTEND) install
 
 dev: ## Run the API and the Vite dev server together
 	$(MAKE) -j2 dev-backend dev-frontend
 
 dev-backend: ## Run only the API with dotnet watch
-	SpaUrl=$(SPA_URL) dotnet watch --project $(API_PROJECT)
+	SpaUrl=$(SPA_URL) ConnectionStrings__Default="$(DB_CONNECTION)" dotnet watch --project $(API_PROJECT)
 
 dev-frontend: ## Run only the Vite dev server
 	API_URL=$(API_URL) pnpm -C $(FRONTEND) dev
@@ -49,7 +51,7 @@ build: ## Publish the API to out/ with the built SPA in out/wwwroot
 	cp -R $(FRONTEND)/dist/. $(OUT)/wwwroot/
 
 run: build ## Build, then serve the API and the SPA together
-	cd $(OUT) && dotnet TodoApi.dll --urls $(API_URL)
+	cd $(OUT) && ConnectionStrings__Default="$(DB_CONNECTION)" dotnet TodoApi.dll --urls $(API_URL)
 
 check: ## Run formatting, build, lint, type checks and tests
 	dotnet format $(SOLUTION) --verify-no-changes
