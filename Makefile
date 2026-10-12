@@ -15,7 +15,7 @@ FRONTEND := frontend
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev dev-backend dev-frontend dev-database reset-dev-database wait-database migration api build run check clean
+.PHONY: help install dev dev-backend dev-frontend dev-database reset-dev-database wait-database wait-backend migration api build run check clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -31,7 +31,7 @@ dev: ## Run the database, the API and the Vite dev server together
 dev-backend: wait-database ## Run only the API with dotnet watch, once the database is up
 	SpaUrl=$(SPA_URL) ConnectionStrings__Default="$(DB_CONNECTION)" dotnet watch --project $(API_PROJECT)
 
-dev-frontend: ## Run only the Vite dev server
+dev-frontend: wait-backend ## Run only the Vite dev server, once the API is up
 	API_URL=$(API_URL) pnpm -C $(FRONTEND) dev
 
 dev-database: ## Run SQL Server in Docker for development
@@ -47,6 +47,10 @@ reset-dev-database: ## Delete the development database volume; stop the database
 wait-database: ## Wait until the development database container is healthy
 	@echo "Waiting for $(DB_CONTAINER) to accept connections (make dev-database starts it)"
 	@until [ "$$(docker inspect -f '{{.State.Health.Status}}' $(DB_CONTAINER) 2>/dev/null)" = healthy ]; do sleep 1; done
+
+wait-backend: ## Wait until the API answers its health check
+	@echo "Waiting for the API at $(API_URL) to be healthy (make dev-backend starts it)"
+	@until curl -sf $(API_URL)/health > /dev/null; do sleep 1; done
 
 migration: ## Add an EF Core migration named NAME, e.g. make migration NAME=AddTags
 	dotnet ef migrations add $(NAME) --project $(API_PROJECT) --output-dir Data/Migrations

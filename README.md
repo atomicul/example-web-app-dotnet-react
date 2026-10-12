@@ -27,7 +27,7 @@ Every API route lives under `/api` (`/api/auth/*`, `/api/todos`). The one except
 |---|---|
 | `make help` | Lists the targets; also what a bare `make` runs |
 | `make install` | Restores the .NET solution and tools (`dotnet-ef`) and installs the frontend packages |
-| `make dev` | Runs the database, the API on `:5080` with `dotnet watch` once the database is up, and the Vite dev server on `:5173`, which proxies `/api` to the API |
+| `make dev` | Runs the database, the API on `:5080` with `dotnet watch` once the database is up, and the Vite dev server on `:5173` once the API answers `/health`; Vite proxies `/api` to the API |
 | `make dev-database` | Runs SQL Server in Docker on `:1433`, keeping its data in the `todoapp-db-data` volume |
 | `make reset-dev-database` | Deletes the `todoapp-db-data` volume, so the next run starts from an empty, freshly migrated database |
 | `make migration NAME=AddTags` | Adds an EF Core migration to `backend/TodoApi/Data/Migrations` after a model change |
