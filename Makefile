@@ -74,6 +74,7 @@ check: ## Run formatting, build, pending migration, lint, type checks and tests
 	dotnet format $(SOLUTION) --verify-no-changes
 	dotnet build $(SOLUTION)
 	dotnet ef migrations has-pending-model-changes --project $(API_PROJECT)
+	dotnet test --solution $(SOLUTION)
 	pnpm -C $(FRONTEND) lint
 	pnpm -C $(FRONTEND) format:check
 	pnpm -C $(FRONTEND) typecheck
