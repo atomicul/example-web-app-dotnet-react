@@ -29,6 +29,17 @@ export class ApiError extends Error {
   }
 }
 
+/** The request never reached the API, as when the user is offline or the server is down. */
+export class NetworkError extends Error {
+  constructor(options?: ErrorOptions) {
+    super(
+      "Couldn't reach the server. Check your connection and try again.",
+      options,
+    )
+    this.name = 'NetworkError'
+  }
+}
+
 /** A message fit for the user, listing every validation error when there are any. */
 export function errorMessage(error: unknown): string {
   if (isTooManyRequests(error)) {
@@ -50,7 +61,7 @@ export function isTooManyRequests(error: unknown): error is ApiError {
   return error instanceof ApiError && error.status === 429
 }
 
-export type ErrorType<_Error> = ApiError
+export type ErrorType<_Error> = ApiError | NetworkError
 
 async function readJson(response: Response): Promise<unknown> {
   const isJson = response.headers.get('content-type')?.includes('json')
@@ -63,9 +74,20 @@ function readRetryAfter(response: Response): number | undefined {
   return Number.isInteger(seconds) ? seconds : undefined
 }
 
-/** Orval mutator: same-origin fetch that resolves the JSON body or throws an {@link ApiError}. */
+/** Fetches, turning the TypeError fetch rejects with when the request cannot be sent into a {@link NetworkError}. */
+async function send(url: string, init: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init)
+  } catch (error) {
+    throw error instanceof TypeError
+      ? new NetworkError({ cause: error })
+      : error
+  }
+}
+
+/** Orval mutator: same-origin fetch that resolves the JSON body or throws an {@link ApiError} or {@link NetworkError}. */
 export async function fetcher<T>(url: string, init: RequestInit): Promise<T> {
-  const response = await fetch(url, init)
+  const response = await send(url, init)
   const body = await readJson(response)
   if (!response.ok) {
     throw new ApiError(

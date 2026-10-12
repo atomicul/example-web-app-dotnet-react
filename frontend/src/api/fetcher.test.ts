@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { ApiError, errorMessage, fetcher } from './fetcher'
+import { ApiError, NetworkError, errorMessage, fetcher } from './fetcher'
 
 function respondWith(response: Response) {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(response))
@@ -78,5 +78,24 @@ describe('fetcher', () => {
 
     expect(error).toMatchObject({ status: 429, retryAfter: undefined })
     expect(errorMessage(error)).toContain('try again in a moment')
+  })
+
+  it('throws a NetworkError with a readable message when the request cannot be sent', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockRejectedValue(new TypeError('Failed to fetch')),
+    )
+
+    const error = await fetcher('/api/todos', {}).catch((e: unknown) => e)
+
+    expect(error).toBeInstanceOf(NetworkError)
+    expect(errorMessage(error)).toContain("Couldn't reach the server")
+  })
+
+  it('lets an aborted request reject unchanged', async () => {
+    const abort = new DOMException('The operation was aborted.', 'AbortError')
+    vi.stubGlobal('fetch', vi.fn().mockRejectedValue(abort))
+
+    await expect(fetcher('/api/todos', {})).rejects.toBe(abort)
   })
 })
