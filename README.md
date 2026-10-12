@@ -16,7 +16,8 @@ Every API route lives under `/api` (`/api/auth/*`, `/api/todos`).
 ## Requirements
 
 - .NET SDK 10, as pinned in `global.json`
-- Node.js and pnpm, as pinned by `packageManager` in `frontend/package.json`
+- Node.js 24, as pinned in `frontend/.nvmrc`
+- pnpm, as pinned by `packageManager` in `frontend/package.json`
 
 ## Make targets
 
