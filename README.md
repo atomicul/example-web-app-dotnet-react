@@ -62,6 +62,9 @@ confirms the address; the login page can send a new link. There is no mail servi
 to its log. Links use the API's `SpaUrl` setting as their origin, or the API's own origin when it is unset;
 `make dev` sets it to the Vite dev server (`SPA_URL`).
 
+Identity's `IdentityOptions` decide which emails and passwords registration accepts. The API writes those rules into
+the `RegisterRequest` schema of its OpenAPI document, so after changing them, `make api` updates the SPA's checks.
+
 Every page of the SPA except login, registration and email confirmation requires a session.
 
 ## Rate limiting

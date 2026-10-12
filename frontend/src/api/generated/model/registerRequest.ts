@@ -7,6 +7,15 @@
  */
 
 export interface RegisterRequest {
+  /**
+     * An email address made of letters, digits and -._+
+     * @pattern ^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\-._+]+@[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\-._+]+$
+     */
   email: string;
+  /**
+     * Use at least 6 characters, with an uppercase letter, a lowercase letter, a digit and a symbol.
+     * @minLength 6
+     * @pattern ^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])
+     */
   password: string;
 }

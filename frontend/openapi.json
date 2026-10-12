@@ -777,10 +777,15 @@
         "type": "object",
         "properties": {
           "email": {
-            "type": "string"
+            "pattern": "^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\-._+]+@[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\-._+]+$",
+            "type": "string",
+            "description": "An email address made of letters, digits and -._+"
           },
           "password": {
-            "type": "string"
+            "minLength": 6,
+            "pattern": "^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])",
+            "type": "string",
+            "description": "Use at least 6 characters, with an uppercase letter, a lowercase letter, a digit and a symbol."
           }
         }
       },

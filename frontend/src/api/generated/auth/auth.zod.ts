@@ -8,9 +8,16 @@
 import * as zod from 'zod';
 
 
+export const postApiAuthRegisterBodyEmailRegExp = new RegExp('^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\-._+]+@[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\-._+]+$');
+export const postApiAuthRegisterBodyPasswordMin = 6;
+
+
+export const postApiAuthRegisterBodyPasswordRegExp = new RegExp('^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])');
+
+
 export const PostApiAuthRegisterBody = zod.object({
-  "email": zod.string(),
-  "password": zod.string()
+  "email": zod.string().regex(postApiAuthRegisterBodyEmailRegExp).describe('An email address made of letters, digits and -._+'),
+  "password": zod.string().min(postApiAuthRegisterBodyPasswordMin).regex(postApiAuthRegisterBodyPasswordRegExp).describe('Use at least 6 characters, with an uppercase letter, a lowercase letter, a digit and a symbol.')
 })
 
 export const PostApiAuthRegisterResponse = zod.unknown()
