@@ -28,10 +28,11 @@ Every API route lives under `/api` (`/api/auth/*`, `/api/todos`).
 | `make install` | Restores the .NET solution and tools (`dotnet-ef`) and installs the frontend packages |
 | `make dev` | Runs the API on `:5080` with `dotnet watch` and the Vite dev server on `:5173`, which proxies `/api` to the API |
 | `make dev-database` | Runs SQL Server in Docker on `:1433`, keeping its data in the `todoapp-db-data` volume |
+| `make migration NAME=AddTags` | Adds an EF Core migration to `backend/TodoApi/Data/Migrations` after a model change |
 | `make api` | Builds the API, copies its OpenAPI document to `frontend/openapi.json` and regenerates the frontend client |
 | `make build` | Publishes the API to `out/` with the built SPA in `out/wwwroot`; `VERSION=1.2.3` stamps the API assembly version |
 | `make run` | Builds, then serves the API and the SPA together on `:5080` |
-| `make check` | Formatting, build, lint, type checks and tests for both projects |
+| `make check` | Formatting, build, lint, type checks and tests for both projects, and fails on model changes without a migration |
 
 Run `make api` after changing an endpoint or contract, and commit the regenerated files.
 

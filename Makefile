@@ -14,7 +14,7 @@ FRONTEND := frontend
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev dev-backend dev-frontend dev-database api build run check clean
+.PHONY: help install dev dev-backend dev-frontend dev-database migration api build run check clean
 
 help: ## Show this help
 	@awk 'BEGIN {FS = ":.*## "} /^[a-z-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -38,6 +38,9 @@ dev-database: ## Run SQL Server in Docker for development
 		-e ACCEPT_EULA=Y -e MSSQL_SA_PASSWORD=$(DB_PASSWORD) \
 		-p $(DB_PORT):1433 -v $(DB_CONTAINER)-data:/var/opt/mssql $(DB_IMAGE)
 
+migration: ## Add an EF Core migration named NAME, e.g. make migration NAME=AddTags
+	dotnet ef migrations add $(NAME) --project $(API_PROJECT) --output-dir Data/Migrations
+
 api: ## Regenerate the frontend client from the API OpenAPI document
 	dotnet build $(API_PROJECT)
 	cp $(API_PROJECT)/obj/openapi.json $(FRONTEND)/openapi.json
@@ -53,9 +56,10 @@ build: ## Publish the API to out/ with the built SPA in out/wwwroot
 run: build ## Build, then serve the API and the SPA together
 	cd $(OUT) && ConnectionStrings__Default="$(DB_CONNECTION)" dotnet TodoApi.dll --urls $(API_URL)
 
-check: ## Run formatting, build, lint, type checks and tests
+check: ## Run formatting, build, pending migration, lint, type checks and tests
 	dotnet format $(SOLUTION) --verify-no-changes
 	dotnet build $(SOLUTION)
+	dotnet ef migrations has-pending-model-changes --project $(API_PROJECT)
 	pnpm -C $(FRONTEND) lint
 	pnpm -C $(FRONTEND) format:check
 	pnpm -C $(FRONTEND) typecheck
