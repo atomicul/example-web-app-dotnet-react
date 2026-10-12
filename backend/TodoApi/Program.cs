@@ -30,9 +30,7 @@ builder.Services.AddOpenApi(options =>
     options.AddDocumentTransformer((document, _, _) =>
     {
         document.Info.Title = appName;
-        document.Info.Description = "Per-user todo lists secured with ASP.NET Core Identity bearer tokens. "
-            + "Register through the Auth endpoints, confirm your email with the link it sends, "
-            + "then log in and authorize with the returned access token.";
+        document.Info.Description = builder.Configuration["AppDescription"];
         return Task.CompletedTask;
     });
     options.AddDocumentTransformer<BearerSecurityTransformer>();
