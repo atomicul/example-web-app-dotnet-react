@@ -100,9 +100,29 @@ proxy's limit.
 
 ## HTTPS
 
+The app serves HTTPS itself when Kestrel has an `Https` endpoint, e.g. in `appsettings.Production.json`:
+
+```json
+"Kestrel": {
+  "Endpoints": {
+    "Http": { "Url": "http://*:80" },
+    "Https": {
+      "Url": "https://*:443",
+      "Certificate": { "Path": "/etc/todoapp/tls/fullchain.pem", "KeyPath": "/etc/todoapp/tls/privkey.pem" }
+    }
+  }
+}
+```
+
+With that endpoint, HTTP requests are redirected to HTTPS, and HTTPS responses carry an HSTS header that tells browsers
+to use only HTTPS for the domain for 30 days, so removing the endpoint later breaks the site for returning visitors
+until it expires. Without it, nothing changes: behind a reverse proxy that terminates TLS, leave it unset. Kestrel
+reads the certificate when the app starts, so restart the app after renewing it.
+
 To get a certificate from Let's Encrypt or another ACME certificate authority without a reverse proxy, point the ACME
 client's web root (`certbot --webroot -w`) at a directory and set `AcmeChallenge:WebRoot` to it: the app then serves
-the client's challenge files from `/.well-known/acme-challenge/` on its HTTP port.
+the client's challenge files from `/.well-known/acme-challenge/`. Once HTTPS is set up, those requests are redirected
+to HTTPS too, which Let's Encrypt follows.
 
 ## Docker image
 
@@ -131,6 +151,10 @@ list items take their index as the last level. Both commands read the same setti
 | `DataProtection__Certificate__Password` | none | The password of that PFX file |
 | `TrustedProxies__Addresses__0`, `__1`, ... | none | IP addresses of reverse proxies whose `X-Forwarded-For` and `X-Forwarded-Proto` are trusted |
 | `TrustedProxies__Networks__0`, `__1`, ... | none | CIDR ranges of trusted reverse proxies, e.g. `172.16.0.0/12` |
+| `Kestrel__Endpoints__Https__Url` | none | An HTTPS address to listen on, e.g. `https://*:8443`, which also redirects HTTP to HTTPS (see [HTTPS](#https)) |
+| `Kestrel__Endpoints__Https__Certificate__Path`, `…__KeyPath` | none | The PEM certificate chain and private key of that endpoint |
+| `Kestrel__Endpoints__Http__Url` | none | The HTTP address to listen on; Kestrel endpoints replace `ASPNETCORE_HTTP_PORTS`, so set it with an HTTPS endpoint, e.g. `http://*:8080` |
+| `HTTPS_PORT` | the HTTPS endpoint's port | The port HTTP is redirected to, when the container's HTTPS port is published on another one |
 | `AcmeChallenge__WebRoot` | none | The web root of an ACME client, whose challenge files the app serves (see [HTTPS](#https)) |
 | `RateLimits__Api__PermitLimit`, `RateLimits__Api__Window` | `100`, `00:01:00` | Requests per client IP per window, for every `/api` request |
 | `RateLimits__Email__PermitLimit`, `RateLimits__Email__Window` | `1`, `00:01:00` | The same, for requests that send an email |

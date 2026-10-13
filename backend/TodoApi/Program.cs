@@ -51,6 +51,12 @@ var app = builder.Build();
 
 app.UseForwardedHeaders();
 
+if (app.Configuration.GetSection("Kestrel:Endpoints:Https").Exists())
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+
 if (app.Environment.IsDevelopment())
 {
     if (!isGeneratingOpenApiDocument)
