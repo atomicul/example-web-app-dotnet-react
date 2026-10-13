@@ -1,0 +1,2 @@
+# The setgid bit gives the sidecar's sockets the app's group, so the app can connect to them and no one else can.
+d {{ dapr_socket_dir }} 2750 {{ dapr_user }} todoapp -

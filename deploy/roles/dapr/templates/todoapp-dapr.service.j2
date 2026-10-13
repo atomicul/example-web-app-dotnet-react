@@ -1,0 +1,34 @@
+[Unit]
+Description=Dapr sidecar of the todo app
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=exec
+User={{ dapr_user }}
+Group={{ dapr_user }}
+UMask=0007
+ExecStartPre=/usr/bin/rm -f {{ dapr_socket_dir }}/dapr-{{ dapr_app_id }}-grpc.socket {{ dapr_socket_dir }}/dapr-{{ dapr_app_id }}-http.socket
+ExecStart={{ dapr_root }}/daprd \
+  --mode standalone \
+  --app-id {{ dapr_app_id }} \
+  --resources-path {{ dapr_components_dir }} \
+  --unix-domain-socket {{ dapr_socket_dir }} \
+  --dapr-internal-grpc-listen-address 127.0.0.1 \
+  --enable-metrics=false
+Restart=on-failure
+RestartSec=5
+ReadWritePaths={{ dapr_socket_dir }}
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+LockPersonality=true
+
+[Install]
+WantedBy=multi-user.target

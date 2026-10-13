@@ -1,2 +1,8 @@
-{% set settings = todoapp_settings | ansible.builtin.combine(todoapp_https_settings, recursive=True) if todoapp_https_certificate.stat.exists else todoapp_settings %}
+{% set settings = todoapp_settings %}
+{% if todoapp_https_certificate.stat.exists %}
+{% set settings = settings | ansible.builtin.combine(todoapp_https_settings, recursive=True) %}
+{% endif %}
+{% if todoapp_email_component_file.stat.exists %}
+{% set settings = settings | ansible.builtin.combine(todoapp_email_settings, recursive=True) %}
+{% endif %}
 {{ settings | ansible.builtin.to_nice_json(indent=2) }}

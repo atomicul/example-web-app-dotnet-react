@@ -7,6 +7,10 @@
     home: /nonexistent
     create_home: false
 
+- name: Run the Dapr sidecar beside the app
+  ansible.builtin.include_role:
+    name: dapr
+
 - name: Install unzip, to unpack the release
   ansible.builtin.apt:
     name: unzip

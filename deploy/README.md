@@ -46,7 +46,8 @@ SQL Server listens on `127.0.0.1` only. It runs as the Express edition, which is
 ### `setup-webapp`
 
 Installs the ASP.NET Core runtime and the release's zip, and runs the app as the `todoapp` systemd service on port
-`80`, then waits for `/health` to answer `Healthy`. It serves plain HTTP until `setup-tls` gives the host a
+`80`, then waits for `/health` to answer `Healthy`. Beside it, it runs the app's Dapr sidecar as the `todoapp-dapr`
+service (see [Dapr sidecar](#dapr-sidecar)). It serves plain HTTP until `setup-tls` gives the host a
 certificate, and from then on HTTPS on port `443` as well. To terminate HTTPS in a reverse proxy instead, skip
 `setup-tls` and set the API's `TrustedProxies` (see the [root README](../README.md#rate-limiting)).
 
@@ -58,6 +59,9 @@ It only asks for what the host doesn't have yet:
 
 To change either of them on a host that has them, pass `--change-database-password` or `--change-certificate`.
 Replacing the certificate logs every user out, and losing it does too: keep the PFX and its password.
+
+`--dapr-components DIR` replaces the sidecar's components on the host with the `*.yaml` and `*.yml` files of a local
+directory, and removes the ones it doesn't have. Without it, the host keeps the components it has.
 
 ### `setup-tls`
 
@@ -77,6 +81,33 @@ nothing.
 The app then sends HSTS, which makes browsers that visited it refuse plain HTTP for 30 days: don't remove HTTPS once
 it's served.
 
+### Dapr sidecar
+
+The app reaches cloud services, such as the queue its emails go on, only through a [Dapr](https://dapr.io) sidecar
+(see the [root README](../README.md#cloud-services)). `setup-webapp` runs `daprd` as the `todoapp-dapr` user, which
+serves the Dapr API only on Unix sockets in `/run/todoapp-dapr` that the app's group can open, and points the app at
+them with `Dapr:GrpcEndpoint`.
+
+This project ships no components: which provider's queue or bucket a name leads to, and how the sidecar authenticates
+to it, are yours to decide and to keep, e.g. in a private directory next to the PFX backup. Each feature needs its
+component in a file of the same name, which also turns the feature on:
+
+| File | Turns on |
+|---|---|
+| `emails.yaml` | Queueing emails on the output binding named `emails` (`Email:Queue`), in the format the [root README](../README.md#email) describes; without it, the app logs them |
+
+Setting a provider up is manual. For AWS, for example:
+
+1. Create the SQS queue and whatever consumes it, e.g. a Lambda that sends each message with SES.
+2. Let the host send to the queue, preferably with an instance profile: the sidecar then needs no keys.
+3. Write `emails.yaml` as an [SQS binding](https://docs.dapr.io/reference/components-reference/supported-bindings/sqs/)
+   named `emails`. Any secret it needs can come from a secret store component, such as
+   [SSM Parameter Store](https://docs.dapr.io/reference/components-reference/supported-secret-stores/aws-parameter-store/),
+   in the same directory.
+4. Run `uv run setup-webapp user@host v1.2.3 --dapr-components path/to/components`.
+
+`journalctl -u todoapp-dapr` shows whether the sidecar loaded the components.
+
 ### `generate-certificate`
 
 `uv run generate-certificate dataprotection.pfx` writes a self-signed certificate that `setup-webapp` accepts, after
@@ -91,20 +122,24 @@ asking for its password. It refuses to overwrite a file.
 | `/etc/todoapp/database.env` | The app's connection string (root only; systemd passes it to the app) |
 | `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's password (root only) and the PFX (readable by the app) |
 | `/etc/todoapp/tls/fullchain.pem`, `privkey.pem` | The HTTPS certificate and its key (readable by the app), copied from `/etc/letsencrypt` by `/usr/local/sbin/todoapp-install-certificate` |
+| `/etc/todoapp/dapr/components` | The Dapr sidecar's components (only the sidecar's user can read them) |
+| `/run/todoapp-dapr` | The sidecar's sockets, which only the app's group can open |
 | `/var/lib/todoapp/acme` | The web root certbot writes ACME challenges to, which the app serves |
 | `/opt/todoapp/releases/<tag>` | Each installed release; `/opt/todoapp/current` links to the one running |
 | `/opt/dotnet/<version>` | The ASP.NET Core runtime |
+| `/opt/dapr/<version>` | The Dapr sidecar, `daprd` |
 
 Environment variables override the JSON file, so the two secrets stay in the `.env` files, which systemd passes to
 the app. To change another setting, such as `TrustedProxies` or `RateLimits` from the
 [root README](../README.md#environment-variables), add it to `todoapp_settings` and run `setup-webapp` again.
 
-`journalctl -u todoapp` shows the app's logs.
+`journalctl -u todoapp` shows the app's logs, and `journalctl -u todoapp-dapr` the sidecar's.
 
 ## Pinned versions
 
-`playbooks/group_vars/all.yml` pins SQL Server and its tools, Docker, the ASP.NET Core runtime, and the signing keys of
-their repositories by checksum. `pyproject.toml`, `uv.lock` and `.python-version` pin Python and the Python packages.
+`playbooks/group_vars/all.yml` pins SQL Server and its tools, Docker, the ASP.NET Core runtime, `daprd`, and the
+signing keys of their repositories by checksum. `pyproject.toml`, `uv.lock` and `.python-version` pin Python and the
+Python packages.
 The few packages that come from Ubuntu's own archive, such as `unzip` and `libicu74`, follow Ubuntu 24.04's updates.
 
 ## Checks

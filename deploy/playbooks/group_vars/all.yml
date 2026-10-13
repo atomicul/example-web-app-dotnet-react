@@ -16,6 +16,16 @@ dotnet_runtime_url: https://builds.dotnet.microsoft.com/dotnet/aspnetcore/Runtim
 dotnet_runtime_checksum: sha512:c489fc3a9dcc85f24f2d52e9a81b46fdf51affc8a360d008dbd5e3b7ce524969adc4a54f555ad13e29b822f59ed1cae9785608cbac2282f2c9c4fda45c21c7d1
 dotnet_root: /opt/dotnet/{{ dotnet_runtime_version }}
 
+dapr_version: 1.18.4
+dapr_archive: daprd_linux_amd64.tar.gz
+dapr_url: https://github.com/dapr/dapr/releases/download/v{{ dapr_version }}/{{ dapr_archive }}
+dapr_checksum: sha256:d679a47789cddacc8cd38d96d0da7a75514475146ca3da3e5b02bff1ad259dfb
+dapr_root: /opt/dapr/{{ dapr_version }}
+dapr_app_id: todoapp
+dapr_user: todoapp-dapr
+dapr_components_dir: "{{ todoapp_config_dir }}/dapr/components"
+dapr_socket_dir: /run/todoapp-dapr
+
 # SQL Server's edition: Express is free in production; Standard and Enterprise need a license.
 mssql_edition: Express
 mssql_port: 1433
@@ -39,6 +49,8 @@ todoapp_settings:
       Path: "{{ todoapp_config_dir }}/dataprotection.pfx"
   AcmeChallenge:
     WebRoot: "{{ todoapp_acme_webroot }}"
+  Dapr:
+    GrpcEndpoint: unix://{{ dapr_socket_dir }}/dapr-{{ dapr_app_id }}-grpc.socket
 
 # Added to todoapp_settings once the host has a certificate in todoapp_tls_dir, which setup-tls puts there.
 todoapp_https_settings:
@@ -49,3 +61,10 @@ todoapp_https_settings:
         Certificate:
           Path: "{{ todoapp_tls_dir }}/fullchain.pem"
           KeyPath: "{{ todoapp_tls_dir }}/privkey.pem"
+
+# Added to todoapp_settings once the host has the Dapr component of the emails binding, which
+# setup-webapp --dapr-components puts there.
+todoapp_email_component: "{{ dapr_components_dir }}/emails.yaml"
+todoapp_email_settings:
+  Email:
+    Queue: emails
