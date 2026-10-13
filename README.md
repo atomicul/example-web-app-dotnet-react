@@ -98,6 +98,12 @@ but only when the proxy is trusted: loopback always is, and `TrustedProxies:Addr
 `TrustedProxies:Networks` (CIDR ranges) add more. Set them before deploying behind one, or every client shares the
 proxy's limit.
 
+## HTTPS
+
+To get a certificate from Let's Encrypt or another ACME certificate authority without a reverse proxy, point the ACME
+client's web root (`certbot --webroot -w`) at a directory and set `AcmeChallenge:WebRoot` to it: the app then serves
+the client's challenge files from `/.well-known/acme-challenge/` on its HTTP port.
+
 ## Docker image
 
 Every semver tag on `main` publishes `ghcr.io/OWNER/REPO`, where `OWNER/REPO` is this repository, tagged with the
@@ -125,6 +131,7 @@ list items take their index as the last level. Both commands read the same setti
 | `DataProtection__Certificate__Password` | none | The password of that PFX file |
 | `TrustedProxies__Addresses__0`, `__1`, ... | none | IP addresses of reverse proxies whose `X-Forwarded-For` and `X-Forwarded-Proto` are trusted |
 | `TrustedProxies__Networks__0`, `__1`, ... | none | CIDR ranges of trusted reverse proxies, e.g. `172.16.0.0/12` |
+| `AcmeChallenge__WebRoot` | none | The web root of an ACME client, whose challenge files the app serves (see [HTTPS](#https)) |
 | `RateLimits__Api__PermitLimit`, `RateLimits__Api__Window` | `100`, `00:01:00` | Requests per client IP per window, for every `/api` request |
 | `RateLimits__Email__PermitLimit`, `RateLimits__Email__Window` | `1`, `00:01:00` | The same, for requests that send an email |
 | `ASPNETCORE_HTTP_PORTS` | `8080` | The port the app listens on inside the container |

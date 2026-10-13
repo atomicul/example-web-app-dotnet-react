@@ -73,6 +73,7 @@ app.UseStaticFiles();
 app.UseRateLimiter();
 
 app.MapHealthChecks("/health");
+app.MapAcmeChallenge();
 
 var api = app.MapGroup("/api").RequireRateLimiting(RateLimits.Api);
 api.MapAuth();
