@@ -1,0 +1,12 @@
+---
+- name: Look for the HTTPS certificate on the host
+  ansible.builtin.stat:
+    path: "{{ todoapp_tls_dir }}/fullchain.pem"
+  register: todoapp_https_certificate
+
+- name: Write the app's settings, serving HTTPS when the host has a certificate
+  ansible.builtin.template:
+    src: appsettings.Production.json.j2
+    dest: "{{ todoapp_config_dir }}/appsettings.Production.json"
+    mode: "0644"
+  notify: Restart the app

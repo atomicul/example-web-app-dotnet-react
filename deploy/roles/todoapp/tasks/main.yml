@@ -31,11 +31,7 @@
     creates: "{{ todoapp_install_dir }}/releases/{{ release_tag }}/TodoApi.dll"
 
 - name: Write the app's settings
-  ansible.builtin.template:
-    src: appsettings.Production.json.j2
-    dest: "{{ todoapp_config_dir }}/appsettings.Production.json"
-    mode: "0644"
-  notify: Restart the app
+  ansible.builtin.include_tasks: settings.yml
 
 - name: Link the host's settings into the release
   ansible.builtin.file:
@@ -85,9 +81,4 @@
     enabled: true
 
 - name: Wait until the app is healthy
-  ansible.builtin.uri:
-    url: http://127.0.0.1:{{ todoapp_port }}/health
-  register: todoapp_health
-  until: todoapp_health.status == 200
-  retries: 30
-  delay: 2
+  ansible.builtin.include_tasks: health.yml

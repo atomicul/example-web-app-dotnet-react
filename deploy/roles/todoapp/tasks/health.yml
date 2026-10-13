@@ -1,0 +1,11 @@
+---
+- name: Wait until the app is healthy
+  ansible.builtin.uri:
+    url: >-
+      {{ 'https://127.0.0.1:' ~ todoapp_https_port if todoapp_https_certificate.stat.exists
+         else 'http://127.0.0.1:' ~ todoapp_port }}/health
+    validate_certs: false
+  register: todoapp_health
+  until: todoapp_health.status == 200
+  retries: 30
+  delay: 2

@@ -1,1 +1,2 @@
-{{ todoapp_settings | ansible.builtin.to_nice_json(indent=2) }}
+{% set settings = todoapp_settings | ansible.builtin.combine(todoapp_https_settings, recursive=True) if todoapp_https_certificate.stat.exists else todoapp_settings %}
+{{ settings | ansible.builtin.to_nice_json(indent=2) }}
