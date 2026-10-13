@@ -46,8 +46,9 @@ Run `make api` after changing an endpoint or contract, and commit the regenerate
 `TodoApi.Tests` boots the whole API with `WebApplicationFactory` against SQL Server in a Docker container that
 Testcontainers starts and removes for each run, so the tests also apply the real migrations. Every test registers its
 own user, and all data belongs to a user, so tests share the database without resetting it. Identity's emails are
-captured instead of logged, which lets tests follow confirmation links. Run them alone with
-`dotnet test --solution backend/TodoApp.slnx`.
+captured instead of logged, which lets tests follow confirmation links. The tests of what the API sends through Dapr
+run a Dapr sidecar in another container, whose `bindings.localstorage` bindings write every message they get to a
+temporary directory for the tests to read. Run them alone with `dotnet test --solution backend/TodoApp.slnx`.
 
 ## Database
 
@@ -92,9 +93,9 @@ ASP.NET Core Identity accepts two schemes:
 - **Bearer tokens** for scripts and Swagger UI (`/swagger` in Development).
 
 Only users with a confirmed email can log in. Registering sends a link to the SPA's `/confirm-email` page, which
-confirms the address; the login page can send a new link. There is no mail service yet, so the API writes every email
-to its log. Links use the API's `SpaUrl` setting as their origin, or the API's own origin when it is unset;
-`make dev` sets it to the Vite dev server (`SPA_URL`).
+confirms the address; the login page can send a new link. The API sends emails as [Email](#email) describes. Links use
+the API's `SpaUrl` setting as their origin, or the API's own origin when it is unset; `make dev` sets it to the Vite dev
+server (`SPA_URL`).
 
 Identity's `IdentityOptions` decide which emails and passwords registration accepts. The API writes those rules into
 the `RegisterRequest` schema of its OpenAPI document, so after changing them, `make api` updates the SPA's checks.
@@ -107,6 +108,29 @@ anyone who can read the database can forge sessions; restrict access to it accor
 `DataProtection:Certificate:Path` to a PFX file, and `DataProtection:Certificate:Password` to its password, encrypts
 every new key with that certificate. Keys created before stay readable without it until they expire after 90 days.
 Replacing or removing the certificate makes the keys it encrypted unreadable, which logs every user out.
+
+## Email
+
+The API doesn't word or send emails itself. When the `Email:Queue` setting names a Dapr output binding (see
+[Cloud services](#cloud-services)), it puts every email on the queue behind that binding, for another service to word
+and send. Without it, as in development, it writes every email to its log instead.
+
+Each message on the queue is a JSON object: what the email is for, the address to send it to, and the link or code it
+carries. Links are plain URLs, not HTML-encoded.
+
+```json
+{ "kind": "ConfirmationLink", "to": "user@example.com", "value": "https://todo.example.com/confirm-email?userId=...&code=..." }
+```
+
+| `kind` | `value` |
+|---|---|
+| `ConfirmationLink` | The link that confirms the address, to the SPA's `/confirm-email` page |
+| `PasswordResetLink` | A link that resets the password; the API's own endpoints don't send it yet |
+| `PasswordResetCode` | The code `POST /api/auth/resetPassword` takes, sent by `POST /api/auth/forgotPassword` |
+
+The API reaches the sidecar at `Dapr:GrpcEndpoint`: `unix:///path/to/dapr-grpc.socket` for a sidecar's gRPC socket on
+the same host, or an address such as `http://127.0.0.1:50001`. Without it, the Dapr client's defaults apply
+(`DAPR_GRPC_ENDPOINT`, or `127.0.0.1` on `DAPR_GRPC_PORT`).
 
 ## Rate limiting
 
@@ -178,6 +202,8 @@ list items take their index as the last level. Both commands read the same setti
 | `Kestrel__Endpoints__Https__Certificate__Path`, `…__KeyPath` | none | The PEM certificate chain and private key of that endpoint |
 | `Kestrel__Endpoints__Http__Url` | none | The HTTP address to listen on; Kestrel endpoints replace `ASPNETCORE_HTTP_PORTS`, so set it with an HTTPS endpoint, e.g. `http://*:8080` |
 | `HTTPS_PORT` | the HTTPS endpoint's port | The port HTTP is redirected to, when the container's HTTPS port is published on another one |
+| `Email__Queue` | none | The Dapr output binding to queue emails on, e.g. `emails`; without it, emails are logged (see [Email](#email)) |
+| `Dapr__GrpcEndpoint` | Dapr's defaults | The Dapr sidecar's gRPC endpoint, e.g. `unix:///run/dapr/dapr-grpc.socket` or `http://dapr:50001` |
 | `AcmeChallenge__WebRoot` | none | The web root of an ACME client, whose challenge files the app serves (see [HTTPS](#https)) |
 | `RateLimits__Api__PermitLimit`, `RateLimits__Api__Window` | `100`, `00:01:00` | Requests per client IP per window, for every `/api` request |
 | `RateLimits__Email__PermitLimit`, `RateLimits__Email__Window` | `1`, `00:01:00` | The same, for requests that send an email |
