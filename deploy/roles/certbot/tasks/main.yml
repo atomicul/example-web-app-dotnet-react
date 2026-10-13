@@ -1,0 +1,43 @@
+---
+- name: Look for the app's service
+  ansible.builtin.stat:
+    path: /etc/systemd/system/todoapp.service
+  register: certbot_todoapp_service
+
+- name: Require the app to be installed
+  ansible.builtin.assert:
+    that: certbot_todoapp_service.stat.exists
+    fail_msg: The app isn't installed on this host yet; run setup-webapp first
+    quiet: true
+
+- name: Install certbot, whose timer renews the certificate
+  ansible.builtin.apt:
+    name: certbot
+    update_cache: true
+
+- name: Create the web root the app serves ACME challenges from
+  ansible.builtin.file:
+    path: "{{ todoapp_acme_webroot }}"
+    state: directory
+    mode: "0755"
+
+- name: Install the hook that copies each new certificate to the app and restarts it
+  ansible.builtin.template:
+    src: todoapp-install-certificate.j2
+    dest: "{{ certbot_deploy_hook }}"
+    mode: "0755"
+
+- name: Get a certificate for {{ todoapp_domain }}
+  ansible.builtin.command:
+    argv:
+      - certbot
+      - certonly
+      - --webroot
+      - --webroot-path={{ todoapp_acme_webroot }}
+      - --domain={{ todoapp_domain }}
+      - --deploy-hook={{ certbot_deploy_hook }}
+      - --keep-until-expiring
+      - --non-interactive
+      - --agree-tos
+      - "{{ '--email=' ~ todoapp_acme_email if todoapp_acme_email else '--register-unsafely-without-email' }}"
+    creates: /etc/letsencrypt/live/{{ todoapp_domain }}/fullchain.pem

@@ -85,7 +85,7 @@ check: ## Run formatting, build, pending migration, lint, type checks and tests 
 	uv --directory $(DEPLOY) run ruff check
 	uv --directory $(DEPLOY) run pytest
 	uv --directory $(DEPLOY) run ansible-lint
-	uv --directory $(DEPLOY) run ansible-playbook --syntax-check --inventory localhost, playbooks/database.yml playbooks/webapp.yml
+	uv --directory $(DEPLOY) run ansible-playbook --syntax-check --inventory localhost, playbooks/database.yml playbooks/webapp.yml playbooks/tls.yml
 
 clean: ## Remove build output, including the backend bin and obj directories
 	rm -rf $(OUT) $(FRONTEND)/dist backend/*/bin backend/*/obj

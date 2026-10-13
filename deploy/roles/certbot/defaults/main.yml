@@ -1,0 +1,2 @@
+---
+certbot_deploy_hook: /usr/local/sbin/todoapp-install-certificate

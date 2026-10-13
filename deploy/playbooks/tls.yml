@@ -1,0 +1,20 @@
+---
+- name: Get a Let's Encrypt certificate for the app's domain and serve the app over HTTPS
+  hosts: all
+  become: true
+  roles:
+    - supported_host
+    - certbot
+  tasks:
+    - name: Serve HTTPS with the certificate
+      ansible.builtin.include_role:
+        name: todoapp
+        tasks_from: settings.yml
+
+    - name: Restart the app if its settings changed
+      ansible.builtin.meta: flush_handlers
+
+    - name: Wait until the app is healthy over HTTPS
+      ansible.builtin.include_role:
+        name: todoapp
+        tasks_from: health.yml

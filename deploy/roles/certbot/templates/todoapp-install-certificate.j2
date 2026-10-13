@@ -1,0 +1,6 @@
+#!/bin/sh
+# certbot runs this after it gets or renews the certificate in $RENEWED_LINEAGE, which only root can read.
+set -eu
+install -D -o root -g todoapp -m 0640 "$RENEWED_LINEAGE/fullchain.pem" {{ todoapp_tls_dir }}/fullchain.pem
+install -D -o root -g todoapp -m 0640 "$RENEWED_LINEAGE/privkey.pem" {{ todoapp_tls_dir }}/privkey.pem
+systemctl restart todoapp

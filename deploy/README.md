@@ -23,6 +23,12 @@ uv run setup-webapp ubuntu@203.0.113.10 v1.2.3
 Both scripts can be run again: a run only changes what differs from the release and settings it is given, so the same
 two commands upgrade the host to a new release.
 
+To serve HTTPS, point a domain name at the host and, once the app is set up, run `setup-tls` with that domain:
+
+```sh
+uv run setup-tls ubuntu@203.0.113.10 todo.example.com --email you@example.com
+```
+
 ### `setup-database`
 
 Installs SQL Server and Docker, applies the release's migrations with the `migrate` command of its Docker image, and
@@ -40,8 +46,9 @@ SQL Server listens on `127.0.0.1` only. It runs as the Express edition, which is
 ### `setup-webapp`
 
 Installs the ASP.NET Core runtime and the release's zip, and runs the app as the `todoapp` systemd service on port
-`80`, then waits for `/health` to answer `Healthy`. It serves plain HTTP: put a reverse proxy in front of it for
-HTTPS, and set the API's `TrustedProxies` (see the [root README](../README.md#rate-limiting)).
+`80`, then waits for `/health` to answer `Healthy`. It serves plain HTTP until `setup-tls` gives the host a
+certificate, and from then on HTTPS on port `443` as well. To terminate HTTPS in a reverse proxy instead, skip
+`setup-tls` and set the API's `TrustedProxies` (see the [root README](../README.md#rate-limiting)).
 
 It only asks for what the host doesn't have yet:
 
@@ -51,6 +58,24 @@ It only asks for what the host doesn't have yet:
 
 To change either of them on a host that has them, pass `--change-database-password` or `--change-certificate`.
 Replacing the certificate logs every user out, and losing it does too: keep the PFX and its password.
+
+### `setup-tls`
+
+Gets a Let's Encrypt certificate for the domain with certbot and serves the app over HTTPS with it, redirecting HTTP to
+HTTPS (see the [root README](../README.md#https)). It needs:
+
+- The app installed by `setup-webapp`, from a release that serves ACME challenges.
+- The domain's DNS pointing at the host, and port `80` reachable from the internet: Let's Encrypt checks that the
+  domain is yours by fetching a file that certbot puts in `/var/lib/todoapp/acme`, which the app serves.
+- Optionally `--email`, for Let's Encrypt to write to about the account. Without it, the account has no address.
+
+certbot's timer renews the certificate before it expires. Its hook copies each new certificate to `/etc/todoapp/tls`,
+where the app can read it, and restarts the app, so the app restarts only when the certificate changes.
+`sudo certbot renew --dry-run` on the host tests a renewal. Running `setup-tls` again with the same domain changes
+nothing.
+
+The app then sends HSTS, which makes browsers that visited it refuse plain HTTP for 30 days: don't remove HTTPS once
+it's served.
 
 ### `generate-certificate`
 
@@ -65,6 +90,8 @@ asking for its password. It refuses to overwrite a file.
 | `/etc/todoapp/database-admin.env` | The `sa` password and connection string, for migrations (root only) |
 | `/etc/todoapp/database.env` | The app's connection string (root only; systemd passes it to the app) |
 | `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's password (root only) and the PFX (readable by the app) |
+| `/etc/todoapp/tls/fullchain.pem`, `privkey.pem` | The HTTPS certificate and its key (readable by the app), copied from `/etc/letsencrypt` by `/usr/local/sbin/todoapp-install-certificate` |
+| `/var/lib/todoapp/acme` | The web root certbot writes ACME challenges to, which the app serves |
 | `/opt/todoapp/releases/<tag>` | Each installed release; `/opt/todoapp/current` links to the one running |
 | `/opt/dotnet/<version>` | The ASP.NET Core runtime |
 
