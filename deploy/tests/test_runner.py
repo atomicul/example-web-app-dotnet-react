@@ -2,7 +2,14 @@ import argparse
 
 import pytest
 
-from todoapp_deploy.runner import Target, parse_github_repository, parse_target, parse_version_tag, release_variables
+from todoapp_deploy.runner import (
+    Target,
+    parse_github_repository,
+    parse_target,
+    parse_version_tag,
+    release_variables,
+    release_variables_of,
+)
 
 
 def test_parse_target_splits_user_and_host():
@@ -52,3 +59,7 @@ def test_release_variables_lowercase_the_image_and_drop_the_tag_prefix():
         "release_tag": "v1.2.3",
         "app_version": "1.2.3",
     }
+
+
+def test_release_variables_of_a_script_without_a_release_are_empty():
+    assert release_variables_of(argparse.Namespace(target=Target("deploy", "example.com"))) == {}

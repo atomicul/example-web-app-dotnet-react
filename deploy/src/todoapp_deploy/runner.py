@@ -64,11 +64,25 @@ def release_variables(repository: str, version_tag: str) -> dict[str, str]:
 def argument_parser(description: str) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
     parser.add_argument("target", type=parse_target, help="the Ubuntu host to set up, as user@host")
-    parser.add_argument("version", type=parse_version_tag, help="the release tag to install, e.g. v1.2.3")
     parser.add_argument(
         "-K", "--ask-become-pass", action="store_true", help="ask for the user's sudo password on the host"
     )
     return parser
+
+
+def add_release_argument(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument("version", type=parse_version_tag, help="the release tag to install, e.g. v1.2.3")
+
+
+def release_variables_of(args: argparse.Namespace) -> dict[str, str]:
+    """The release variables of the version in args, when the script takes one."""
+    if "version" not in args:
+        return {}
+    try:
+        repository = origin_repository()
+    except (subprocess.CalledProcessError, ValueError) as error:
+        sys.exit(f"Can't tell which GitHub repository to deploy: {error}")
+    return release_variables(repository, args.version)
 
 
 def run_playbook(
@@ -78,13 +92,8 @@ def run_playbook(
     secrets: dict[str, str] | None = None,
 ) -> int:
     """Runs a playbook against args.target, passing secrets as environment variables so they never reach argv."""
-    try:
-        repository = origin_repository()
-    except (subprocess.CalledProcessError, ValueError) as error:
-        sys.exit(f"Can't tell which GitHub repository to deploy: {error}")
-
     become = ["--ask-become-pass"] if args.ask_become_pass else []
-    extra_variables = release_variables(repository, args.version) | (variables or {})
+    extra_variables = release_variables_of(args) | (variables or {})
     command = [
         str(Path(sys.executable).parent / "ansible-playbook"),
         *become,

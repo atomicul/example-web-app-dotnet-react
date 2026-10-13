@@ -3,11 +3,12 @@
 import os
 import sys
 
-from todoapp_deploy.runner import argument_parser, run_playbook
+from todoapp_deploy.runner import add_release_argument, argument_parser, run_playbook
 
 
 def main() -> None:
     parser = argument_parser(__doc__.partition(": ")[2])
+    add_release_argument(parser)
     parser.add_argument(
         "--change-database-password",
         action="store_true",
