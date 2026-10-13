@@ -60,6 +60,29 @@ Outside Development the API never migrates its database: deployments apply migra
 new version, with the Docker image's `migrate` command (see [Docker image](#docker-image)). `make run` runs as
 Production, so it expects the development database to be migrated already, e.g. by a previous `make dev`.
 
+## Cloud services
+
+Apart from its database, the API reaches cloud services such as queues and storage buckets only through a
+[Dapr](https://dapr.io) sidecar, which runs as a separate process on the same host. The sidecar holds the credentials
+and the mapping from the names the API uses, such as the `emails` binding, to real resources, such as an SQS queue.
+The API connects to it over a Unix socket that only the app's user can open, so the API holds no cloud credentials of
+its own. Every change that uses a cloud service keeps to three rules:
+
+1. **Development needs only the database.** A feature reaches a cloud service through its own interface, such as
+   `IEmailSender`. A stand-in implementation of that interface serves `make dev`, `make run` and the Docker image, e.g.
+   by logging. A setting switches to the Dapr implementation, never the environment, so any build runs without a
+   sidecar until it is configured. The Dapr implementation uses `DaprClient` directly: Dapr is already the abstraction
+   over providers, so it gets no wrapper.
+2. **Dapr implementations are tested against a real sidecar.** The backend tests run daprd in Docker with
+   provider-agnostic components, such as `bindings.localstorage`, and check which building blocks each implementation
+   calls and with what.
+3. **The repository stays provider-agnostic, `deploy/` included.** Component YAMLs that name a provider's resources,
+   credentials or secret stores live with whoever operates the host, not here, and setting up the provider's side,
+   such as creating a queue or granting the host access to it, is manual.
+
+A new feature therefore brings a stand-in and a Dapr implementation, a setting that picks between them, tests against
+the sidecar, and a `setup-webapp` change that turns the setting on only when the host has the matching component.
+
 ## Authentication
 
 ASP.NET Core Identity accepts two schemes:
