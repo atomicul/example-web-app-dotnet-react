@@ -228,25 +228,6 @@ concurrent runs wait for each other, and exits non-zero when it fails. Its outpu
 - `migrate --connection "<connection string>"` overrides `ConnectionStrings__Default`; prefer the environment variable,
   which keeps the password out of the process list.
 
-From Ansible, run it as a one-off container with the version about to be deployed:
-
-```yaml
-- name: Migrate the database
-  community.docker.docker_container:
-    name: todoapp-migrate
-    image: "ghcr.io/OWNER/REPO:{{ app_version }}"
-    command: migrate
-    detach: false
-    cleanup: true
-    networks:
-      - name: todoapp
-    env:
-      ConnectionStrings__Default: "{{ todoapp_connection_string }}"
-  no_log: true
-  register: migration
-  changed_when: "'No migrations were applied' not in migration.container.Output"
-```
-
 ## Deploying to a host
 
 `deploy/` sets the app and its database up on a single Ubuntu 24.04 host with Ansible, needing only uv. For each
