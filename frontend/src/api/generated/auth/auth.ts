@@ -455,7 +455,7 @@ return fetcher<void>(getPostApiAuthResendConfirmationEmailUrl(),
 
 export const getPostApiAuthResendConfirmationEmailMutationKey = () => ['postApiAuthResendConfirmationEmail'] as const;
 
-export const getPostApiAuthResendConfirmationEmailMutationOptions = <TError = ErrorType<unknown>,
+export const getPostApiAuthResendConfirmationEmailMutationOptions = <TError = ErrorType<HttpValidationProblemDetails>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthResendConfirmationEmail>>, TError,PostApiAuthResendConfirmationEmailMutationVariables, TContext>, request?: SecondParameter<typeof fetcher>}
 ): UseMutationOptions<Awaited<ReturnType<typeof postApiAuthResendConfirmationEmail>>, TError,PostApiAuthResendConfirmationEmailMutationVariables, TContext> => {
 
@@ -484,10 +484,10 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
 
     export type PostApiAuthResendConfirmationEmailMutationResult = NonNullable<Awaited<ReturnType<typeof postApiAuthResendConfirmationEmail>>>
     export type PostApiAuthResendConfirmationEmailMutationBody = ResendConfirmationEmailRequest
-    export type PostApiAuthResendConfirmationEmailMutationError = ErrorType<unknown>
+    export type PostApiAuthResendConfirmationEmailMutationError = ErrorType<HttpValidationProblemDetails>
     export type PostApiAuthResendConfirmationEmailMutationVariables = {data: ResendConfirmationEmailRequest}
 
-    export const usePostApiAuthResendConfirmationEmail = <TError = ErrorType<unknown>,
+    export const usePostApiAuthResendConfirmationEmail = <TError = ErrorType<HttpValidationProblemDetails>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postApiAuthResendConfirmationEmail>>, TError,PostApiAuthResendConfirmationEmailMutationVariables, TContext>, request?: SecondParameter<typeof fetcher>}
  , queryClient?: QueryClient): UseMutationResult<
         Awaited<ReturnType<typeof postApiAuthResendConfirmationEmail>>,
