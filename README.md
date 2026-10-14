@@ -24,6 +24,10 @@ is not rate limited.
 - Docker, for the development database and the backend tests
 - uv, which installs the pinned Python and packages of `deploy/`
 
+The .NET SDK is pinned to an exact release because the OpenAPI document, and so the generated frontend client, can
+change between .NET patches. To upgrade it, change the version in `global.json` and the `sdk` and `aspnet` image tags in
+the `Dockerfile` together, then run `make api` and commit the regenerated client.
+
 ## Make targets
 
 | Target | Does |

@@ -8,7 +8,7 @@ RUN pnpm install --frozen-lockfile
 COPY frontend/ ./
 RUN pnpm build
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS backend
+FROM mcr.microsoft.com/dotnet/sdk:10.0.402 AS backend
 ARG VERSION
 WORKDIR /src
 COPY global.json dotnet-tools.json ./
@@ -19,7 +19,7 @@ COPY backend/TodoApi/ backend/TodoApi/
 RUN dotnet publish backend/TodoApi -c Release -o /app --no-restore -p:OpenApiGenerateDocuments=false ${VERSION:+-p:Version=$VERSION}
 RUN dotnet ef migrations bundle --project backend/TodoApi --configuration Release --no-build --output /migrate
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0.13
 ENV ASPNETCORE_ENVIRONMENT=Production
 WORKDIR /app
 COPY --from=backend /app ./
