@@ -124,3 +124,10 @@ export const PostApiAuthManageInfoResponse = zod.object({
  */
 export const PostApiAuthLogoutResponse = zod.unknown()
 
+/**
+ * @summary Gets the email the signed-in user asked to change to, while the link that confirms it still works.
+ */
+export const GetPendingEmailResponse = zod.object({
+  "email": zod.string().nullable().describe('The new email, which the link sent to it confirms; null when no change is waiting, or its link no longer works\nbecause it expired, the change was confirmed or the password changed since.')
+}).describe('An email change the signed-in user asked for and hasn\'t confirmed yet.')
+

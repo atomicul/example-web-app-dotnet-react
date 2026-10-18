@@ -19,6 +19,7 @@ public static class AuthEndpoints
         identity.Add(GuardAccountChanges);
         identity.AddEndpointFilter(ValidationProblems.CodeIdentityErrors);
         auth.MapPost("/logout", Logout).RequireAuthorization();
+        auth.MapGet("/manage/pendingEmail", AccountChanges.GetPendingEmail).RequireAuthorization().WithName("GetPendingEmail");
 
         return app;
     }

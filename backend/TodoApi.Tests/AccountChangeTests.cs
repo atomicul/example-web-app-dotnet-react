@@ -1,9 +1,11 @@
 using System.Net;
+using System.Net.Http.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using TodoApi.Auth;
 
 namespace TodoApi.Tests;
 
@@ -23,6 +25,47 @@ public class AccountChangeTests(TodoApiFactory factory)
 
         var (_, issues) = await response.ReadValidationProblemAsync();
         Assert.Equal("DuplicateEmail", Assert.Single(issues).Code);
+    }
+
+    [Fact]
+    public async Task No_email_change_is_pending_at_first()
+    {
+        var client = await factory.CreateUserClientAsync();
+
+        Assert.Null(await GetPendingEmailAsync(client));
+    }
+
+    [Fact]
+    public async Task Email_change_is_pending_until_confirmed()
+    {
+        var client = await factory.CreateUserClientAsync();
+        var newEmail = TestUsers.NewEmail();
+
+        (await client.ChangeInfoAsync(new InfoRequest { NewEmail = newEmail })).EnsureSuccessStatusCode();
+        var beforeConfirming = await GetPendingEmailAsync(client);
+        (await client.ConfirmEmailAsync(factory.Emails.ConfirmationLinkFor(newEmail))).EnsureSuccessStatusCode();
+        var afterConfirming = await GetPendingEmailAsync(client);
+        var login = await factory.CreateClient().LoginAsync(newEmail);
+
+        Assert.Equal(newEmail, beforeConfirming);
+        Assert.Null(afterConfirming);
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+    }
+
+    [Fact]
+    public async Task Password_change_drops_the_pending_email_change()
+    {
+        var client = await factory.CreateUserClientAsync();
+        var newEmail = TestUsers.NewEmail();
+
+        (await client.ChangeInfoAsync(new InfoRequest { NewEmail = newEmail })).EnsureSuccessStatusCode();
+        (await client.ChangeInfoAsync(new InfoRequest { OldPassword = TestUsers.Password, NewPassword = NewPassword }))
+            .EnsureSuccessStatusCode();
+        var pending = await GetPendingEmailAsync(client);
+        var confirmation = await client.ConfirmEmailAsync(factory.Emails.ConfirmationLinkFor(newEmail));
+
+        Assert.Null(pending);
+        Assert.Equal(HttpStatusCode.Unauthorized, confirmation.StatusCode);
     }
 
     [Fact]
@@ -55,6 +98,9 @@ public class AccountChangeTests(TodoApiFactory factory)
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
     }
+
+    private static async Task<string?> GetPendingEmailAsync(HttpClient client) =>
+        (await client.GetFromJsonAsync<PendingEmailResponse>("/api/auth/manage/pendingEmail", CancellationToken))!.Email;
 
     /// <summary>A server that checks each cookie's security stamp on every request, instead of every 30 minutes.</summary>
     private WebApplicationFactory<Program> ValidatingSessionsOnEveryRequest() =>

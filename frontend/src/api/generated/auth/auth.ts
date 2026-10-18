@@ -32,6 +32,7 @@ import type {
   InfoResponse,
   LoginRequest,
   MapIdentityApiApiAuthConfirmEmailParams,
+  PendingEmailResponse,
   PostApiAuthLoginParams,
   RefreshRequest,
   RegisterRequest,
@@ -988,3 +989,103 @@ export const usePostApiAuthLogout = <TError = ErrorType<void>,
       > => {
       return useMutation(getPostApiAuthLogoutMutationOptions(options), queryClient);
     }
+    export const getGetPendingEmailUrl = () => {
+
+
+
+
+  return `/api/auth/manage/pendingEmail`
+}
+
+/**
+ * @summary Gets the email the signed-in user asked to change to, while the link that confirms it still works.
+ */
+export const getPendingEmail = async ( options?: Parameters<typeof fetcher>[1]): Promise<PendingEmailResponse> => {
+
+  return fetcher<PendingEmailResponse>(getGetPendingEmailUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPendingEmailQueryKey = () => {
+    return [
+    'api','auth','manage','pendingEmail'
+    ] as const;
+    }
+
+
+export const getGetPendingEmailQueryOptions = <TData = Awaited<ReturnType<typeof getPendingEmail>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPendingEmail>>, TError, TData>>, request?: SecondParameter<typeof fetcher>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPendingEmailQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPendingEmail>>> = ({ signal }) => getPendingEmail({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPendingEmail>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetPendingEmailQueryResult = NonNullable<Awaited<ReturnType<typeof getPendingEmail>>>
+export type GetPendingEmailQueryError = ErrorType<void>
+
+
+export function useGetPendingEmail<TData = Awaited<ReturnType<typeof getPendingEmail>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPendingEmail>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPendingEmail>>,
+          TError,
+          Awaited<ReturnType<typeof getPendingEmail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof fetcher>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPendingEmail<TData = Awaited<ReturnType<typeof getPendingEmail>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPendingEmail>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getPendingEmail>>,
+          TError,
+          Awaited<ReturnType<typeof getPendingEmail>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof fetcher>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetPendingEmail<TData = Awaited<ReturnType<typeof getPendingEmail>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPendingEmail>>, TError, TData>>, request?: SecondParameter<typeof fetcher>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Gets the email the signed-in user asked to change to, while the link that confirms it still works.
+ */
+
+export function useGetPendingEmail<TData = Awaited<ReturnType<typeof getPendingEmail>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getPendingEmail>>, TError, TData>>, request?: SecondParameter<typeof fetcher>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetPendingEmailQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

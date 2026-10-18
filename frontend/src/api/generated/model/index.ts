@@ -15,6 +15,7 @@ export * from './infoRequest';
 export * from './infoResponse';
 export * from './loginRequest';
 export * from './mapIdentityApiApiAuthConfirmEmailParams';
+export * from './pendingEmailResponse';
 export * from './postApiAuthLoginParams';
 export * from './refreshRequest';
 export * from './registerRequest';

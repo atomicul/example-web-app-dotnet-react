@@ -405,6 +405,38 @@
         ]
       }
     },
+    "/api/auth/manage/pendingEmail": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Gets the email the signed-in user asked to change to, while the link that confirms it still works.",
+        "operationId": "GetPendingEmail",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PendingEmailResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Missing or invalid bearer token."
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/todos": {
       "get": {
         "tags": [
@@ -797,6 +829,22 @@
             ]
           }
         }
+      },
+      "PendingEmailResponse": {
+        "required": [
+          "email"
+        ],
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The new email, which the link sent to it confirms; null when no change is waiting, or its link no longer works\nbecause it expired, the change was confirmed or the password changed since."
+          }
+        },
+        "description": "An email change the signed-in user asked for and hasn't confirmed yet."
       },
       "RefreshRequest": {
         "required": [
