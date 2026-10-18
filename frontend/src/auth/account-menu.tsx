@@ -22,8 +22,7 @@ import {
 } from '@/components/menu'
 import { Button } from '@/components/ui/button'
 import { languages } from '@/i18n'
-
-const themes = ['light', 'dark', 'system'] as const
+import { type Theme, themes, useTheme } from '@/theme'
 
 /** Shows who is signed in, and lets them pick the language and theme or log out. */
 export function AccountMenu({ email }: { email: string }) {
@@ -89,9 +88,10 @@ function LanguageSubmenu() {
   )
 }
 
-/** Lists the themes, which can't be picked until the SPA supports them. */
+/** Picks a light or dark theme, or the device's; the choice is remembered in this browser. */
 function ThemeSubmenu() {
   const { t } = useTranslation()
+  const { theme, setTheme } = useTheme()
 
   return (
     <MenuSub>
@@ -100,10 +100,13 @@ function ThemeSubmenu() {
         {t('accountMenu.theme')}
       </MenuSubTrigger>
       <MenuSubContent title={t('accountMenu.theme')}>
-        <MenuRadioGroup value="system">
-          {themes.map((theme) => (
-            <MenuRadioItem key={theme} value={theme} disabled>
-              {t(`accountMenu.themes.${theme}`)}
+        <MenuRadioGroup
+          value={theme}
+          onValueChange={(value) => setTheme(value as Theme)}
+        >
+          {themes.map((choice) => (
+            <MenuRadioItem key={choice} value={choice}>
+              {t(`accountMenu.themes.${choice}`)}
             </MenuRadioItem>
           ))}
         </MenuRadioGroup>
