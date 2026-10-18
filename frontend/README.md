@@ -77,6 +77,19 @@ English. Signed-in users pick it in the account menu, and the login, registratio
 `LanguageSwitcher`. To add one, add its catalog, then list it in `languages` and its zod locale in
 `zodLocales` in `src/i18n/index.ts`, and cover it in the catalog test (`src/i18n/i18n.test.ts`).
 
+## Themes
+
+The SPA's colors are the CSS variables shadcn/ui set up in `src/index.css`: `:root` holds the light theme and `.dark`
+the dark one, and Tailwind's `dark:` variant applies under the `dark` class. Components use the semantic utilities
+(`bg-background`, `text-muted-foreground`, `border-border`) rather than raw colors, so they follow the theme without a
+`dark:` variant of their own. To change a color, change its variable in both blocks.
+
+The theme is the one the user last picked in the account menu, remembered in this browser, or else `system`, which
+follows the device's light or dark setting as it changes. `src/theme` puts the `dark` class on `<html>`, and
+components read the choice with `useTheme()`, as the toaster does. A small script in `index.html` applies the
+remembered theme before the SPA loads, so dark pages don't flash white; it reads the same `theme` key in
+`localStorage`, so change both together.
+
 ## Menus
 
 Menus are built from the parts in `src/components/menu.tsx`, never from `dropdown-menu` or `drawer` directly. On big
