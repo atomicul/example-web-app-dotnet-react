@@ -51,7 +51,8 @@
     "sent": "Ți-am trimis un nou link de confirmare la {{email}}."
   },
   "layout": {
-    "todos": "Sarcini"
+    "todos": "Sarcini",
+    "refresh": "Reîmprospătează"
   },
   "accountMenu": {
     "open": "Meniul contului",

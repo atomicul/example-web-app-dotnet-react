@@ -50,7 +50,8 @@
     "sent": "We sent a new confirmation link to {{email}}."
   },
   "layout": {
-    "todos": "Todos"
+    "todos": "Todos",
+    "refresh": "Refresh"
   },
   "accountMenu": {
     "open": "Account menu",

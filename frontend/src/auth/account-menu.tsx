@@ -7,6 +7,7 @@ import {
   SunMoonIcon,
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { useGetApiAuthManageInfo } from '@/api/generated'
 import { useAuth } from '@/auth/use-auth'
 import {
   Menu,
@@ -27,8 +28,9 @@ import { languages } from '@/i18n'
 import { type Theme, themes, useTheme } from '@/theme'
 
 /** Shows who is signed in, and lets them change their email and password, pick the language and theme or log out. */
-export function AccountMenu({ email }: { email: string }) {
+export function AccountMenu() {
   const { t } = useTranslation()
+  const { data: user } = useGetApiAuthManageInfo()
   const navigate = useNavigate()
   const { logout } = useAuth()
 
@@ -49,7 +51,9 @@ export function AccountMenu({ email }: { email: string }) {
         <MenuGroup>
           <MenuLabel>
             {t('accountMenu.signedInAs')}
-            <span className="text-foreground block truncate">{email}</span>
+            <span className="text-foreground block truncate">
+              {user?.email}
+            </span>
           </MenuLabel>
         </MenuGroup>
         <MenuSeparator />

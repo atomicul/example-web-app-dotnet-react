@@ -2,21 +2,19 @@ import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { AccountMenu } from '@/auth/account-menu'
 import { fetchSession } from '@/auth/session'
+import { RefreshButton } from '@/components/refresh-button'
 
 export const Route = createFileRoute('/_authenticated')({
   beforeLoad: async ({ context, location }) => {
-    const user = await fetchSession(context.queryClient)
-    if (!user) {
+    if (!(await fetchSession(context.queryClient))) {
       throw redirect({ to: '/login', search: { redirect: location.href } })
     }
-    return { user }
   },
   component: AuthenticatedLayout,
 })
 
 function AuthenticatedLayout() {
   const { t } = useTranslation()
-  const { user } = Route.useRouteContext()
 
   return (
     <div className="flex h-svh flex-col">
@@ -25,7 +23,10 @@ function AuthenticatedLayout() {
           <span className="font-heading font-semibold">
             {t('layout.todos')}
           </span>
-          <AccountMenu email={user.email} />
+          <div className="flex items-center gap-1">
+            <RefreshButton />
+            <AccountMenu />
+          </div>
         </div>
       </header>
       <main className="flex-1 overflow-y-auto">
