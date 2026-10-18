@@ -72,6 +72,26 @@ public class TodoTests(TodoApiFactory factory)
     }
 
     [Fact]
+    public async Task Error_the_api_words_carries_its_code()
+    {
+        var client = await factory.CreateUserClientAsync();
+
+        var created = await client.PostAsJsonAsync("/api/todos", new TodoRequest("Water the plants", DueDate: Yesterday), CancellationToken);
+
+        Assert.Equal(["DueDateInPast"], (await ValidationCodesAsync(created))["DueDate"]);
+    }
+
+    [Fact]
+    public async Task Error_worded_by_an_attribute_has_no_code()
+    {
+        var client = await factory.CreateUserClientAsync();
+
+        var created = await client.PostAsJsonAsync("/api/todos", new TodoRequest(""), CancellationToken);
+
+        Assert.Equal([null], (await ValidationCodesAsync(created))["Title"]);
+    }
+
+    [Fact]
     public async Task Completed_todo_can_be_due_in_the_past()
     {
         var client = await factory.CreateUserClientAsync();
@@ -87,4 +107,13 @@ public class TodoTests(TodoApiFactory factory)
         var problem = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(CancellationToken);
         return problem!.Errors.Keys;
     }
+
+    private static async Task<Dictionary<string, string?[]>> ValidationCodesAsync(HttpResponseMessage response)
+    {
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        var problem = await response.Content.ReadFromJsonAsync<CodedValidationProblem>(CancellationToken);
+        return problem!.Codes;
+    }
+
+    private record CodedValidationProblem(Dictionary<string, string?[]> Codes);
 }

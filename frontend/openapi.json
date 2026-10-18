@@ -700,6 +700,19 @@
                 "type": "string"
               }
             }
+          },
+          "codes": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "array",
+              "items": {
+                "type": [
+                  "null",
+                  "string"
+                ]
+              }
+            },
+            "description": "The codes of the errors, keyed like errors: each names the error at the same position, for clients to word in their own language, or is null when the error has none."
           }
         }
       },

@@ -9,11 +9,13 @@ namespace TodoApi.Todos;
 public record TodoRequest([property: Required, StringLength(200, MinimumLength = 1)] string Title, bool IsComplete = false, DateOnly? DueDate = null)
     : IValidatableObject
 {
+    public const string DueDateInPast = "An open todo can't be due in the past.";
+
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
         if (!IsComplete && DueDate < DateOnly.FromDateTime(DateTime.UtcNow))
         {
-            yield return new ValidationResult("An open todo can't be due in the past.", [nameof(DueDate)]);
+            yield return new ValidationResult(DueDateInPast, [nameof(DueDate)]);
         }
     }
 }

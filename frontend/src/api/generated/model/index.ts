@@ -9,6 +9,7 @@
 export * from './accessTokenResponse';
 export * from './forgotPasswordRequest';
 export * from './httpValidationProblemDetails';
+export * from './httpValidationProblemDetailsCodes';
 export * from './httpValidationProblemDetailsErrors';
 export * from './infoRequest';
 export * from './infoResponse';

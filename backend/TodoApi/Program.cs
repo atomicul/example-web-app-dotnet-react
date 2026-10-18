@@ -31,7 +31,7 @@ builder.Services.AddRateLimits(builder.Configuration);
 builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
 
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
-builder.Services.AddProblemDetails();
+builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = ValidationCodes.Add);
 builder.Services.AddValidation();
 
 builder.Services.AddOpenApi(options =>
@@ -45,6 +45,7 @@ builder.Services.AddOpenApi(options =>
     options.AddDocumentTransformer<BearerSecurityTransformer>();
     options.AddOperationTransformer<BearerSecurityTransformer>();
     options.AddSchemaTransformer<RegisterRequestSchemaTransformer>();
+    options.AddSchemaTransformer<ValidationCodesSchemaTransformer>();
 });
 
 var app = builder.Build();
