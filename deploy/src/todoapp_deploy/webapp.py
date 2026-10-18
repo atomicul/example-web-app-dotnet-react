@@ -5,6 +5,7 @@ import os
 import sys
 from pathlib import Path
 
+from todoapp_deploy.passwords import generate_password
 from todoapp_deploy.runner import add_release_argument, argument_parser, run_playbook
 
 
@@ -40,4 +41,5 @@ def main() -> None:
         "todoapp_controller_directory": os.getcwd(),
         "dapr_components_source": str(args.dapr_components or ""),
     }
-    sys.exit(run_playbook("webapp.yml", args, variables=variables))
+    secrets = {"TODOAPP_GENERATED_CERTIFICATE_PASSWORD": generate_password()}
+    sys.exit(run_playbook("webapp.yml", args, variables=variables, secrets=secrets))

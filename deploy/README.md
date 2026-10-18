@@ -56,7 +56,8 @@ It only asks for what the host doesn't have yet:
 - The connection string the app connects to its database with: the one `setup-database` showed when it set the
   database up on the same host, or one to any other SQL Server.
 - The PFX certificate that encrypts the app's Data Protection keys: press Enter to generate one, saved locally as its
-  backup, or type the path of an existing PFX. Either way, it then asks for the PFX's password.
+  backup, or type the path of an existing PFX. Either way, it then asks for the PFX's password. For a new PFX, press
+  Enter to generate a password, which it **shows once**.
 
 To change either of them on a host that has them, pass `--change-connection-string` or `--change-certificate`.
 Replacing the certificate logs every user out, and losing it does too: keep the PFX and its password.

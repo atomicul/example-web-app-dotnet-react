@@ -45,24 +45,40 @@
 
 - name: Ask for the certificate's password
   ansible.builtin.pause:
-    prompt: "{{ 'Password for the new PFX' if todoapp_generate_certificate else 'Password of the PFX' }}"
+    prompt: >-
+      {{ 'Password for the new PFX: press Enter to generate one' if todoapp_generate_certificate
+         else 'Password of the PFX' }}
     echo: false
-  register: todoapp_certificate_password
+  register: todoapp_certificate_password_input
+
+- name: Remember whether to generate the certificate's password
+  ansible.builtin.set_fact:
+    todoapp_generate_certificate_password: >-
+      {{ todoapp_generate_certificate and todoapp_certificate_password_input.user_input | length == 0 }}
 
 - name: Ask for the new certificate's password again
   ansible.builtin.pause:
     prompt: Repeat the password
     echo: false
   register: todoapp_certificate_password_again
-  when: todoapp_generate_certificate
+  when: todoapp_generate_certificate and not todoapp_generate_certificate_password
 
 - name: Require a certificate password, typed the same way twice for a new one
   ansible.builtin.assert:
     that:
-      - todoapp_certificate_password.user_input | length > 0
-      - not todoapp_generate_certificate or todoapp_certificate_password_again.user_input == todoapp_certificate_password.user_input
+      - todoapp_generate_certificate_password or todoapp_certificate_password_input.user_input | length > 0
+      - >-
+        todoapp_certificate_password_again is skipped
+        or todoapp_certificate_password_again.user_input == todoapp_certificate_password_input.user_input
     fail_msg: The certificate password is empty, or the two passwords don't match
     quiet: true
+  no_log: true
+
+- name: Remember the certificate's password
+  ansible.builtin.set_fact:
+    todoapp_certificate_password: >-
+      {{ lookup('ansible.builtin.env', 'TODOAPP_GENERATED_CERTIFICATE_PASSWORD') if todoapp_generate_certificate_password
+         else todoapp_certificate_password_input.user_input }}
   no_log: true
 
 - name: Generate the certificate
@@ -71,12 +87,20 @@
       - "{{ ansible_playbook_python | dirname }}/generate-certificate"
       - "{{ todoapp_certificate_file }}"
   environment:
-    TODOAPP_CERTIFICATE_PASSWORD: "{{ todoapp_certificate_password.user_input }}"
+    TODOAPP_CERTIFICATE_PASSWORD: "{{ todoapp_certificate_password }}"
   delegate_to: localhost
   become: false
   changed_when: true
   no_log: true
   when: todoapp_generate_certificate
+
+- name: Show the certificate's generated password, this once
+  ansible.builtin.debug:
+    msg:
+      - "Generated {{ todoapp_certificate_file }} with this password:"
+      - "{{ todoapp_certificate_password }}"
+      - It is shown only this once. Keep it with the PFX; the app can't read its keys without both.
+  when: todoapp_generate_certificate_password
 
 - name: Copy the certificate to the host
   ansible.builtin.copy:
