@@ -27,7 +27,8 @@ Failed mutations are handled once, in `src/router.ts`:
 
 - Every failed mutation is toasted with `errorMessage`, unless its `meta.handlesErrors` says its caller shows the
   error itself, as a form does under its fields.
-- Every settled mutation refetches the queries under the keys in its `meta.invalidates`, or every query without it.
+- Every settled mutation refetches the active queries under the keys in its `meta.invalidates`, or every active
+  query without it, and stays pending until they are refetched, so the page changes once, with the API's data.
 - A 429 shows a single shared toast, however many requests it refused, and queries wait for its `Retry-After` before
   their one retry.
 
@@ -38,6 +39,31 @@ const { mutateAsync: createTodo } = useCreateTodo({
   },
 })
 ```
+
+## Optimistic updates
+
+A change the user expects to take effect at once, as checking a todo does, shows while its mutation is pending,
+from the mutation's own `variables`, rather than waiting for the API and the refetch after it:
+
+```tsx
+const update = useUpdateTodo({ mutation })
+const isComplete = update.isPending
+  ? update.variables.data.isComplete
+  : todo.isComplete
+```
+
+- The mutation stays pending until its queries are refetched (see [Error handling](#error-handling)), so the guess
+  gives way to the API's data without flickering back in between.
+- A failed mutation stops being pending, so the page shows the data as it was, and the error is toasted. Nothing
+  needs undoing.
+- Mutations that change the same resource share a `scope` (``scope: { id: `todo-${todo.id}` }``), which runs them one
+  after another, so the controls stay enabled and quick changes reach the API in the order they were made.
+
+This suits a change shown in one place, the component that makes it. Once other components show the same data,
+write the guess into the cache instead, in the mutation's `onMutate`, and put the cached data back in its `onError`,
+as TanStack Query's [optimistic updates](https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates)
+guide does. `onMutate` first cancels the queries it writes to (`cancelQueries`), so a refetch already on its way,
+as from a refresh, doesn't overwrite the guess.
 
 ## Forms
 
