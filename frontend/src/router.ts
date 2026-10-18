@@ -6,7 +6,7 @@ import {
   hashKey,
   matchQuery,
 } from '@tanstack/react-query'
-import { createRouter } from '@tanstack/react-router'
+import { createBrowserHistory, createRouter } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import {
   ApiError,
@@ -15,6 +15,7 @@ import {
   isUnauthorized,
 } from '@/api/fetcher'
 import { sessionQueryKey } from '@/auth/session'
+import { withTreeNavigation } from '@/lib/tree-history'
 import { routeTree } from './routeTree.gen'
 
 /** Every rate-limited request shares one toast, so a burst of them shows only once. */
@@ -96,6 +97,7 @@ queryClient.getQueryCache().subscribe((event) => {
 
 export const router = createRouter({
   routeTree,
+  history: withTreeNavigation(createBrowserHistory()),
   context: { queryClient },
   defaultPreload: 'intent',
   scrollRestoration: true,
