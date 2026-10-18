@@ -96,5 +96,8 @@
     "PasswordRequiresLower": "Parola trebuie să conțină cel puțin o literă mică.",
     "PasswordRequiresUpper": "Parola trebuie să conțină cel puțin o literă mare.",
     "PasswordRequiresUniqueChars": "Parola trebuie să conțină mai multe caractere diferite."
+  },
+  "page": {
+    "back": "Înapoi"
   }
 }
