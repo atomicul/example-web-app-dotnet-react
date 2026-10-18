@@ -7,7 +7,10 @@ import { Page } from '@/components/page'
 
 export const Route = createFileRoute('/_authenticated/account')({
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(getGetPendingEmailQueryOptions()),
+    context.queryClient.query({
+      ...getGetPendingEmailQueryOptions(),
+      staleTime: 'static',
+    }),
   component: AccountPage,
 })
 

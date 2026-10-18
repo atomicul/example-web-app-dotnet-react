@@ -11,7 +11,10 @@ import { TodoList } from '@/todos/todo-list'
 
 export const Route = createFileRoute('/_authenticated/')({
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(getGetTodosQueryOptions()),
+    context.queryClient.query({
+      ...getGetTodosQueryOptions(),
+      staleTime: 'static',
+    }),
   component: TodosPage,
 })
 

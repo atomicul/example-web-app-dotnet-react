@@ -15,9 +15,10 @@ function isStaleSession(error: unknown) {
 /** Resolves the signed-in user, or null when the session cookie is missing, expired or stale. */
 export async function fetchSession(queryClient: QueryClient) {
   try {
-    return await queryClient.ensureQueryData(
-      getGetApiAuthManageInfoQueryOptions(),
-    )
+    return await queryClient.query({
+      ...getGetApiAuthManageInfoQueryOptions(),
+      staleTime: 'static',
+    })
   } catch (error) {
     if (isUnauthorized(error) || isStaleSession(error)) {
       return null

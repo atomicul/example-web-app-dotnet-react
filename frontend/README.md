@@ -139,7 +139,10 @@ through query hooks (see [Loading data](#loading-data)):
 ```tsx
 export const Route = createFileRoute('/_authenticated/account')({
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(getGetPendingEmailQueryOptions()),
+    context.queryClient.query({
+      ...getGetPendingEmailQueryOptions(),
+      staleTime: 'static',
+    }),
   component: AccountPage,
 })
 
@@ -176,7 +179,10 @@ data rather than a loading state, and the page's components read the data back t
 ```tsx
 export const Route = createFileRoute('/_authenticated/')({
   loader: ({ context }) =>
-    context.queryClient.ensureQueryData(getGetTodosQueryOptions()),
+    context.queryClient.query({
+      ...getGetTodosQueryOptions(),
+      staleTime: 'static',
+    }),
   component: TodosPage,
 })
 
@@ -185,6 +191,10 @@ export function TodoList() {
   // ...
 }
 ```
+
+The `'static'` `staleTime` makes `query` fetch only what the cache lacks: a page opened again shows at once with what
+the cache holds, and the hook's own `staleTime`, React Query's default of 0, refetches it in the background as the
+component mounts. Without it, every navigation would wait for a fetch, and the hook would fetch the same data again.
 
 Components never show what a `loader` returns (`Route.useLoaderData()`), nor what a `beforeLoad` puts in the route
 context (`Route.useRouteContext()`). Both are snapshots, taken when the route loads, which stay as they were while
@@ -210,7 +220,7 @@ screen reads through its hook. A page needs nothing to take part, as long as it 
 [Loading data](#loading-data):
 
 - Data a component shows from a `loader` or the route context isn't an active query, so a refresh leaves it as it
-  was. Running the routes again (`router.invalidate()`) wouldn't help: `ensureQueryData` returns what the cache holds,
-  however old.
+  was. Running the routes again (`router.invalidate()`) wouldn't help: with its `'static'` `staleTime`, `query` returns
+  what the cache holds, however old.
 - Queries of the pages left behind aren't refetched. Queries are stale as soon as they are fetched (React Query's
   default `staleTime` of 0), so each refetches anyway once its page shows again.
