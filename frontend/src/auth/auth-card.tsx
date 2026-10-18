@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
+import { LanguageSwitcher } from '@/components/language-switcher'
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -27,6 +29,9 @@ export function AuthCard({
         <CardHeader>
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
+          <CardAction>
+            <LanguageSwitcher />
+          </CardAction>
         </CardHeader>
         <CardContent>{children}</CardContent>
         {footer && (

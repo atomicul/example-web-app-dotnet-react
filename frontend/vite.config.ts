@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import path from 'node:path'
 import tailwindcss from '@tailwindcss/vite'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
@@ -12,6 +13,9 @@ export default defineConfig({
   ],
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, 'src') },
+  },
+  test: {
+    setupFiles: ['src/test-setup.ts'],
   },
   server: {
     proxy: {

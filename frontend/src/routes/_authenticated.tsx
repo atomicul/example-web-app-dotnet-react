@@ -2,6 +2,7 @@ import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { fetchSession } from '@/auth/session'
 import { useAuth } from '@/auth/use-auth'
+import { LanguageSwitcher } from '@/components/language-switcher'
 import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/_authenticated')({
@@ -28,6 +29,7 @@ function AuthenticatedLayout() {
             {t('layout.todos')}
           </span>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             <span className="text-muted-foreground truncate text-sm">
               {user.email}
             </span>
