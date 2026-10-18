@@ -1,5 +1,7 @@
+import { useNavigate } from '@tanstack/react-router'
 import {
   CircleUserRoundIcon,
+  KeyRoundIcon,
   LanguagesIcon,
   LogOutIcon,
   SunMoonIcon,
@@ -24,9 +26,10 @@ import { Button } from '@/components/ui/button'
 import { languages } from '@/i18n'
 import { type Theme, themes, useTheme } from '@/theme'
 
-/** Shows who is signed in, and lets them pick the language and theme or log out. */
+/** Shows who is signed in, and lets them change their email and password, pick the language and theme or log out. */
 export function AccountMenu({ email }: { email: string }) {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const { logout } = useAuth()
 
   return (
@@ -50,6 +53,10 @@ export function AccountMenu({ email }: { email: string }) {
           </MenuLabel>
         </MenuGroup>
         <MenuSeparator />
+        <MenuItem onClick={() => void navigate({ to: '/account' })}>
+          <KeyRoundIcon />
+          {t('accountMenu.emailAndPassword')}
+        </MenuItem>
         <LanguageSubmenu />
         <ThemeSubmenu />
         <MenuSeparator />

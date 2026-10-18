@@ -41,7 +41,9 @@
     "logIn": "Autentifică-te",
     "invalid": "Link invalid sau expirat",
     "invalidDescription": "Nu ți-am putut confirma emailul cu acest link. Încearcă să te autentifici ca să primești unul nou.",
-    "backToLogIn": "Înapoi la autentificare"
+    "backToLogIn": "Înapoi la autentificare",
+    "changed": "Email schimbat",
+    "changedDescription": "Contul tău folosește acum {{email}}. De acum înainte, autentifică-te cu el."
   },
   "resendConfirmation": {
     "resend": "Retrimite emailul de confirmare",
@@ -62,7 +64,8 @@
       "dark": "Întunecată",
       "system": "Ca sistemul"
     },
-    "logOut": "Deconectează-te"
+    "logOut": "Deconectează-te",
+    "emailAndPassword": "Email și parolă"
   },
   "todos": {
     "title": "Titlu",
@@ -95,9 +98,29 @@
     "PasswordRequiresDigit": "Parola trebuie să conțină cel puțin o cifră.",
     "PasswordRequiresLower": "Parola trebuie să conțină cel puțin o literă mică.",
     "PasswordRequiresUpper": "Parola trebuie să conțină cel puțin o literă mare.",
-    "PasswordRequiresUniqueChars": "Parola trebuie să conțină mai multe caractere diferite."
+    "PasswordRequiresUniqueChars": "Parola trebuie să conțină mai multe caractere diferite.",
+    "PasswordMismatch": "Parola actuală este greșită.",
+    "OldPasswordRequired": "Introdu parola actuală ca să setezi una nouă."
   },
   "page": {
     "back": "Înapoi"
+  },
+  "account": {
+    "title": "Email și parolă",
+    "email": "Email",
+    "currentEmail": "Te autentifici cu {{email}}.",
+    "pendingEmail": "Așteptăm să confirmi {{email}}. Deschide linkul pe care ți l-am trimis acolo ca să termini schimbarea; până atunci, autentifică-te în continuare cu emailul actual.",
+    "newEmail": "Email nou",
+    "changeEmail": "Schimbă emailul",
+    "emailLinkSent": "Ți-am trimis un link de confirmare la {{email}}.",
+    "password": "Parolă",
+    "passwordDescription": "Schimbarea ei te deconectează de peste tot în altă parte.",
+    "currentPassword": "Parola actuală",
+    "currentPasswordRequired": "Introdu parola actuală.",
+    "newPassword": "Parola nouă",
+    "confirmPassword": "Confirmă parola nouă",
+    "passwordsDiffer": "Parolele nu se potrivesc.",
+    "changePassword": "Schimbă parola",
+    "passwordChanged": "Parola ta a fost schimbată."
   }
 }

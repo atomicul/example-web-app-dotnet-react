@@ -40,7 +40,9 @@
     "logIn": "Log in",
     "invalid": "Link invalid or expired",
     "invalidDescription": "We could not confirm your email with this link. Try logging in to get a new one.",
-    "backToLogIn": "Back to log in"
+    "backToLogIn": "Back to log in",
+    "changed": "Email changed",
+    "changedDescription": "Your account now uses {{email}}. Log in with it from now on."
   },
   "resendConfirmation": {
     "resend": "Resend confirmation email",
@@ -61,7 +63,8 @@
       "dark": "Dark",
       "system": "System"
     },
-    "logOut": "Log out"
+    "logOut": "Log out",
+    "emailAndPassword": "Email and password"
   },
   "todos": {
     "title": "Title",
@@ -85,5 +88,23 @@
   },
   "page": {
     "back": "Back"
+  },
+  "account": {
+    "title": "Email and password",
+    "email": "Email",
+    "currentEmail": "You log in with {{email}}.",
+    "pendingEmail": "Waiting for you to confirm {{email}}. Open the link we sent there to finish the change; until then, keep logging in with your current email.",
+    "newEmail": "New email",
+    "changeEmail": "Change email",
+    "emailLinkSent": "We sent a confirmation link to {{email}}.",
+    "password": "Password",
+    "passwordDescription": "Changing it logs you out everywhere else.",
+    "currentPassword": "Current password",
+    "currentPasswordRequired": "Enter your current password.",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm new password",
+    "passwordsDiffer": "The passwords don't match.",
+    "changePassword": "Change password",
+    "passwordChanged": "Your password has been changed."
   }
 }

@@ -11,8 +11,9 @@ const confirmEmailSearchSchema =
   MapIdentityApiApiAuthConfirmEmailQueryParams.partial()
 
 /**
- * Confirms the email from the link's search params. Identity answers 401 for an unknown user
- * or a bad code. It calls the API directly because a 401 from a cached query re-runs the guards.
+ * Confirms the email from the link's search params, or the change to `changedEmail` when the link was sent for one.
+ * Identity answers 401 for an unknown user or a bad code. It calls the API directly because a 401 from a cached
+ * query re-runs the guards.
  */
 async function confirmEmail({
   userId,
@@ -43,11 +44,18 @@ export const Route = createFileRoute('/confirm-email')({
 function ConfirmEmailPage() {
   const { t } = useTranslation()
   const confirmed = Route.useLoaderData()
+  const { changedEmail } = Route.useSearch()
 
   return confirmed ? (
     <AuthCard
-      title={t('confirmEmail.confirmed')}
-      description={t('confirmEmail.confirmedDescription')}
+      title={t(
+        changedEmail ? 'confirmEmail.changed' : 'confirmEmail.confirmed',
+      )}
+      description={
+        changedEmail
+          ? t('confirmEmail.changedDescription', { email: changedEmail })
+          : t('confirmEmail.confirmedDescription')
+      }
     >
       <Link to="/login" className={buttonVariants({ className: 'w-full' })}>
         {t('confirmEmail.logIn')}
