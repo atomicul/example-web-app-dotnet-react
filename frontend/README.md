@@ -133,7 +133,8 @@ session. Their paths form a tree: a page's parent is its path without the last s
 under `/account`, which sits under `/`. Nest a new page's path under the page it is opened from and goes back to.
 
 Every page but the top one is laid out by `Page` (`src/components/page.tsx`): a back button to its parent and its
-title, then its content. Pages load what they show in their route's `loader`, as `/account` does:
+title, then its content. Pages fetch what they show in their route's `loader`, as `/account` does, and read it
+through query hooks (see [Loading data](#loading-data)):
 
 ```tsx
 export const Route = createFileRoute('/_authenticated/account')({
@@ -166,3 +167,50 @@ remembering in each entry the pages behind it:
 Links and `navigate` need nothing special: a plain `<Link to="/account">` follows these rules, and the back button
 is a `<Link to="..">`. A page opened directly, from an emailed link or a new tab, has nothing behind it: its back
 button replaces it with its parent, and the browser's back leaves the app.
+
+## Loading data
+
+The query cache is the one place a page's data lives. A route's `loader` only fills it, so the page shows with its
+data rather than a loading state, and the page's components read the data back through the generated query hooks:
+
+```tsx
+export const Route = createFileRoute('/_authenticated/')({
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(getGetTodosQueryOptions()),
+  component: TodosPage,
+})
+
+export function TodoList() {
+  const { data: todos, isPending, error } = useGetTodos()
+  // ...
+}
+```
+
+Components never show what a `loader` returns (`Route.useLoaderData()`), nor what a `beforeLoad` puts in the route
+context (`Route.useRouteContext()`). Both are snapshots, taken when the route loads, which stay as they were while
+the cache changes after them, until the user navigates again. A query hook instead subscribes its component to its
+query, which the cache refetches when a mutation invalidates it, when the window regains focus and when the user
+refreshes the page, and the component renders again with the new data. This is why the account menu reads the
+signed-in user with `useGetApiAuthManageInfo()`, though `_authenticated`'s `beforeLoad` fetched it already.
+
+The route context carries what routes need to decide, not what pages show: `_authenticated`'s `beforeLoad` checks the
+session to send the user to the login page, and loaders take the `queryClient` from it.
+
+## Refreshing
+
+A page's data can change while it is open, as when the user edits their todos on another device, so the signed-in
+layout lets the user refetch it: by pulling the page down from the top on touch screens (`PullToRefresh`,
+`src/components/pull-to-refresh.tsx`, which is the scrolling section under the header), and with the button in the
+header elsewhere. The button hides on touch screens (Tailwind's `pointer-coarse:` variant) rather than below a width,
+so a tablet pulls and a narrow desktop window keeps the button. Either way, the arrow spins until the refetch is
+done, for at least one turn and always whole ones, so a refetch faster than the eye still shows it happened.
+
+Both go through `useRefresh()` (`src/lib/use-refresh.ts`), which refetches the active queries: those a component on
+screen reads through its hook. A page needs nothing to take part, as long as it follows
+[Loading data](#loading-data):
+
+- Data a component shows from a `loader` or the route context isn't an active query, so a refresh leaves it as it
+  was. Running the routes again (`router.invalidate()`) wouldn't help: `ensureQueryData` returns what the cache holds,
+  however old.
+- Queries of the pages left behind aren't refetched. Queries are stale as soon as they are fetched (React Query's
+  default `staleTime` of 0), so each refetches anyway once its page shows again.
