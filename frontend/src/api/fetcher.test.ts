@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
+import { i18n } from '@/i18n'
+import ro from '@/i18n/ro.json'
 import { ApiError, NetworkError, errorMessage, fetcher } from './fetcher'
 
 function respondWith(response: Response) {
@@ -12,8 +14,9 @@ function json(body: unknown, status: number, contentType = 'application/json') {
   })
 }
 
-afterEach(() => {
+afterEach(async () => {
   vi.unstubAllGlobals()
+  await i18n.changeLanguage('en')
 })
 
 describe('fetcher', () => {
@@ -97,5 +100,52 @@ describe('fetcher', () => {
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(abort))
 
     await expect(fetcher('/api/todos', {})).rejects.toBe(abort)
+  })
+})
+
+describe('ApiError', () => {
+  const pastDueDate = "An open todo can't be due in the past."
+
+  it('words a validation error by its code in the user language', async () => {
+    await i18n.changeLanguage('ro')
+    const error = new ApiError(400, {
+      errors: { DueDate: [pastDueDate] },
+      codes: { DueDate: ['DueDateInPast'] },
+    })
+
+    expect(error.errors).toEqual({
+      DueDate: [ro.validationErrors.DueDateInPast],
+    })
+  })
+
+  it('words an Identity error by its key, which is its code', async () => {
+    await i18n.changeLanguage('ro')
+    const error = new ApiError(400, {
+      errors: { DuplicateUserName: ["Username 'ada' is already taken."] },
+      codes: { DuplicateUserName: [null] },
+    })
+
+    expect(error.errors).toEqual({
+      DuplicateUserName: [ro.validationErrors.DuplicateUserName],
+    })
+  })
+
+  it("keeps the API's wording of an error the SPA does not translate", async () => {
+    await i18n.changeLanguage('ro')
+    const error = new ApiError(400, {
+      errors: { Title: ['Too long.', pastDueDate] },
+      codes: { Title: [null, 'NotACode'] },
+    })
+
+    expect(error.errors).toEqual({ Title: ['Too long.', pastDueDate] })
+  })
+
+  it("keeps the API's English wording in English", () => {
+    const error = new ApiError(400, {
+      errors: { DueDate: [pastDueDate] },
+      codes: { DueDate: ['DueDateInPast'] },
+    })
+
+    expect(error.errors).toEqual({ DueDate: [pastDueDate] })
   })
 })

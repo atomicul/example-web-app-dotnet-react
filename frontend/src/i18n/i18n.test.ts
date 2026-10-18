@@ -19,7 +19,10 @@ afterEach(async () => {
 
 describe('i18n', () => {
   it('has a Romanian translation for every English text', () => {
-    expect(new Set(keysOf(ro))).toEqual(new Set(keysOf(en)))
+    const texts = keysOf(ro).filter(
+      (key) => !key.startsWith('validationErrors.'),
+    )
+    expect(new Set(texts)).toEqual(new Set(keysOf(en)))
   })
 
   it('words plurals by the rules of the language', async () => {

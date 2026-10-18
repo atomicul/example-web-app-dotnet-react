@@ -24,10 +24,29 @@ export class ApiError extends Error {
     this.retryAfter = retryAfter
   }
 
-  /** Validation messages keyed by field, empty when the response had none. */
+  /**
+   * Validation messages keyed by field, empty when the response had none. Each is in the user's language when the SPA
+   * translates its code, and as the API worded it otherwise.
+   */
   get errors(): Record<string, string[]> {
-    return this.problem?.errors ?? {}
+    const { errors = {}, codes = {} } = this.problem ?? {}
+    return Object.fromEntries(
+      Object.entries(errors).map(([key, messages]) => [
+        key,
+        messages.map((message, index) =>
+          validationMessage(codes[key]?.[index] ?? key, message),
+        ),
+      ]),
+    )
   }
+}
+
+/**
+ * The SPA's translation of a validation error, by the code the API sent with it. Identity's errors carry no code but
+ * are keyed by theirs, so their key stands in for it.
+ */
+function validationMessage(code: string, message: string) {
+  return i18n.t(`validationErrors.${code}`, { defaultValue: message })
 }
 
 /** The request never reached the API, as when the user is offline or the server is down. */

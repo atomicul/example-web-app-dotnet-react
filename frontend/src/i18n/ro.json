@@ -71,5 +71,18 @@
     "title": "Pagina nu a fost găsită",
     "description": "Pagina pe care o cauți nu există sau a fost mutată.",
     "back": "Înapoi la sarcini"
+  },
+  "validationErrors": {
+    "DueDateInPast": "O sarcină nefinalizată nu poate avea termenul în trecut.",
+    "InvalidEmail": "Adresa de email nu este validă.",
+    "InvalidUserName": "Adresa de email conține caractere nepermise.",
+    "DuplicateUserName": "Există deja un cont cu această adresă de email.",
+    "DuplicateEmail": "Există deja un cont cu această adresă de email.",
+    "PasswordTooShort": "Parola este prea scurtă.",
+    "PasswordRequiresNonAlphanumeric": "Parola trebuie să conțină cel puțin un simbol.",
+    "PasswordRequiresDigit": "Parola trebuie să conțină cel puțin o cifră.",
+    "PasswordRequiresLower": "Parola trebuie să conțină cel puțin o literă mică.",
+    "PasswordRequiresUpper": "Parola trebuie să conțină cel puțin o literă mare.",
+    "PasswordRequiresUniqueChars": "Parola trebuie să conțină mai multe caractere diferite."
   }
 }
