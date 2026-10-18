@@ -49,7 +49,19 @@
     "sent": "Ți-am trimis un nou link de confirmare la {{email}}."
   },
   "layout": {
-    "todos": "Sarcini",
+    "todos": "Sarcini"
+  },
+  "accountMenu": {
+    "open": "Meniul contului",
+    "title": "Cont",
+    "signedInAs": "Conectat ca",
+    "language": "Limbă",
+    "theme": "Temă",
+    "themes": {
+      "light": "Luminoasă",
+      "dark": "Întunecată",
+      "system": "Ca sistemul"
+    },
     "logOut": "Deconectează-te"
   },
   "todos": {

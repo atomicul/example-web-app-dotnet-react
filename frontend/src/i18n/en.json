@@ -48,7 +48,19 @@
     "sent": "We sent a new confirmation link to {{email}}."
   },
   "layout": {
-    "todos": "Todos",
+    "todos": "Todos"
+  },
+  "accountMenu": {
+    "open": "Account menu",
+    "title": "Account",
+    "signedInAs": "Signed in as",
+    "language": "Language",
+    "theme": "Theme",
+    "themes": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
     "logOut": "Log out"
   },
   "todos": {
