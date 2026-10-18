@@ -98,6 +98,17 @@ those rules into the `RegisterRequest` and `InfoRequest` schemas of its OpenAPI 
 SPA explains the rules in its own words, which don't follow them: after changing the password rules, also update
 `register.passwordRules` in its catalogs (see the SPA's [Forms](frontend/README.md#forms)).
 
+Signed-in users change their email and password on the SPA's `/account` page, through Identity's
+`POST /api/auth/manage/info`:
+
+- A new email takes effect once the user opens the link sent to it, which leads to the same `/confirm-email` page.
+  The current email keeps working until then, and `GET /api/auth/manage/pendingEmail` shows the change as waiting
+  for as long as its link works: a day, unless the password changes first. An email that belongs to another user is
+  refused with a `DuplicateEmail` error.
+- A new password needs the current one. The session that changes it stays signed in, while every other session of
+  the user ends within 30 minutes, when Identity next checks its security stamp. Confirming a new email ends them
+  the same way.
+
 Every page of the SPA except login, registration and email confirmation requires a session.
 
 The app keeps the keys that protect its cookies, bearer tokens and emailed links in the database, so sessions survive

@@ -19,6 +19,12 @@ contracts' records, become the summaries and descriptions in the document:
 public static async Task<Results<Ok<TodoResponse>, NotFound>> GetById(int id, AppDbContext db, CancellationToken ct)
 ```
 
+Identity's own endpoints come from `MapIdentityApi`, under `/api/auth`. `Auth/AuthEndpoints.cs` adjusts them with
+conventions that pick routes by method and path, rather than writing them anew: the stricter rate limit of those that
+send an email, and the filter in `Auth/AccountChanges.cs` around `POST /manage/info`, which checks a new email and
+remembers it until it is confirmed. Endpoints Identity lacks, such as `GET /manage/pendingEmail`, are mapped next to
+them.
+
 ## Validation errors
 
 A refused request gets ASP.NET's own validation problem, whose `errors` map reads as the framework writes it, plus an

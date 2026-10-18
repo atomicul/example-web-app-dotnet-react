@@ -125,3 +125,44 @@ shadcn's dropdown menu, so a menu is written once for both:
 - Picking an item or a radio item closes the whole menu, submenus included.
 - A label goes in a `MenuGroup`, as the signed-in identity does in the account menu (`src/auth/account-menu.tsx`).
 - A part the menu needs and `menu.tsx` lacks, such as checkbox items, is added there for both kinds of menu.
+
+## Pages
+
+Pages are files under `src/routes`, which TanStack Router turns into routes; those under `_authenticated/` require a
+session. Their paths form a tree: a page's parent is its path without the last segment, so `/account/email` sits
+under `/account`, which sits under `/`. Nest a new page's path under the page it is opened from and goes back to.
+
+Every page but the top one is laid out by `Page` (`src/components/page.tsx`): a back button to its parent and its
+title, then its content. Pages load what they show in their route's `loader`, as `/account` does:
+
+```tsx
+export const Route = createFileRoute('/_authenticated/account')({
+  loader: ({ context }) =>
+    context.queryClient.ensureQueryData(getGetPendingEmailQueryOptions()),
+  component: AccountPage,
+})
+
+function AccountPage() {
+  const { t } = useTranslation()
+
+  return (
+    <Page title={t('account.title')}>
+      <EmailForm />
+      <PasswordForm />
+    </Page>
+  )
+}
+```
+
+The browser's history follows the same tree, rather than every page visited, so its back button goes up as the
+page's does. `withTreeNavigation` (`src/lib/tree-history.ts`) decides what each navigation does to the history,
+remembering in each entry the pages behind it:
+
+- Going to a page nested under the current one adds an entry, as opening `/account` from `/` does.
+- Going to a page behind goes back to it, dropping the entries after it, so it shows as it was left. A link that
+  names search params returns only to an entry with the same ones.
+- Going anywhere else replaces the current entry, as opening `/account` from another page does.
+
+Links and `navigate` need nothing special: a plain `<Link to="/account">` follows these rules, and the back button
+is a `<Link to="..">`. A page opened directly, from an emailed link or a new tab, has nothing behind it: its back
+button replaces it with its parent, and the browser's back leaves the app.
