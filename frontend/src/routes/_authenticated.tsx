@@ -2,6 +2,7 @@ import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { AccountMenu } from '@/auth/account-menu'
 import { fetchSession } from '@/auth/session'
+import { PullToRefresh } from '@/components/pull-to-refresh'
 import { RefreshButton } from '@/components/refresh-button'
 
 export const Route = createFileRoute('/_authenticated')({
@@ -29,11 +30,11 @@ function AuthenticatedLayout() {
           </div>
         </div>
       </header>
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-2xl p-4">
+      <PullToRefresh className="flex-1">
+        <main className="mx-auto max-w-2xl p-4">
           <Outlet />
-        </div>
-      </main>
+        </main>
+      </PullToRefresh>
     </div>
   )
 }
