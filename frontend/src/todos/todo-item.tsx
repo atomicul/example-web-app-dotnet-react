@@ -11,23 +11,33 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import { EditTodoDialog } from './edit-todo-dialog'
 
+/**
+ * Shows a toggled todo as toggled at once, while its request and the refetch after it are pending; a failed toggle
+ * shows the todo as it was again. Requests about the same todo run one after another, so they reach the API in the
+ * order they were made.
+ */
 export function TodoItem({ todo }: { todo: TodoResponse }) {
   const { t } = useTranslation()
-  const mutation = { meta: { invalidates: [getGetTodosQueryKey()] } }
+  const mutation = {
+    meta: { invalidates: [getGetTodosQueryKey()] },
+    scope: { id: `todo-${todo.id}` },
+  }
   const update = useUpdateTodo({ mutation })
   const remove = useDeleteTodo({ mutation })
+  const isComplete = update.isPending
+    ? update.variables.data.isComplete
+    : todo.isComplete
 
-  function toggle(isComplete: boolean) {
-    update.mutate({ id: todo.id, data: { ...todo, isComplete } })
+  function toggle(checked: boolean) {
+    update.mutate({ id: todo.id, data: { ...todo, isComplete: checked } })
   }
 
   return (
     <li className="flex items-center gap-3 px-4 py-3">
       <Checkbox
-        checked={todo.isComplete}
-        disabled={update.isPending}
+        checked={isComplete}
         onCheckedChange={toggle}
-        aria-label={t(todo.isComplete ? 'todos.markOpen' : 'todos.markDone', {
+        aria-label={t(isComplete ? 'todos.markOpen' : 'todos.markDone', {
           title: todo.title,
         })}
       />
@@ -35,7 +45,7 @@ export function TodoItem({ todo }: { todo: TodoResponse }) {
         <p
           className={cn(
             'truncate',
-            todo.isComplete && 'text-muted-foreground line-through',
+            isComplete && 'text-muted-foreground line-through',
           )}
         >
           {todo.title}
