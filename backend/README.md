@@ -70,9 +70,10 @@ fails:
   their keys. They are not about one field of the request, so their issues have no pointer.
 
 The endpoint filter that runs the rules, `ValidationProblems.ValidateRequests`, replaces ASP.NET's `AddValidation`,
-whose results carry only messages. It validates every handler argument whose type has rules, but only that argument's
-own properties: an object or collection nested in a contract is not validated. Contracts are flat today; extend the
-filter before nesting one.
+whose results carry only messages. It validates every handler argument whose type has rules, and the objects nested
+in its properties whose types have rules too, whose errors are about members under the property's name, as in
+`Address.PostalCode` with the pointer `#/address/postalCode`. Collections in a contract are not validated; extend the
+filter before adding one.
 
 ## The OpenAPI document
 
@@ -119,4 +120,5 @@ temporary directory for the tests to read. Run them alone with `dotnet test --so
 
 Tests act as a client would, through the helpers in `TestUsers` and `TodoClient`. A refused request is read with
 `ReadValidationProblemAsync`, which asserts the 400 and returns both the problem as ASP.NET's clients read it and its
-issues, so a test can check the field, the code or both.
+issues, so a test can check the field, the code or both. The one exception is `ValidationProblemsTests`, which runs
+the validation filter on its own for contracts no endpoint has yet, such as one with an object nested in it.

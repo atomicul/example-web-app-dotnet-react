@@ -28,7 +28,7 @@ public static class ValidationProblems
     /// <summary>
     /// Endpoint filter factory that validates every argument whose type has validation attributes or implements
     /// <see cref="IValidatableObject"/>, and answers with a validation problem when one fails. It validates the
-    /// argument's own properties only, not objects or collections nested in them.
+    /// argument's properties and the objects nested in them whose types have rules too, but not collections.
     /// </summary>
     public static EndpointFilterDelegate ValidateRequests(EndpointFilterFactoryContext context, EndpointFilterDelegate next)
     {
@@ -70,11 +70,14 @@ public static class ValidationProblems
         type.IsAssignableTo(typeof(IValidatableObject))
         || type.GetProperties().Any(property => property.IsDefined(typeof(ValidationAttribute), inherit: true));
 
-    /// <summary>The errors of the request's properties or, when they are all valid, of its own rules.</summary>
+    /// <summary>
+    /// The errors of the request's properties and of the objects nested in them or, when they are all valid, of its
+    /// own rules.
+    /// </summary>
     private static IEnumerable<ValidationError> Validate(object request)
     {
         var propertyErrors = request.GetType().GetProperties()
-            .SelectMany(property => PropertyErrors(request, property))
+            .SelectMany(property => PropertyErrors(request, property).Concat(NestedErrors(request, property)))
             .ToList();
         return propertyErrors.Count > 0 || request is not IValidatableObject validatable
             ? propertyErrors
@@ -97,6 +100,17 @@ public static class ValidationProblems
             .Where(check => check.Result != ValidationResult.Success)
             .Select(check => new ValidationError(property.Name, check.Code, check.Result!.ErrorMessage ?? check.Code));
     }
+
+    /// <summary>
+    /// The errors of the object in a property, when its type has rules, about members under the property's name, as in
+    /// <c>Address.PostalCode</c>.
+    /// </summary>
+    private static IEnumerable<ValidationError> NestedErrors(object request, PropertyInfo property) =>
+        HasRules(property.PropertyType) && property.GetValue(request) is { } nested
+            ? Validate(nested).Select(error => error with { Member = Join(property.Name, error.Member) })
+            : [];
+
+    private static string Join(string property, string? member) => member is null ? property : $"{property}.{member}";
 
     /// <summary>The errors of a failed rule, one per member it names, coded as it declares.</summary>
     private static IEnumerable<ValidationError> RuleErrors(ValidationResult result)
@@ -121,6 +135,10 @@ public static class ValidationProblems
         string Code)
     {
         public static ValidationIssue From(ValidationError error) =>
-            new(error.Member is null ? null : $"#/{JsonNamingPolicy.CamelCase.ConvertName(error.Member)}", error.Detail, error.Code);
+            new(error.Member is null ? null : PointerTo(error.Member), error.Detail, error.Code);
+
+        /// <summary>The JSON Pointer to a member, such as <c>#/address/postalCode</c> for <c>Address.PostalCode</c>.</summary>
+        private static string PointerTo(string member) =>
+            "#/" + string.Join('/', member.Split('.').Select(JsonNamingPolicy.CamelCase.ConvertName));
     }
 }
