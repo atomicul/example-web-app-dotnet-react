@@ -16,6 +16,7 @@ public static class AuthEndpoints
 
         var identity = auth.MapIdentityApi<IdentityUser>();
         identity.Add(LimitEmailSending);
+        identity.Add(GuardAccountChanges);
         identity.AddEndpointFilter(ValidationProblems.CodeIdentityErrors);
         auth.MapPost("/logout", Logout).RequireAuthorization();
 
@@ -28,13 +29,25 @@ public static class AuthEndpoints
     /// </summary>
     private static void LimitEmailSending(EndpointBuilder endpoint)
     {
-        if (endpoint is RouteEndpointBuilder { RoutePattern.RawText: { } route }
-            && endpoint.Metadata.OfType<HttpMethodMetadata>().Any(metadata => metadata.HttpMethods.Contains(HttpMethods.Post))
-            && EmailSendingRoutes.Any(route.EndsWith))
+        if (EmailSendingRoutes.Any(route => IsPost(endpoint, route)))
         {
             endpoint.Metadata.Add(new EnableRateLimitingAttribute(RateLimits.Email));
         }
     }
+
+    /// <summary>Runs <see cref="AccountChanges.GuardAsync"/> around <c>POST /manage/info</c>.</summary>
+    private static void GuardAccountChanges(EndpointBuilder endpoint)
+    {
+        if (IsPost(endpoint, "/manage/info"))
+        {
+            endpoint.FilterFactories.Add((_, next) => invocation => AccountChanges.GuardAsync(invocation, next));
+        }
+    }
+
+    private static bool IsPost(EndpointBuilder endpoint, string route) =>
+        endpoint is RouteEndpointBuilder { RoutePattern.RawText: { } pattern }
+        && pattern.EndsWith(route)
+        && endpoint.Metadata.OfType<HttpMethodMetadata>().Any(metadata => metadata.HttpMethods.Contains(HttpMethods.Post));
 
     /// <summary>Signs the current user out by clearing the Identity cookie.</summary>
     public static async Task<Ok> Logout(SignInManager<IdentityUser> signInManager)

@@ -41,6 +41,10 @@ public static class TestUsers
     public static Task<HttpResponseMessage> ConfirmEmailAsync(this HttpClient client, Uri confirmationLink) =>
         client.GetAsync($"/api/auth/confirmEmail{confirmationLink.Query}", CancellationToken);
 
+    /// <summary>Changes the signed-in user's email or password through Identity's <c>POST /manage/info</c>.</summary>
+    public static Task<HttpResponseMessage> ChangeInfoAsync(this HttpClient client, InfoRequest request) =>
+        client.PostAsJsonAsync("/api/auth/manage/info", request, CancellationToken);
+
     public static Task<HttpResponseMessage> LoginAsync(
         this HttpClient client, string email, bool useCookies = false, string password = Password) =>
         client.PostAsJsonAsync(
