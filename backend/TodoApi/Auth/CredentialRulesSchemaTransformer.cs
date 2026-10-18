@@ -7,17 +7,25 @@ using Microsoft.OpenApi;
 namespace TodoApi.Auth;
 
 /// <summary>
-/// Describes the rules Identity applies on registration in the <see cref="RegisterRequest"/> schema, so clients can
-/// check them before sending: the characters a user name (the email) may use, and the password requirements.
+/// Describes the rules Identity applies to a new email and password in the schemas of the requests that set them,
+/// <see cref="RegisterRequest"/> and <see cref="InfoRequest"/>, so clients can check them before sending: the
+/// characters a user name (the email) may use, and the password requirements.
 /// <see cref="PasswordOptions.RequiredUniqueChars"/> can't be written as a pattern and is left to the server.
 /// </summary>
-public class RegisterRequestSchemaTransformer(IOptions<IdentityOptions> identityOptions) : IOpenApiSchemaTransformer
+public class CredentialRulesSchemaTransformer(IOptions<IdentityOptions> identityOptions) : IOpenApiSchemaTransformer
 {
+    /// <summary>The email and password properties of each request that sets them.</summary>
+    private static readonly Dictionary<Type, (string Email, string Password)> CredentialProperties = new()
+    {
+        [typeof(RegisterRequest)] = ("email", "password"),
+        [typeof(InfoRequest)] = ("newEmail", "newPassword"),
+    };
+
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
     {
-        if (context.JsonTypeInfo.Type != typeof(RegisterRequest)
-            || schema.Properties?["email"] is not OpenApiSchema email
-            || schema.Properties["password"] is not OpenApiSchema password)
+        if (!CredentialProperties.TryGetValue(context.JsonTypeInfo.Type, out var names)
+            || schema.Properties?[names.Email] is not OpenApiSchema email
+            || schema.Properties[names.Password] is not OpenApiSchema password)
         {
             return Task.CompletedTask;
         }

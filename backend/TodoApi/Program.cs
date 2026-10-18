@@ -44,7 +44,7 @@ builder.Services.AddOpenApi(options =>
     });
     options.AddDocumentTransformer<BearerSecurityTransformer>();
     options.AddOperationTransformer<BearerSecurityTransformer>();
-    options.AddSchemaTransformer<RegisterRequestSchemaTransformer>();
+    options.AddSchemaTransformer<CredentialRulesSchemaTransformer>();
     options.AddSchemaTransformer<ValidationIssuesSchemaTransformer>();
 });
 

@@ -74,8 +74,8 @@ The OpenAPI document is the SPA's contract: `make api` generates the SPA's clien
 it, so run it after changing an endpoint or a contract. When something the API enforces isn't in the document by
 default, a transformer writes it there:
 
-- `Auth/RegisterRequestSchemaTransformer.cs` writes the email and password rules of Identity's `IdentityOptions` into
-  the `RegisterRequest` schema.
+- `Auth/CredentialRulesSchemaTransformer.cs` writes the email and password rules of Identity's `IdentityOptions` into
+  the schemas of the requests that set them, `RegisterRequest` and `InfoRequest`.
 - `Validation/ValidationIssuesSchemaTransformer.cs` documents the `issues` member of validation problems.
 - `BearerSecurityTransformer.cs` adds the bearer scheme and marks the operations that require it.
 

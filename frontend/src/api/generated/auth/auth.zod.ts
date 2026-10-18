@@ -101,9 +101,16 @@ export const GetApiAuthManageInfoResponse = zod.object({
   "isEmailConfirmed": zod.boolean()
 })
 
+export const postApiAuthManageInfoBodyNewEmailRegExp = new RegExp('^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\-._+]+@[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\-._+]+$');
+export const postApiAuthManageInfoBodyNewPasswordMin = 6;
+
+
+export const postApiAuthManageInfoBodyNewPasswordRegExp = new RegExp('^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])');
+
+
 export const PostApiAuthManageInfoBody = zod.object({
-  "newEmail": zod.string().nullish(),
-  "newPassword": zod.string().nullish(),
+  "newEmail": zod.string().regex(postApiAuthManageInfoBodyNewEmailRegExp).nullish().describe('An email address made of letters, digits and -._+'),
+  "newPassword": zod.string().min(postApiAuthManageInfoBodyNewPasswordMin).regex(postApiAuthManageInfoBodyNewPasswordRegExp).nullish().describe('Use at least 6 characters, with an uppercase letter, a lowercase letter, a digit and a symbol.'),
   "oldPassword": zod.string().nullish()
 })
 

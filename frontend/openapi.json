@@ -732,16 +732,21 @@
         "type": "object",
         "properties": {
           "newEmail": {
+            "pattern": "^[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\-._+]+@[abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789\\-._+]+$",
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "An email address made of letters, digits and -._+"
           },
           "newPassword": {
+            "minLength": 6,
+            "pattern": "^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])",
             "type": [
               "null",
               "string"
-            ]
+            ],
+            "description": "Use at least 6 characters, with an uppercase letter, a lowercase letter, a digit and a symbol."
           },
           "oldPassword": {
             "type": [
