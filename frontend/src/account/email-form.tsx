@@ -1,5 +1,4 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { MailIcon } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
@@ -27,6 +26,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { fieldMessages } from '@/lib/field-messages'
 import { setServerErrors } from '@/lib/server-errors'
+import { PendingEmailNotice } from './pending-email-notice'
 
 const EmailChangeBody = PostApiAuthManageInfoBody.pick({
   newEmail: true,
@@ -75,12 +75,7 @@ export function EmailForm() {
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        {pending?.email && (
-          <p className="bg-muted flex gap-2 rounded-lg p-3">
-            <MailIcon className="mt-0.5 size-4 shrink-0" />
-            {t('account.pendingEmail', { email: pending.email })}
-          </p>
-        )}
+        {pending?.email && <PendingEmailNotice email={pending.email} />}
         <form onSubmit={form.handleSubmit(submit)} noValidate>
           <FieldGroup>
             <Field data-invalid={!!errors.newEmail}>

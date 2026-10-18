@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { useCooldown } from '@/lib/use-cooldown'
 
 /** The API sends each client at most one email a minute. */
-const EMAIL_COOLDOWN_SECONDS = 60
+export const EMAIL_COOLDOWN_SECONDS = 60
 
 /**
  * Asks Identity to email a new confirmation link to the given address, then waits out the API's
