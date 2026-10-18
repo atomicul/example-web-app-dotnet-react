@@ -72,6 +72,43 @@ the reference: `t()` only accepts keys of `en.json`, and a test fails when `ro.j
 - `validationErrors` translates the codes of the API's validation errors. Only other languages need it: English
   falls back to the API's own wording, so `en.json` has none.
 
-The language is the one the user last picked with `LanguageSwitcher`, remembered in this browser, or else the
-browser's, falling back to English. To add one, add its catalog, then list it in `languages` and its zod locale in
+The language is the one the user last picked, remembered in this browser, or else the browser's, falling back to
+English. Signed-in users pick it in the account menu, and the login, registration and email confirmation pages with
+`LanguageSwitcher`. To add one, add its catalog, then list it in `languages` and its zod locale in
 `zodLocales` in `src/i18n/index.ts`, and cover it in the catalog test (`src/i18n/i18n.test.ts`).
+
+## Menus
+
+Menus are built from the parts in `src/components/menu.tsx`, never from `dropdown-menu` or `drawer` directly. On big
+screens a menu drops down from its trigger, as shadcn's dropdown menu; on phones, below `useIsMobile`'s 768px, it
+slides up from the bottom as a drawer, and each submenu opens as a drawer stacked on it. The parts are named after
+shadcn's dropdown menu, so a menu is written once for both:
+
+```tsx
+<Menu>
+  <MenuTrigger
+    render={
+      <Button variant="ghost" size="icon" aria-label={t('accountMenu.open')} />
+    }
+  >
+    <CircleUserRoundIcon />
+  </MenuTrigger>
+  <MenuContent title={t('accountMenu.title')} align="end">
+    <MenuSub>
+      <MenuSubTrigger>{t('accountMenu.language')}</MenuSubTrigger>
+      <MenuSubContent title={t('accountMenu.language')}>
+        <MenuRadioGroup value={language} onValueChange={changeLanguage}>
+          <MenuRadioItem value="en">English</MenuRadioItem>
+        </MenuRadioGroup>
+      </MenuSubContent>
+    </MenuSub>
+    <MenuSeparator />
+    <MenuItem onClick={logout}>{t('accountMenu.logOut')}</MenuItem>
+  </MenuContent>
+</Menu>
+```
+
+- `MenuContent`'s `title` names the menu for assistive technology; `MenuSubContent`'s heads its drawer on phones.
+- Picking an item or a radio item closes the whole menu, submenus included.
+- A label goes in a `MenuGroup`, as the signed-in identity does in the account menu (`src/auth/account-menu.tsx`).
+- A part the menu needs and `menu.tsx` lacks, such as checkbox items, is added there for both kinds of menu.
