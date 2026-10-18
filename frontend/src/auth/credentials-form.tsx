@@ -11,11 +11,13 @@ import {
   FieldLabel,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { describedErrors } from '@/lib/described-errors'
+import { fieldMessages } from '@/lib/field-messages'
 import { setServerErrors } from '@/lib/server-errors'
 
 type CredentialsFormProps = {
   schema: z.ZodType<LoginRequest, LoginRequest>
+  /** What to show for a field the schema refuses, in place of zod's message. */
+  messages?: Partial<Record<keyof LoginRequest, string>>
   submitLabel: string
   /** `new-password` lets password managers offer to generate one when signing up. */
   passwordAutoComplete: 'current-password' | 'new-password'
@@ -25,13 +27,14 @@ type CredentialsFormProps = {
 /** Email and password form shared by login and registration; failures show under the fields. */
 export function CredentialsForm({
   schema,
+  messages = {},
   submitLabel,
   passwordAutoComplete,
   onSubmit,
 }: CredentialsFormProps) {
   const { t } = useTranslation()
   const form = useForm<LoginRequest>({
-    resolver: zodResolver(schema, { error: describedErrors(schema) }),
+    resolver: zodResolver(schema, { error: fieldMessages(messages) }),
     defaultValues: { email: '', password: '' },
   })
   const { errors, isSubmitting } = form.formState

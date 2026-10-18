@@ -58,6 +58,10 @@ function RegisterPage() {
     >
       <CredentialsForm
         schema={PostApiAuthRegisterBody}
+        messages={{
+          email: t('register.emailRules'),
+          password: t('register.passwordRules'),
+        }}
         submitLabel={t('register.submit')}
         passwordAutoComplete="new-password"
         onSubmit={submit}
