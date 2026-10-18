@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import type { z } from 'zod'
 import type { LoginRequest } from '@/api/generated/model'
 import { Button } from '@/components/ui/button'
@@ -28,6 +29,7 @@ export function CredentialsForm({
   passwordAutoComplete,
   onSubmit,
 }: CredentialsFormProps) {
+  const { t } = useTranslation()
   const form = useForm<LoginRequest>({
     resolver: zodResolver(schema, { error: describedErrors(schema) }),
     defaultValues: { email: '', password: '' },
@@ -46,7 +48,7 @@ export function CredentialsForm({
     <form onSubmit={form.handleSubmit(submit)} noValidate>
       <FieldGroup>
         <Field data-invalid={!!errors.email}>
-          <FieldLabel htmlFor="email">Email</FieldLabel>
+          <FieldLabel htmlFor="email">{t('credentials.email')}</FieldLabel>
           <Input
             id="email"
             type="email"
@@ -57,7 +59,9 @@ export function CredentialsForm({
           <FieldError errors={[errors.email]} />
         </Field>
         <Field data-invalid={!!errors.password}>
-          <FieldLabel htmlFor="password">Password</FieldLabel>
+          <FieldLabel htmlFor="password">
+            {t('credentials.password')}
+          </FieldLabel>
           <Input
             id="password"
             type="password"

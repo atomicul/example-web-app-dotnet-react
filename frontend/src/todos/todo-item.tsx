@@ -1,4 +1,5 @@
 import { Trash2Icon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   getGetTodosQueryKey,
   useDeleteTodo,
@@ -10,13 +11,8 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { cn } from '@/lib/utils'
 import { EditTodoDialog } from './edit-todo-dialog'
 
-function formatDueDate(dueDate: string) {
-  return new Date(`${dueDate}T00:00`).toLocaleDateString(undefined, {
-    dateStyle: 'medium',
-  })
-}
-
 export function TodoItem({ todo }: { todo: TodoResponse }) {
+  const { t } = useTranslation()
   const mutation = { meta: { invalidates: [getGetTodosQueryKey()] } }
   const update = useUpdateTodo({ mutation })
   const remove = useDeleteTodo({ mutation })
@@ -31,7 +27,9 @@ export function TodoItem({ todo }: { todo: TodoResponse }) {
         checked={todo.isComplete}
         disabled={update.isPending}
         onCheckedChange={toggle}
-        aria-label={`Mark ${todo.title} as ${todo.isComplete ? 'open' : 'done'}`}
+        aria-label={t(todo.isComplete ? 'todos.markOpen' : 'todos.markDone', {
+          title: todo.title,
+        })}
       />
       <div className="min-w-0 flex-1">
         <p
@@ -44,7 +42,7 @@ export function TodoItem({ todo }: { todo: TodoResponse }) {
         </p>
         {todo.dueDate && (
           <p className="text-muted-foreground text-xs">
-            Due {formatDueDate(todo.dueDate)}
+            {t('todos.due', { date: new Date(`${todo.dueDate}T00:00`) })}
           </p>
         )}
       </div>
@@ -52,7 +50,7 @@ export function TodoItem({ todo }: { todo: TodoResponse }) {
       <Button
         variant="ghost"
         size="icon-sm"
-        aria-label={`Delete ${todo.title}`}
+        aria-label={t('todos.delete', { title: todo.title })}
         disabled={remove.isPending}
         onClick={() => remove.mutate({ id: todo.id })}
       >

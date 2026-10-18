@@ -1,4 +1,5 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import type { z } from 'zod'
 import { isUnauthorized } from '@/api/fetcher'
 import { mapIdentityApiApiAuthConfirmEmail } from '@/api/generated'
@@ -40,24 +41,25 @@ export const Route = createFileRoute('/confirm-email')({
 })
 
 function ConfirmEmailPage() {
+  const { t } = useTranslation()
   const confirmed = Route.useLoaderData()
 
   return confirmed ? (
     <AuthCard
-      title="Email confirmed"
-      description="Thanks for confirming your email. You can now log in."
+      title={t('confirmEmail.confirmed')}
+      description={t('confirmEmail.confirmedDescription')}
     >
       <Link to="/login" className={buttonVariants({ className: 'w-full' })}>
-        Log in
+        {t('confirmEmail.logIn')}
       </Link>
     </AuthCard>
   ) : (
     <AuthCard
-      title="Link invalid or expired"
-      description="We could not confirm your email with this link. Try logging in to get a new one."
+      title={t('confirmEmail.invalid')}
+      description={t('confirmEmail.invalidDescription')}
     >
       <Link to="/login" className={buttonVariants({ className: 'w-full' })}>
-        Back to log in
+        {t('confirmEmail.backToLogIn')}
       </Link>
     </AuthCard>
   )

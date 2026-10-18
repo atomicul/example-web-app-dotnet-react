@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { isTooManyRequests } from '@/api/fetcher'
 import { usePostApiAuthResendConfirmationEmail } from '@/api/generated'
@@ -12,11 +13,12 @@ const EMAIL_COOLDOWN_SECONDS = 60
  * email limit. Failures are toasted for every mutation, so a rate-limited one only restarts the wait.
  */
 export function ResendConfirmationButton({ email }: { email: string }) {
+  const { t } = useTranslation()
   const cooldown = useCooldown()
   const { mutate, isPending } = usePostApiAuthResendConfirmationEmail({
     mutation: {
       onSuccess: () => {
-        toast.success(`We sent a new confirmation link to ${email}.`)
+        toast.success(t('resendConfirmation.sent', { email }))
         cooldown.start(EMAIL_COOLDOWN_SECONDS)
       },
       onError: (error) => {
@@ -34,8 +36,8 @@ export function ResendConfirmationButton({ email }: { email: string }) {
       onClick={() => mutate({ data: { email } })}
     >
       {cooldown.isActive
-        ? `Resend confirmation email in ${cooldown.secondsLeft}s`
-        : 'Resend confirmation email'}
+        ? t('resendConfirmation.resendIn', { seconds: cooldown.secondsLeft })
+        : t('resendConfirmation.resend')}
     </Button>
   )
 }

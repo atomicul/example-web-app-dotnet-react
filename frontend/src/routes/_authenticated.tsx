@@ -1,4 +1,5 @@
 import { Outlet, createFileRoute, redirect } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import { fetchSession } from '@/auth/session'
 import { useAuth } from '@/auth/use-auth'
 import { Button } from '@/components/ui/button'
@@ -15,6 +16,7 @@ export const Route = createFileRoute('/_authenticated')({
 })
 
 function AuthenticatedLayout() {
+  const { t } = useTranslation()
   const { user } = Route.useRouteContext()
   const { logout } = useAuth()
 
@@ -22,13 +24,15 @@ function AuthenticatedLayout() {
     <div className="min-h-svh">
       <header className="border-b">
         <div className="mx-auto flex max-w-2xl items-center justify-between gap-4 p-4">
-          <span className="font-heading font-semibold">Todos</span>
+          <span className="font-heading font-semibold">
+            {t('layout.todos')}
+          </span>
           <div className="flex items-center gap-3">
             <span className="text-muted-foreground truncate text-sm">
               {user.email}
             </span>
             <Button variant="outline" size="sm" onClick={() => logout()}>
-              Log out
+              {t('layout.logOut')}
             </Button>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { PencilIcon } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { getGetTodosQueryKey, useUpdateTodo } from '@/api/generated'
 import type { TodoRequest, TodoResponse } from '@/api/generated/model'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,7 @@ import {
 import { TodoForm } from './todo-form'
 
 export function EditTodoDialog({ todo }: { todo: TodoResponse }) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const { mutateAsync: updateTodo } = useUpdateTodo({
     mutation: {
@@ -32,7 +34,7 @@ export function EditTodoDialog({ todo }: { todo: TodoResponse }) {
           <Button
             variant="ghost"
             size="icon-sm"
-            aria-label={`Edit ${todo.title}`}
+            aria-label={t('todos.edit', { title: todo.title })}
           />
         }
       >
@@ -40,9 +42,9 @@ export function EditTodoDialog({ todo }: { todo: TodoResponse }) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit todo</DialogTitle>
+          <DialogTitle>{t('todos.editTitle')}</DialogTitle>
         </DialogHeader>
-        <TodoForm todo={todo} submitLabel="Save" onSubmit={save} />
+        <TodoForm todo={todo} submitLabel={t('todos.save')} onSubmit={save} />
       </DialogContent>
     </Dialog>
   )

@@ -1,5 +1,7 @@
 import { Link, createFileRoute } from '@tanstack/react-router'
+import type { ParseKeys } from 'i18next'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ApiError } from '@/api/fetcher'
 import { PostApiAuthLoginBody } from '@/api/generated/index.zod'
 import type { LoginRequest } from '@/api/generated/model'
@@ -17,11 +19,10 @@ export const Route = createFileRoute('/login')({
 })
 
 /** Identity refuses a sign-in with a 401 whose detail names the reason; any other reason means wrong credentials. */
-const loginFailureMessages: Partial<Record<string, string>> = {
-  NotAllowed: 'Confirm your email before logging in.',
-  LockedOut: 'Too many failed attempts. Try again in a few minutes.',
-  RequiresTwoFactor:
-    'This account uses two-factor authentication, which this app does not support yet.',
+const loginFailureMessages: Partial<Record<string, ParseKeys>> = {
+  NotAllowed: 'login.notAllowed',
+  LockedOut: 'login.lockedOut',
+  RequiresTwoFactor: 'login.requiresTwoFactor',
 }
 
 function loginFailureReason(error: unknown) {
@@ -31,6 +32,7 @@ function loginFailureReason(error: unknown) {
 }
 
 function LoginPage() {
+  const { t } = useTranslation()
   const search = Route.useSearch()
   const { login } = useAuth()
   const [unconfirmedEmail, setUnconfirmedEmail] = useState<string>()
@@ -48,20 +50,20 @@ function LoginPage() {
         setUnconfirmedEmail(credentials.email)
       }
       throw new FormError(
-        loginFailureMessages[reason] ?? 'Invalid email or password.',
+        t(loginFailureMessages[reason] ?? 'login.invalidCredentials'),
       )
     }
   }
 
   return (
     <AuthCard
-      title="Log in"
-      description="Welcome back! Log in to see your todos."
+      title={t('login.title')}
+      description={t('login.description')}
       footer={
         <p>
-          New here?{' '}
+          {t('login.newHere')}{' '}
           <Link to="/register" search={search} className="underline">
-            Create an account
+            {t('login.createAccount')}
           </Link>
         </p>
       }
@@ -69,7 +71,7 @@ function LoginPage() {
       <div className="flex flex-col gap-4">
         <CredentialsForm
           schema={PostApiAuthLoginBody}
-          submitLabel="Log in"
+          submitLabel={t('login.submit')}
           passwordAutoComplete="current-password"
           onSubmit={submit}
         />

@@ -1,0 +1,72 @@
+{
+  "errors": {
+    "network": "Couldn't reach the server. Check your connection and try again.",
+    "requestFailed": "Request failed with status {{status}}",
+    "tooManyRequests_one": "Whoa, slow down! Take a breather and try again in {{count}} second.",
+    "tooManyRequests_other": "Whoa, slow down! Take a breather and try again in {{count}} seconds.",
+    "tooManyRequestsSoon": "Whoa, slow down! Take a breather and try again in a moment.",
+    "unknown": "Something went wrong."
+  },
+  "credentials": {
+    "email": "Email",
+    "password": "Password"
+  },
+  "login": {
+    "title": "Log in",
+    "description": "Welcome back! Log in to see your todos.",
+    "newHere": "New here?",
+    "createAccount": "Create an account",
+    "submit": "Log in",
+    "notAllowed": "Confirm your email before logging in.",
+    "lockedOut": "Too many failed attempts. Try again in a few minutes.",
+    "requiresTwoFactor": "This account uses two-factor authentication, which this app does not support yet.",
+    "invalidCredentials": "Invalid email or password."
+  },
+  "register": {
+    "title": "Create an account",
+    "description": "Sign up to start keeping track of your todos.",
+    "haveAccount": "Already have an account?",
+    "logIn": "Log in",
+    "submit": "Create account",
+    "checkEmail": "Check your email",
+    "linkSent": "We sent a confirmation link to {{email}}. Open it to activate your account, then log in.",
+    "goToLogIn": "Go to log in"
+  },
+  "confirmEmail": {
+    "confirmed": "Email confirmed",
+    "confirmedDescription": "Thanks for confirming your email. You can now log in.",
+    "logIn": "Log in",
+    "invalid": "Link invalid or expired",
+    "invalidDescription": "We could not confirm your email with this link. Try logging in to get a new one.",
+    "backToLogIn": "Back to log in"
+  },
+  "resendConfirmation": {
+    "resend": "Resend confirmation email",
+    "resendIn": "Resend confirmation email in {{seconds}}s",
+    "sent": "We sent a new confirmation link to {{email}}."
+  },
+  "layout": {
+    "todos": "Todos",
+    "logOut": "Log out"
+  },
+  "todos": {
+    "title": "Title",
+    "titlePlaceholder": "What needs doing?",
+    "dueDate": "Due date",
+    "add": "Add",
+    "save": "Save",
+    "edit": "Edit {{title}}",
+    "editTitle": "Edit todo",
+    "delete": "Delete {{title}}",
+    "markDone": "Mark {{title}} as done",
+    "markOpen": "Mark {{title}} as open",
+    "due": "Due {{date, datetime(dateStyle: medium)}}",
+    "loading": "Loading todos…",
+    "empty": "Nothing to do yet. Add your first todo above."
+  },
+  "notFound": {
+    "title": "Page not found",
+    "description": "The page you are looking for does not exist or has moved.",
+    "back": "Back to your todos"
+  }
+}

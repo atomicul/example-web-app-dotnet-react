@@ -1,4 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 import {
   getGetTodosQueryKey,
   getGetTodosQueryOptions,
@@ -15,6 +16,7 @@ export const Route = createFileRoute('/_authenticated/')({
 })
 
 function TodosPage() {
+  const { t } = useTranslation()
   const { mutateAsync: createTodo } = useCreateTodo({
     mutation: {
       meta: { handlesErrors: true, invalidates: [getGetTodosQueryKey()] },
@@ -27,7 +29,7 @@ function TodosPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <TodoForm submitLabel="Add" onSubmit={add} />
+      <TodoForm submitLabel={t('todos.add')} onSubmit={add} />
       <TodoList />
     </div>
   )

@@ -1,3 +1,4 @@
+import { i18n } from '@/i18n'
 import type { HttpValidationProblemDetails } from './generated/model'
 
 /** A non-success response, carrying the ProblemDetails body when the API sent one. */
@@ -15,7 +16,7 @@ export class ApiError extends Error {
     super(
       problem?.detail ??
         problem?.title ??
-        `Request failed with status ${status}`,
+        i18n.t('errors.requestFailed', { status }),
     )
     this.name = 'ApiError'
     this.status = status
@@ -32,10 +33,7 @@ export class ApiError extends Error {
 /** The request never reached the API, as when the user is offline or the server is down. */
 export class NetworkError extends Error {
   constructor(options?: ErrorOptions) {
-    super(
-      "Couldn't reach the server. Check your connection and try again.",
-      options,
-    )
+    super(i18n.t('errors.network'), options)
     this.name = 'NetworkError'
   }
 }
@@ -43,14 +41,15 @@ export class NetworkError extends Error {
 /** A message fit for the user, listing every validation error when there are any. */
 export function errorMessage(error: unknown): string {
   if (isTooManyRequests(error)) {
-    const wait = error.retryAfter ? `${error.retryAfter} seconds` : 'a moment'
-    return `Whoa, slow down! Take a breather and try again in ${wait}.`
+    return error.retryAfter
+      ? i18n.t('errors.tooManyRequests', { count: error.retryAfter })
+      : i18n.t('errors.tooManyRequestsSoon')
   }
   if (error instanceof ApiError) {
     const messages = Object.values(error.errors).flat()
     return messages.length > 0 ? messages.join(' ') : error.message
   }
-  return error instanceof Error ? error.message : 'Something went wrong.'
+  return error instanceof Error ? error.message : i18n.t('errors.unknown')
 }
 
 export function isUnauthorized(error: unknown): boolean {

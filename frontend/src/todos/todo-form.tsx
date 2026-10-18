@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import { CreateTodoBody } from '@/api/generated/index.zod'
 import type { TodoRequest, TodoResponse } from '@/api/generated/model'
 import { Button } from '@/components/ui/button'
@@ -15,6 +16,7 @@ type TodoFormProps = {
 
 /** Creates or edits a todo; the server's validation errors show next to their fields. */
 export function TodoForm({ todo, submitLabel, onSubmit }: TodoFormProps) {
+  const { t } = useTranslation()
   const form = useForm({
     resolver: zodResolver(CreateTodoBody),
     defaultValues: {
@@ -46,11 +48,11 @@ export function TodoForm({ todo, submitLabel, onSubmit }: TodoFormProps) {
             htmlFor={`title-${todo?.id ?? 'new'}`}
             className="sr-only"
           >
-            Title
+            {t('todos.title')}
           </FieldLabel>
           <Input
             id={`title-${todo?.id ?? 'new'}`}
-            placeholder="What needs doing?"
+            placeholder={t('todos.titlePlaceholder')}
             aria-invalid={!!errors.title}
             {...form.register('title')}
           />
@@ -61,7 +63,7 @@ export function TodoForm({ todo, submitLabel, onSubmit }: TodoFormProps) {
             htmlFor={`due-date-${todo?.id ?? 'new'}`}
             className="sr-only"
           >
-            Due date
+            {t('todos.dueDate')}
           </FieldLabel>
           <Input
             id={`due-date-${todo?.id ?? 'new'}`}
