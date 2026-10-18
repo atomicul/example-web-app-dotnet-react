@@ -60,9 +60,9 @@
     path: "{{ todoapp_config_dir }}/certificate.env"
   register: todoapp_certificate_env
 
-- name: Configure the database password
+- name: Configure the database connection string
   ansible.builtin.include_tasks: database.yml
-  when: todoapp_change_database_password | bool or not todoapp_database_env.stat.exists
+  when: todoapp_change_connection_string | bool or not todoapp_database_env.stat.exists
 
 - name: Configure the Data Protection certificate
   ansible.builtin.include_tasks: certificate.yml

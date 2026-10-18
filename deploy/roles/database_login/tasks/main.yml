@@ -40,11 +40,13 @@
   changed_when: true
   no_log: true
 
-- name: Show the app's database password, this once
+- name: Show the app's connection string, this once
   ansible.builtin.debug:
     msg:
-      - "Created the database login '{{ todoapp_database_login }}' with this password:"
-      - "{{ lookup('ansible.builtin.env', 'TODOAPP_DATABASE_PASSWORD') }}"
+      - "Created the database login '{{ todoapp_database_login }}'. An app on this host connects with it through:"
+      - >-
+        Server=127.0.0.1,{{ mssql_port }};Database={{ todoapp_database }};User ID={{ todoapp_database_login }};Password={{
+        lookup('ansible.builtin.env', 'TODOAPP_DATABASE_PASSWORD') }};TrustServerCertificate=True
       - It is shown only this once and stored nowhere. Save it; setup-webapp asks for it.
   when: database_login_count.stdout | trim == '0'
 
