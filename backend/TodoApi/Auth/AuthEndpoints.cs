@@ -20,6 +20,7 @@ public static class AuthEndpoints
         identity.AddEndpointFilter(ValidationProblems.CodeIdentityErrors);
         auth.MapPost("/logout", Logout).RequireAuthorization();
         auth.MapGet("/manage/pendingEmail", AccountChanges.GetPendingEmail).RequireAuthorization().WithName("GetPendingEmail");
+        auth.MapDelete("/manage/pendingEmail", AccountChanges.CancelPendingEmail).RequireAuthorization().WithName("CancelPendingEmail");
 
         return app;
     }
@@ -30,25 +31,32 @@ public static class AuthEndpoints
     /// </summary>
     private static void LimitEmailSending(EndpointBuilder endpoint)
     {
-        if (EmailSendingRoutes.Any(route => IsPost(endpoint, route)))
+        if (EmailSendingRoutes.Any(route => Is(endpoint, HttpMethods.Post, route)))
         {
             endpoint.Metadata.Add(new EnableRateLimitingAttribute(RateLimits.Email));
         }
     }
 
-    /// <summary>Runs <see cref="AccountChanges.GuardAsync"/> around <c>POST /manage/info</c>.</summary>
+    /// <summary>
+    /// Runs <see cref="AccountChanges.GuardInfoAsync"/> around <c>POST /manage/info</c> and
+    /// <see cref="AccountChanges.GuardEmailConfirmationAsync"/> around <c>GET /confirmEmail</c>.
+    /// </summary>
     private static void GuardAccountChanges(EndpointBuilder endpoint)
     {
-        if (IsPost(endpoint, "/manage/info"))
+        if (Is(endpoint, HttpMethods.Post, "/manage/info"))
         {
-            endpoint.FilterFactories.Add((_, next) => invocation => AccountChanges.GuardAsync(invocation, next));
+            endpoint.FilterFactories.Add((_, next) => invocation => AccountChanges.GuardInfoAsync(invocation, next));
+        }
+        else if (Is(endpoint, HttpMethods.Get, "/confirmEmail"))
+        {
+            endpoint.FilterFactories.Add((_, next) => invocation => AccountChanges.GuardEmailConfirmationAsync(invocation, next));
         }
     }
 
-    private static bool IsPost(EndpointBuilder endpoint, string route) =>
+    private static bool Is(EndpointBuilder endpoint, string method, string route) =>
         endpoint is RouteEndpointBuilder { RoutePattern.RawText: { } pattern }
         && pattern.EndsWith(route)
-        && endpoint.Metadata.OfType<HttpMethodMetadata>().Any(metadata => metadata.HttpMethods.Contains(HttpMethods.Post));
+        && endpoint.Metadata.OfType<HttpMethodMetadata>().Any(metadata => metadata.HttpMethods.Contains(method));
 
     /// <summary>Signs the current user out by clearing the Identity cookie.</summary>
     public static async Task<Ok> Logout(SignInManager<IdentityUser> signInManager)

@@ -1089,3 +1089,76 @@ export function useGetPendingEmail<TData = Awaited<ReturnType<typeof getPendingE
 
 
 
+export const getCancelPendingEmailUrl = () => {
+
+
+
+
+  return `/api/auth/manage/pendingEmail`
+}
+
+/**
+ * @summary Cancels the signed-in user's email change, so the links sent for it stop working.
+ */
+export const cancelPendingEmail = async ( options?: Parameters<typeof fetcher>[1]): Promise<void> => {
+
+  return fetcher<void>(getCancelPendingEmailUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getCancelPendingEmailMutationKey = () => ['cancelPendingEmail'] as const;
+
+export const getCancelPendingEmailMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelPendingEmail>>, TError,void, TContext>, request?: SecondParameter<typeof fetcher>}
+): UseMutationOptions<Awaited<ReturnType<typeof cancelPendingEmail>>, TError,void, TContext> => {
+
+const mutationKey = getCancelPendingEmailMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof cancelPendingEmail>>, void> = () => {
+
+
+          return  cancelPendingEmail(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CancelPendingEmailMutationResult = NonNullable<Awaited<ReturnType<typeof cancelPendingEmail>>>
+
+    export type CancelPendingEmailMutationError = ErrorType<void>
+
+
+    /**
+ * @summary Cancels the signed-in user's email change, so the links sent for it stop working.
+ */
+export const useCancelPendingEmail = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof cancelPendingEmail>>, TError,void, TContext>, request?: SecondParameter<typeof fetcher>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof cancelPendingEmail>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getCancelPendingEmailMutationOptions(options), queryClient);
+    }

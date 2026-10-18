@@ -53,6 +53,55 @@ public class AccountChangeTests(TodoApiFactory factory)
     }
 
     [Fact]
+    public async Task Cancelled_email_change_cannot_be_confirmed()
+    {
+        var client = factory.CreateClient();
+        var email = await client.RegisterConfirmedAsync(factory);
+        (await client.LoginAsync(email, useCookies: true)).EnsureSuccessStatusCode();
+        var newEmail = TestUsers.NewEmail();
+
+        (await client.ChangeInfoAsync(new InfoRequest { NewEmail = newEmail })).EnsureSuccessStatusCode();
+        (await client.DeleteAsync("/api/auth/manage/pendingEmail", CancellationToken)).EnsureSuccessStatusCode();
+        var pending = await GetPendingEmailAsync(client);
+        var confirmation = await client.ConfirmEmailAsync(factory.Emails.ConfirmationLinkFor(newEmail));
+        var login = await factory.CreateClient().LoginAsync(email);
+
+        Assert.Null(pending);
+        Assert.Equal(HttpStatusCode.Unauthorized, confirmation.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, login.StatusCode);
+    }
+
+    [Fact]
+    public async Task Only_the_latest_email_change_can_be_confirmed()
+    {
+        var client = await factory.CreateUserClientAsync();
+        var firstEmail = TestUsers.NewEmail();
+        var latestEmail = TestUsers.NewEmail();
+
+        (await client.ChangeInfoAsync(new InfoRequest { NewEmail = firstEmail })).EnsureSuccessStatusCode();
+        (await client.ChangeInfoAsync(new InfoRequest { NewEmail = latestEmail })).EnsureSuccessStatusCode();
+        var first = await client.ConfirmEmailAsync(factory.Emails.ConfirmationLinkFor(firstEmail));
+        var latest = await client.ConfirmEmailAsync(factory.Emails.ConfirmationLinkFor(latestEmail));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, first.StatusCode);
+        Assert.Equal(HttpStatusCode.OK, latest.StatusCode);
+    }
+
+    [Fact]
+    public async Task Links_sent_earlier_for_the_same_email_keep_working()
+    {
+        var client = await factory.CreateUserClientAsync();
+        var newEmail = TestUsers.NewEmail();
+
+        (await client.ChangeInfoAsync(new InfoRequest { NewEmail = newEmail })).EnsureSuccessStatusCode();
+        var firstLink = factory.Emails.ConfirmationLinkFor(newEmail);
+        (await client.ChangeInfoAsync(new InfoRequest { NewEmail = newEmail })).EnsureSuccessStatusCode();
+        var confirmation = await client.ConfirmEmailAsync(firstLink);
+
+        Assert.Equal(HttpStatusCode.OK, confirmation.StatusCode);
+    }
+
+    [Fact]
     public async Task Password_change_drops_the_pending_email_change()
     {
         var client = await factory.CreateUserClientAsync();

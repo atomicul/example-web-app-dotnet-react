@@ -435,6 +435,29 @@
             "Bearer": [ ]
           }
         ]
+      },
+      "delete": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Cancels the signed-in user's email change, so the links sent for it stop working.",
+        "operationId": "CancelPendingEmail",
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Missing or invalid bearer token."
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
       }
     },
     "/api/todos": {

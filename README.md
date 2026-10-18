@@ -103,8 +103,10 @@ Signed-in users change their email and password on the SPA's `/account` page, th
 
 - A new email takes effect once the user opens the link sent to it, which leads to the same `/confirm-email` page.
   The current email keeps working until then, and `GET /api/auth/manage/pendingEmail` shows the change as waiting
-  for as long as its link works: a day, unless the password changes first. An email that belongs to another user is
-  refused with a `DuplicateEmail` error.
+  for as long as its link works: a day, unless the password changes first. Only the latest change can be confirmed:
+  asking for another email, or cancelling with `DELETE /api/auth/manage/pendingEmail`, makes the links sent before
+  stop working. Asking again for the same email sends a new link, and the earlier ones keep working. An email that
+  belongs to another user is refused with a `DuplicateEmail` error.
 - A new password needs the current one. The session that changes it stays signed in, while every other session of
   the user ends within 30 minutes, when Identity next checks its security stamp. Confirming a new email ends them
   the same way.

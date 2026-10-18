@@ -131,3 +131,8 @@ export const GetPendingEmailResponse = zod.object({
   "email": zod.string().nullable().describe('The new email, which the link sent to it confirms; null when no change is waiting, or its link no longer works\nbecause it expired, the change was confirmed or the password changed since.')
 }).describe('An email change the signed-in user asked for and hasn\'t confirmed yet.')
 
+/**
+ * @summary Cancels the signed-in user's email change, so the links sent for it stop working.
+ */
+export const CancelPendingEmailResponse = zod.void()
+
