@@ -701,18 +701,30 @@
               }
             }
           },
-          "codes": {
-            "type": "object",
-            "additionalProperties": {
-              "type": "array",
-              "items": {
-                "type": [
-                  "null",
-                  "string"
-                ]
+          "issues": {
+            "type": "array",
+            "items": {
+              "required": [
+                "detail",
+                "code"
+              ],
+              "type": "object",
+              "properties": {
+                "pointer": {
+                  "type": "string",
+                  "description": "A JSON Pointer to the request field the error is about; absent when it is not about one."
+                },
+                "detail": {
+                  "type": "string",
+                  "description": "What is wrong, in English."
+                },
+                "code": {
+                  "type": "string",
+                  "description": "Names the error: the code its rule declares, its validation attribute's name, or Identity's code."
+                }
               }
             },
-            "description": "The codes of the errors, keyed like errors: each names the error at the same position, for clients to word in their own language, or is null when the error has none."
+            "description": "The errors, each as an RFC 9457 error object with a code for clients to word it in their own language."
           }
         }
       },

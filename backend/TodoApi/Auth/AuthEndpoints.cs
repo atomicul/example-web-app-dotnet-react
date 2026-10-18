@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
+using TodoApi.Validation;
 
 namespace TodoApi.Auth;
 
@@ -13,7 +14,9 @@ public static class AuthEndpoints
     {
         var auth = app.MapGroup("/auth").WithTags("Auth");
 
-        auth.MapIdentityApi<IdentityUser>().Add(LimitEmailSending);
+        var identity = auth.MapIdentityApi<IdentityUser>();
+        identity.Add(LimitEmailSending);
+        identity.AddEndpointFilter(ValidationProblems.CodeIdentityErrors);
         auth.MapPost("/logout", Logout).RequireAuthorization();
 
         return app;

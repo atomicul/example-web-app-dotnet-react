@@ -1,6 +1,5 @@
 using System.Net;
 using System.Net.Http.Json;
-using Microsoft.AspNetCore.Http;
 using TodoApi.Todos;
 
 namespace TodoApi.Tests;
@@ -50,15 +49,17 @@ public class TodoTests(TodoApiFactory factory)
     }
 
     [Theory]
-    [InlineData(0)]
-    [InlineData(201)]
-    public async Task Title_must_have_1_to_200_characters(int length)
+    [InlineData(0, "Required")]
+    [InlineData(201, "StringLength")]
+    public async Task Title_must_have_1_to_200_characters(int length, string code)
     {
         var client = await factory.CreateUserClientAsync();
 
         var created = await client.PostAsJsonAsync("/api/todos", new TodoRequest(new string('a', length)), CancellationToken);
+        var (problem, issues) = await created.ReadValidationProblemAsync();
 
-        Assert.Contains("Title", await ValidationErrorsAsync(created));
+        Assert.Equal(problem.Errors["Title"], issues.Select(issue => issue.Detail));
+        Assert.Equal(new ValidationProblemReader.Issue("#/title", problem.Errors["Title"][0], code), Assert.Single(issues));
     }
 
     [Fact]
@@ -67,28 +68,11 @@ public class TodoTests(TodoApiFactory factory)
         var client = await factory.CreateUserClientAsync();
 
         var created = await client.PostAsJsonAsync("/api/todos", new TodoRequest("Water the plants", DueDate: Yesterday), CancellationToken);
+        var (problem, issues) = await created.ReadValidationProblemAsync();
 
-        Assert.Contains("DueDate", await ValidationErrorsAsync(created));
-    }
-
-    [Fact]
-    public async Task Error_the_api_words_carries_its_code()
-    {
-        var client = await factory.CreateUserClientAsync();
-
-        var created = await client.PostAsJsonAsync("/api/todos", new TodoRequest("Water the plants", DueDate: Yesterday), CancellationToken);
-
-        Assert.Equal(["DueDateInPast"], (await ValidationCodesAsync(created))["DueDate"]);
-    }
-
-    [Fact]
-    public async Task Error_worded_by_an_attribute_has_no_code()
-    {
-        var client = await factory.CreateUserClientAsync();
-
-        var created = await client.PostAsJsonAsync("/api/todos", new TodoRequest(""), CancellationToken);
-
-        Assert.Equal([null], (await ValidationCodesAsync(created))["Title"]);
+        const string Detail = "An open todo can't be due in the past.";
+        Assert.Equal([Detail], problem.Errors["DueDate"]);
+        Assert.Equal(new ValidationProblemReader.Issue("#/dueDate", Detail, "DueDateInPast"), Assert.Single(issues));
     }
 
     [Fact]
@@ -100,20 +84,4 @@ public class TodoTests(TodoApiFactory factory)
 
         Assert.Equal(HttpStatusCode.Created, created.StatusCode);
     }
-
-    private static async Task<IEnumerable<string>> ValidationErrorsAsync(HttpResponseMessage response)
-    {
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var problem = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(CancellationToken);
-        return problem!.Errors.Keys;
-    }
-
-    private static async Task<Dictionary<string, string?[]>> ValidationCodesAsync(HttpResponseMessage response)
-    {
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-        var problem = await response.Content.ReadFromJsonAsync<CodedValidationProblem>(CancellationToken);
-        return problem!.Codes;
-    }
-
-    private record CodedValidationProblem(Dictionary<string, string?[]> Codes);
 }

@@ -14,9 +14,9 @@ export class FormError extends Error {
   }
 }
 
-/** Maps a server validation key such as `DueDate` onto the camelCase name the form uses. */
-function toFieldName(key: string): string {
-  return key.charAt(0).toLowerCase() + key.slice(1)
+/** The field a JSON Pointer such as `#/dueDate` names, or undefined when it names none. */
+function fieldOf(pointer: string | undefined) {
+  return pointer?.replace(/^#\//, '')
 }
 
 /**
@@ -36,17 +36,22 @@ export function setServerErrors<T extends FieldValues>(
     throw error
   }
   const fields = Object.keys(form.getValues())
-  const fieldErrors =
-    error instanceof ApiError ? Object.entries(error.errors) : []
-  const rootMessages = fieldErrors.length === 0 ? [errorMessage(error)] : []
+  const validationErrors = error instanceof ApiError ? error.errors : []
+  const rootMessages =
+    validationErrors.length === 0 ? [errorMessage(error)] : []
+  const fieldMessages = new Map<string, string[]>()
 
-  for (const [key, messages] of fieldErrors) {
-    const field = toFieldName(key)
-    if (fields.includes(field)) {
-      form.setError(field as FieldPath<T>, { message: messages.join(' ') })
+  for (const { pointer, message } of validationErrors) {
+    const field = fieldOf(pointer)
+    if (field && fields.includes(field)) {
+      fieldMessages.set(field, [...(fieldMessages.get(field) ?? []), message])
     } else {
-      rootMessages.push(...messages)
+      rootMessages.push(message)
     }
+  }
+
+  for (const [field, messages] of fieldMessages) {
+    form.setError(field as FieldPath<T>, { message: messages.join(' ') })
   }
 
   if (rootMessages.length > 0) {

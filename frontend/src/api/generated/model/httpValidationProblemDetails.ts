@@ -5,8 +5,8 @@
  * Per-user todo lists secured with ASP.NET Core Identity bearer tokens. Register through the Auth endpoints, confirm your email with the link it sends, then log in and authorize with the returned access token.
  * OpenAPI spec version: 1.0.0
  */
-import type { HttpValidationProblemDetailsCodes } from './httpValidationProblemDetailsCodes';
 import type { HttpValidationProblemDetailsErrors } from './httpValidationProblemDetailsErrors';
+import type { HttpValidationProblemDetailsIssuesItem } from './httpValidationProblemDetailsIssuesItem';
 
 export interface HttpValidationProblemDetails {
   /** @nullable */
@@ -20,6 +20,6 @@ export interface HttpValidationProblemDetails {
   /** @nullable */
   instance?: string | null;
   errors?: HttpValidationProblemDetailsErrors;
-  /** The codes of the errors, keyed like errors: each names the error at the same position, for clients to word in their own language, or is null when the error has none. */
-  codes?: HttpValidationProblemDetailsCodes;
+  /** The errors, each as an RFC 9457 error object with a code for clients to word it in their own language. */
+  issues?: HttpValidationProblemDetailsIssuesItem[];
 }

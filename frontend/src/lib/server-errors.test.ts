@@ -14,12 +14,13 @@ function errorsFor(error: unknown) {
 }
 
 describe('setServerErrors', () => {
-  it('puts validation errors under the fields they name', () => {
+  it('puts validation errors under the fields they point to', () => {
     const error = new ApiError(400, {
-      errors: {
-        Title: ['Too long.', 'Too shouty.'],
-        DueDate: ['In the past.'],
-      },
+      issues: [
+        { pointer: '#/title', detail: 'Too long.', code: 'StringLength' },
+        { pointer: '#/title', detail: 'Too shouty.', code: 'Shouty' },
+        { pointer: '#/dueDate', detail: 'In the past.', code: 'Past' },
+      ],
     })
     expect(errorsFor(error)).toEqual({
       title: 'Too long. Too shouty.',
@@ -27,9 +28,13 @@ describe('setServerErrors', () => {
     })
   })
 
-  it('joins validation errors for unknown keys into the root error', () => {
+  it('joins validation errors about other fields or none into the root error', () => {
     const error = new ApiError(400, {
-      errors: { Title: ['Too long.'], Owner: ['Missing.'], '': ['Bad body.'] },
+      issues: [
+        { pointer: '#/title', detail: 'Too long.', code: 'StringLength' },
+        { pointer: '#/owner', detail: 'Missing.', code: 'Required' },
+        { detail: 'Bad body.', code: 'Validate' },
+      ],
     })
     expect(errorsFor(error)).toEqual({
       title: 'Too long.',

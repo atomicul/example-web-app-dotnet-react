@@ -39,6 +39,17 @@ public class AuthTests(TodoApiFactory factory)
     }
 
     [Fact]
+    public async Task Registration_errors_are_coded_as_identity_keys_them()
+    {
+        var response = await factory.CreateClient().RegisterAsync(TestUsers.NewEmail(), password: "Password!");
+
+        var (problem, issues) = await response.ReadValidationProblemAsync();
+
+        Assert.Equal(problem.Errors["PasswordRequiresDigit"], issues.Where(issue => issue.Code == "PasswordRequiresDigit").Select(issue => issue.Detail));
+        Assert.All(issues, issue => Assert.Null(issue.Pointer));
+    }
+
+    [Fact]
     public async Task Login_requires_a_confirmed_email()
     {
         var client = factory.CreateClient();

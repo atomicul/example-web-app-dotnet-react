@@ -7,6 +7,7 @@ using TodoApi;
 using TodoApi.Auth;
 using TodoApi.Todos;
 using TodoApi.Data;
+using TodoApi.Validation;
 
 var builder = WebApplication.CreateBuilder(args);
 var appName = builder.Configuration["AppName"] ?? builder.Environment.ApplicationName;
@@ -31,8 +32,7 @@ builder.Services.AddRateLimits(builder.Configuration);
 builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
 
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
-builder.Services.AddProblemDetails(options => options.CustomizeProblemDetails = ValidationCodes.Add);
-builder.Services.AddValidation();
+builder.Services.AddProblemDetails();
 
 builder.Services.AddOpenApi(options =>
 {
@@ -45,7 +45,7 @@ builder.Services.AddOpenApi(options =>
     options.AddDocumentTransformer<BearerSecurityTransformer>();
     options.AddOperationTransformer<BearerSecurityTransformer>();
     options.AddSchemaTransformer<RegisterRequestSchemaTransformer>();
-    options.AddSchemaTransformer<ValidationCodesSchemaTransformer>();
+    options.AddSchemaTransformer<ValidationIssuesSchemaTransformer>();
 });
 
 var app = builder.Build();
@@ -83,6 +83,7 @@ app.MapHealthChecks("/health");
 app.MapAcmeChallenge();
 
 var api = app.MapGroup("/api").RequireRateLimiting(RateLimits.Api);
+api.AddEndpointFilterFactory(ValidationProblems.ValidateRequests);
 api.MapAuth();
 api.MapTodos();
 api.MapFallback(() => TypedResults.NotFound());

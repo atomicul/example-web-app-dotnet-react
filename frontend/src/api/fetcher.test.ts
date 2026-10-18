@@ -37,9 +37,11 @@ describe('fetcher', () => {
   })
 
   it('throws an ApiError carrying validation errors', async () => {
+    const detail = 'The Title field is required.'
     const problem = {
       title: 'One or more validation errors occurred.',
-      errors: { Title: ['The Title field is required.'] },
+      errors: { Title: [detail] },
+      issues: [{ pointer: '#/title', detail, code: 'Required' }],
     }
     respondWith(json(problem, 400, 'application/problem+json'))
 
@@ -51,7 +53,7 @@ describe('fetcher', () => {
     expect(error).toMatchObject({
       status: 400,
       message: problem.title,
-      errors: problem.errors,
+      errors: [{ pointer: '#/title', message: detail }],
     })
   })
 
@@ -60,7 +62,7 @@ describe('fetcher', () => {
 
     const error = await fetcher('/api/todos', {}).catch((e: unknown) => e)
 
-    expect(error).toMatchObject({ status: 401, problem: undefined, errors: {} })
+    expect(error).toMatchObject({ status: 401, problem: undefined, errors: [] })
   })
 
   it('throws an ApiError with the seconds to wait when rate limited', async () => {
@@ -109,43 +111,52 @@ describe('ApiError', () => {
   it('words a validation error by its code in the user language', async () => {
     await i18n.changeLanguage('ro')
     const error = new ApiError(400, {
-      errors: { DueDate: [pastDueDate] },
-      codes: { DueDate: ['DueDateInPast'] },
+      issues: [
+        { pointer: '#/dueDate', detail: pastDueDate, code: 'DueDateInPast' },
+      ],
     })
 
-    expect(error.errors).toEqual({
-      DueDate: [ro.validationErrors.DueDateInPast],
-    })
+    expect(error.errors).toEqual([
+      { pointer: '#/dueDate', message: ro.validationErrors.DueDateInPast },
+    ])
   })
 
-  it('words an Identity error by its key, which is its code', async () => {
+  it('words an error about no field by its code too', async () => {
     await i18n.changeLanguage('ro')
     const error = new ApiError(400, {
-      errors: { DuplicateUserName: ["Username 'ada' is already taken."] },
-      codes: { DuplicateUserName: [null] },
+      issues: [
+        {
+          detail: "Username 'ada' is already taken.",
+          code: 'DuplicateUserName',
+        },
+      ],
     })
 
-    expect(error.errors).toEqual({
-      DuplicateUserName: [ro.validationErrors.DuplicateUserName],
-    })
+    expect(error.errors).toEqual([
+      { message: ro.validationErrors.DuplicateUserName },
+    ])
   })
 
   it("keeps the API's wording of an error the SPA does not translate", async () => {
     await i18n.changeLanguage('ro')
     const error = new ApiError(400, {
-      errors: { Title: ['Too long.', pastDueDate] },
-      codes: { Title: [null, 'NotACode'] },
+      issues: [
+        { pointer: '#/title', detail: 'Too long.', code: 'StringLength' },
+      ],
     })
 
-    expect(error.errors).toEqual({ Title: ['Too long.', pastDueDate] })
+    expect(error.errors).toEqual([{ pointer: '#/title', message: 'Too long.' }])
   })
 
   it("keeps the API's English wording in English", () => {
     const error = new ApiError(400, {
-      errors: { DueDate: [pastDueDate] },
-      codes: { DueDate: ['DueDateInPast'] },
+      issues: [
+        { pointer: '#/dueDate', detail: pastDueDate, code: 'DueDateInPast' },
+      ],
     })
 
-    expect(error.errors).toEqual({ DueDate: [pastDueDate] })
+    expect(error.errors).toEqual([
+      { pointer: '#/dueDate', message: pastDueDate },
+    ])
   })
 })

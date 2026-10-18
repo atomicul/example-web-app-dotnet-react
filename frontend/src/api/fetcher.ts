@@ -1,6 +1,13 @@
 import { i18n } from '@/i18n'
 import type { HttpValidationProblemDetails } from './generated/model'
 
+/** A reason the API refused a request. */
+export type ValidationMessage = {
+  /** A JSON Pointer such as `#/dueDate` to the request field it is about, absent when it is not about one. */
+  pointer?: string
+  message: string
+}
+
 /** A non-success response, carrying the ProblemDetails body when the API sent one. */
 export class ApiError extends Error {
   readonly status: number
@@ -25,28 +32,15 @@ export class ApiError extends Error {
   }
 
   /**
-   * Validation messages keyed by field, empty when the response had none. Each is in the user's language when the SPA
-   * translates its code, and as the API worded it otherwise.
+   * The validation errors of the response's issues, empty when it had none. Each is in the user's language when the
+   * SPA translates its code, and as the API worded it otherwise.
    */
-  get errors(): Record<string, string[]> {
-    const { errors = {}, codes = {} } = this.problem ?? {}
-    return Object.fromEntries(
-      Object.entries(errors).map(([key, messages]) => [
-        key,
-        messages.map((message, index) =>
-          validationMessage(codes[key]?.[index] ?? key, message),
-        ),
-      ]),
-    )
+  get errors(): ValidationMessage[] {
+    return (this.problem?.issues ?? []).map(({ pointer, detail, code }) => ({
+      pointer,
+      message: i18n.t(`validationErrors.${code}`, { defaultValue: detail }),
+    }))
   }
-}
-
-/**
- * The SPA's translation of a validation error, by the code the API sent with it. Identity's errors carry no code but
- * are keyed by theirs, so their key stands in for it.
- */
-function validationMessage(code: string, message: string) {
-  return i18n.t(`validationErrors.${code}`, { defaultValue: message })
 }
 
 /** The request never reached the API, as when the user is offline or the server is down. */
@@ -65,7 +59,7 @@ export function errorMessage(error: unknown): string {
       : i18n.t('errors.tooManyRequestsSoon')
   }
   if (error instanceof ApiError) {
-    const messages = Object.values(error.errors).flat()
+    const messages = error.errors.map(({ message }) => message)
     return messages.length > 0 ? messages.join(' ') : error.message
   }
   return error instanceof Error ? error.message : i18n.t('errors.unknown')

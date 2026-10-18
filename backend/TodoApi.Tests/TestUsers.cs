@@ -34,8 +34,8 @@ public static class TestUsers
         return email;
     }
 
-    public static Task<HttpResponseMessage> RegisterAsync(this HttpClient client, string email) =>
-        client.PostAsJsonAsync("/api/auth/register", new RegisterRequest { Email = email, Password = Password }, CancellationToken);
+    public static Task<HttpResponseMessage> RegisterAsync(this HttpClient client, string email, string password = Password) =>
+        client.PostAsJsonAsync("/api/auth/register", new RegisterRequest { Email = email, Password = password }, CancellationToken);
 
     /// <summary>Calls the API's confirmation endpoint with the query of a link to the SPA's confirmation page.</summary>
     public static Task<HttpResponseMessage> ConfirmEmailAsync(this HttpClient client, Uri confirmationLink) =>
