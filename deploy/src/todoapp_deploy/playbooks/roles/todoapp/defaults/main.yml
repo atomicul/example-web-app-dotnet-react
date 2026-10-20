@@ -2,5 +2,6 @@
 todoapp_change_connection_string: false
 todoapp_change_certificate: false
 todoapp_settings_source: ""
+todoapp_certificate_source: ""
 todoapp_controller_directory: "{{ lookup('ansible.builtin.env', 'PWD') }}"
 todoapp_default_certificate_path: "{{ inventory_hostname }}-dataprotection.pfx"

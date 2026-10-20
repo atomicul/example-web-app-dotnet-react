@@ -17,6 +17,13 @@ def parse_components_directory(value: str) -> Path:
     return path.resolve()
 
 
+def parse_certificate_file(value: str) -> Path:
+    path = Path(value).expanduser()
+    if not path.is_file():
+        raise argparse.ArgumentTypeError(f"expected a PFX file, got {value!r}")
+    return path.resolve()
+
+
 def parse_settings_file(value: str) -> Path:
     path = Path(value).expanduser()
     try:
@@ -42,6 +49,11 @@ def main() -> None:
         help="replace the host's Data Protection certificate, which logs every user out",
     )
     parser.add_argument(
+        "--certificate",
+        type=parse_certificate_file,
+        help="the PFX to install as the Data Protection certificate, with its password in TODOAPP_CERTIFICATE_PASSWORD",
+    )
+    parser.add_argument(
         "--dapr-components",
         type=parse_components_directory,
         help="replace the Dapr sidecar's components on the host with the YAML files of this directory",
@@ -58,6 +70,7 @@ def main() -> None:
         "todoapp_controller_directory": os.getcwd(),
         "dapr_components_source": str(args.dapr_components or ""),
         "todoapp_settings_source": str(args.settings or ""),
+        "todoapp_certificate_source": str(args.certificate or ""),
     }
     secrets = {"TODOAPP_GENERATED_CERTIFICATE_PASSWORD": generate_password()}
     sys.exit(run_playbook("webapp.yml", args, variables=variables, secrets=secrets))

@@ -74,6 +74,13 @@ It only asks for what the host doesn't have yet:
 To change either of them on a host that has them, pass `--change-connection-string` or `--change-certificate`.
 Replacing the certificate logs every user out, and losing it does too: keep the PFX and its password.
 
+To answer the certificate's prompts ahead of time, pass the PFX's path as `--certificate PFX` and export its password
+as `TODOAPP_CERTIFICATE_PASSWORD`, e.g. for a PFX made with [`generate-certificate`](#generate-certificate). Secrets
+only ever come from environment variables, never from arguments. On a host that has a certificate, they are used only
+with `--change-certificate`; without it, the run fails if `--certificate` names a different PFX than the host's, so
+the certificate is never replaced by accident. Passing the same PFX and password again changes nothing on the host,
+even with `--change-certificate`.
+
 `--dapr-components DIR` replaces the sidecar's components on the host with the `*.yaml` and `*.yml` files of a local
 directory, and removes the ones it doesn't have. Without it, the host keeps the components it has.
 
@@ -141,8 +148,8 @@ Setting a provider up is manual. For AWS, for example:
 
 ### `generate-certificate`
 
-`uv run generate-certificate dataprotection.pfx` writes a self-signed certificate that `setup-webapp` accepts, after
-asking for its password. It refuses to overwrite a file.
+`uv run generate-certificate dataprotection.pfx` writes a self-signed certificate that `setup-webapp` accepts, with the
+password in `TODOAPP_CERTIFICATE_PASSWORD`, or else one it asks for. It refuses to overwrite a file.
 
 ## On the host
 

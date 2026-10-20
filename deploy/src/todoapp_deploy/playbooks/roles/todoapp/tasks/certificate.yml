@@ -4,11 +4,16 @@
     prompt: >-
       {{ 'Replacing the installed certificate logs every user out. ' if todoapp_certificate_env.stat.exists else '' -}}
       Data Protection certificate: press Enter to generate a new one, or type the local path of an existing PFX
-  register: todoapp_certificate_source
+  register: todoapp_certificate_input
+  when: todoapp_certificate_source | length == 0
+
+- name: Remember the certificate's chosen path
+  ansible.builtin.set_fact:
+    todoapp_chosen_certificate_path: "{{ todoapp_certificate_source or todoapp_certificate_input.user_input | default('') }}"
 
 - name: Remember whether to generate the certificate
   ansible.builtin.set_fact:
-    todoapp_generate_certificate: "{{ todoapp_certificate_source.user_input | length == 0 }}"
+    todoapp_generate_certificate: "{{ todoapp_chosen_certificate_path | length == 0 }}"
 
 - name: Ask where to keep the generated certificate
   ansible.builtin.pause:
@@ -19,11 +24,11 @@
 - name: Remember the certificate's local path
   ansible.builtin.set_fact:
     todoapp_certificate_file: >-
-      {{ [todoapp_controller_directory, todoapp_chosen_certificate_path | ansible.builtin.expanduser]
+      {{ [todoapp_controller_directory, todoapp_certificate_path | ansible.builtin.expanduser]
          | ansible.builtin.path_join }}
   vars:
-    todoapp_chosen_certificate_path: >-
-      {{ todoapp_certificate_source.user_input
+    todoapp_certificate_path: >-
+      {{ todoapp_chosen_certificate_path
          or todoapp_certificate_output.user_input | default('')
          or todoapp_default_certificate_path }}
 
@@ -43,33 +48,47 @@
          else "doesn't exist" }}
     quiet: true
 
-- name: Ask for the certificate's password
+- name: Read the certificate's password from TODOAPP_CERTIFICATE_PASSWORD
+  ansible.builtin.set_fact:
+    todoapp_certificate_password_variable: "{{ lookup('ansible.builtin.env', 'TODOAPP_CERTIFICATE_PASSWORD') }}"
+  no_log: true
+
+- name: Ask for the certificate's password, unless TODOAPP_CERTIFICATE_PASSWORD has it
   ansible.builtin.pause:
     prompt: >-
       {{ 'Password for the new PFX: press Enter to generate one' if todoapp_generate_certificate
          else 'Password of the PFX' }}
     echo: false
   register: todoapp_certificate_password_input
+  when: todoapp_certificate_password_variable | length == 0
+
+- name: Remember the given password
+  ansible.builtin.set_fact:
+    todoapp_given_certificate_password: >-
+      {{ todoapp_certificate_password_variable or todoapp_certificate_password_input.user_input | default('') }}
+  no_log: true
 
 - name: Remember whether to generate the certificate's password
   ansible.builtin.set_fact:
     todoapp_generate_certificate_password: >-
-      {{ todoapp_generate_certificate and todoapp_certificate_password_input.user_input | length == 0 }}
+      {{ todoapp_generate_certificate and todoapp_given_certificate_password | length == 0 }}
 
 - name: Ask for the new certificate's password again
   ansible.builtin.pause:
     prompt: Repeat the password
     echo: false
   register: todoapp_certificate_password_again
-  when: todoapp_generate_certificate and not todoapp_generate_certificate_password
+  when: >-
+    todoapp_generate_certificate and not todoapp_generate_certificate_password
+    and todoapp_certificate_password_variable | length == 0
 
 - name: Require a certificate password, typed the same way twice for a new one
   ansible.builtin.assert:
     that:
-      - todoapp_generate_certificate_password or todoapp_certificate_password_input.user_input | length > 0
+      - todoapp_generate_certificate_password or todoapp_given_certificate_password | length > 0
       - >-
         todoapp_certificate_password_again is skipped
-        or todoapp_certificate_password_again.user_input == todoapp_certificate_password_input.user_input
+        or todoapp_certificate_password_again.user_input == todoapp_given_certificate_password
     fail_msg: The certificate password is empty, or the two passwords don't match
     quiet: true
   no_log: true
@@ -78,7 +97,7 @@
   ansible.builtin.set_fact:
     todoapp_certificate_password: >-
       {{ lookup('ansible.builtin.env', 'TODOAPP_GENERATED_CERTIFICATE_PASSWORD') if todoapp_generate_certificate_password
-         else todoapp_certificate_password_input.user_input }}
+         else todoapp_given_certificate_password }}
   no_log: true
 
 - name: Generate the certificate

@@ -64,6 +64,31 @@
   ansible.builtin.include_tasks: database.yml
   when: todoapp_change_connection_string | bool or not todoapp_database_env.stat.exists
 
+- name: Require the given certificate to be the host's, unless it replaces it
+  when: >-
+    todoapp_certificate_source | length > 0 and todoapp_certificate_env.stat.exists
+    and not todoapp_change_certificate | bool
+  block:
+    - name: Look for the given certificate
+      ansible.builtin.stat:
+        path: "{{ todoapp_certificate_source }}"
+      delegate_to: localhost
+      become: false
+      register: todoapp_given_certificate
+
+    - name: Look for the host's certificate
+      ansible.builtin.stat:
+        path: "{{ todoapp_config_dir }}/dataprotection.pfx"
+      register: todoapp_host_certificate
+
+    - name: Require the same certificate
+      ansible.builtin.assert:
+        that: todoapp_given_certificate.stat.checksum == todoapp_host_certificate.stat.checksum | default('')
+        fail_msg: >-
+          {{ todoapp_certificate_source }} isn't the host's certificate. Replacing it logs every user out: pass
+          --change-certificate to replace it.
+        quiet: true
+
 - name: Configure the Data Protection certificate
   ansible.builtin.include_tasks: certificate.yml
   when: todoapp_change_certificate | bool or not todoapp_certificate_env.stat.exists
