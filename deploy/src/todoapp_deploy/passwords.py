@@ -16,3 +16,8 @@ def generate_password(length: int = 32) -> str:
 def meets_sql_server_policy(password: str) -> bool:
     """SQL Server wants at least 8 characters from three of: lowercase, uppercase, digits and symbols."""
     return len(password) >= 8 and all(any(map(is_class, password)) for is_class in CHARACTER_CLASSES)
+
+
+def is_usable_password(password: str) -> bool:
+    """Whether SQL Server accepts the password and it needs no quoting in a connection string, like a generated one."""
+    return meets_sql_server_policy(password) and set(password) <= set(ALPHABET)

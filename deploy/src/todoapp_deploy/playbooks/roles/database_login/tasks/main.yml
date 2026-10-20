@@ -20,7 +20,7 @@
   changed_when: false
   no_log: true
 
-- name: Create the app's login with the generated password
+- name: Create the app's login with its password
   ansible.builtin.command:
     argv:
       - /opt/mssql-tools18/bin/sqlcmd
@@ -48,7 +48,12 @@
         Server=127.0.0.1,{{ mssql_port }};Database={{ todoapp_database }};User ID={{ todoapp_database_login }};Password={{
         lookup('ansible.builtin.env', 'TODOAPP_DATABASE_PASSWORD') }};TrustServerCertificate=True
       - It is shown only this once and stored nowhere. Save it; setup-webapp asks for it, or reads it from TODOAPP_CONNECTION_STRING.
-  when: database_login_count.stdout | trim == '0'
+  when: database_login_count.stdout | trim == '0' and database_login_password_generated | bool
+
+- name: Tell which password the app's login was created with
+  ansible.builtin.debug:
+    msg: Created the database login '{{ todoapp_database_login }}' with the password in TODOAPP_DATABASE_PASSWORD.
+  when: database_login_count.stdout | trim == '0' and not database_login_password_generated | bool
 
 - name: Let the app's login read and write the app's database
   ansible.builtin.command:

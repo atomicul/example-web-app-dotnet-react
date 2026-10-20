@@ -34,7 +34,7 @@
     state: directory
     mode: "0755"
 
-- name: Keep the generated sa password on the host, for later migrations
+- name: Keep the sa password on the host, for later migrations
   ansible.builtin.template:
     src: database-admin.env.j2
     dest: "{{ todoapp_config_dir }}/database-admin.env"

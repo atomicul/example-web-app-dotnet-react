@@ -46,12 +46,17 @@ uvx --from "git+https://github.com/OWNER/REPO@v1.2.3#subdirectory=deploy" setup-
 Installs SQL Server and Docker, applies the release's migrations with the `migrate` command of its Docker image, and
 creates the `todoapp` login the app connects with, which can read and write the app's tables but not change them.
 
-The first run generates two passwords:
+The first run sets two passwords, taken from environment variables when they are set and generated otherwise:
 
-- The `todoapp` login's password, which it **shows once** at the end of the run, in the connection string an app on
-  the same host connects with, and stores nowhere. `setup-webapp` asks for that connection string, or reads it from
-  `TODOAPP_CONNECTION_STRING`.
-- The `sa` password, kept for later migrations in `/etc/todoapp/database-admin.env`, which only root can read.
+- The `todoapp` login's password, from `TODOAPP_DATABASE_PASSWORD`. It stores it nowhere. A generated one it **shows
+  once** at the end of the run, in the connection string an app on the same host connects with. `setup-webapp` asks
+  for that connection string, or reads it from `TODOAPP_CONNECTION_STRING`.
+- The `sa` password, from `TODOAPP_SA_PASSWORD`, kept for later migrations in `/etc/todoapp/database-admin.env`, which
+  only root can read.
+
+A password of your own must be at least 8 letters and digits, with a lowercase letter, an uppercase letter and a
+digit, so that SQL Server accepts it and a connection string needs no quoting. Later runs ignore both variables: the
+login and SQL Server keep the passwords they were created with.
 
 SQL Server listens on `127.0.0.1` only. It runs as the Express edition, which is free in production; set
 `mssql_edition` in `src/todoapp_deploy/playbooks/group_vars/all.yml` before the first run to use a licensed one.
