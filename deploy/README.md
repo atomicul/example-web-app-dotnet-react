@@ -49,7 +49,8 @@ creates the `todoapp` login the app connects with, which can read and write the 
 The first run generates two passwords:
 
 - The `todoapp` login's password, which it **shows once** at the end of the run, in the connection string an app on
-  the same host connects with, and stores nowhere. `setup-webapp` asks for that connection string.
+  the same host connects with, and stores nowhere. `setup-webapp` asks for that connection string, or reads it from
+  `TODOAPP_CONNECTION_STRING`.
 - The `sa` password, kept for later migrations in `/etc/todoapp/database-admin.env`, which only root can read.
 
 SQL Server listens on `127.0.0.1` only. It runs as the Express edition, which is free in production; set
@@ -66,7 +67,8 @@ certificate, and from then on HTTPS on port `443` as well. To terminate HTTPS in
 It only asks for what the host doesn't have yet:
 
 - The connection string the app connects to its database with: the one `setup-database` showed when it set the
-  database up on the same host, or one to any other SQL Server.
+  database up on the same host, or one to any other SQL Server. Export it as `TODOAPP_CONNECTION_STRING` to skip the
+  prompt.
 - The PFX certificate that encrypts the app's Data Protection keys: press Enter to generate one, saved locally as its
   backup, or type the path of an existing PFX. Either way, it then asks for the PFX's password. For a new PFX, press
   Enter to generate a password, which it **shows once**.
@@ -80,6 +82,9 @@ only ever come from environment variables, never from arguments. On a host that 
 with `--change-certificate`; without it, the run fails if `--certificate` names a different PFX than the host's, so
 the certificate is never replaced by accident. Passing the same PFX and password again changes nothing on the host,
 even with `--change-certificate`.
+
+The same goes for `TODOAPP_CONNECTION_STRING` and `--change-connection-string`. So another repository can pass both
+`--change-…` flags on every run, with the same PFX and variables, and the host only changes when one of them does.
 
 `--dapr-components DIR` replaces the sidecar's components on the host with the `*.yaml` and `*.yml` files of a local
 directory, and removes the ones it doesn't have. Without it, the host keeps the components it has.

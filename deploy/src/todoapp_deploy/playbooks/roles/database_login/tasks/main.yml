@@ -47,7 +47,7 @@
       - >-
         Server=127.0.0.1,{{ mssql_port }};Database={{ todoapp_database }};User ID={{ todoapp_database_login }};Password={{
         lookup('ansible.builtin.env', 'TODOAPP_DATABASE_PASSWORD') }};TrustServerCertificate=True
-      - It is shown only this once and stored nowhere. Save it; setup-webapp asks for it.
+      - It is shown only this once and stored nowhere. Save it; setup-webapp asks for it, or reads it from TODOAPP_CONNECTION_STRING.
   when: database_login_count.stdout | trim == '0'
 
 - name: Let the app's login read and write the app's database
