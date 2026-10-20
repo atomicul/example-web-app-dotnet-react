@@ -13,6 +13,7 @@ SOLUTION := backend/TodoApp.slnx
 API_PROJECT := backend/TodoApi
 FRONTEND := frontend
 DEPLOY := deploy
+DEPLOY_PLAYBOOKS := src/todoapp_deploy/playbooks
 
 .DEFAULT_GOAL := help
 
@@ -85,7 +86,7 @@ check: ## Run formatting, build, pending migration, lint, type checks and tests 
 	uv --directory $(DEPLOY) run ruff check
 	uv --directory $(DEPLOY) run pytest
 	uv --directory $(DEPLOY) run ansible-lint
-	uv --directory $(DEPLOY) run ansible-playbook --syntax-check --inventory localhost, playbooks/database.yml playbooks/webapp.yml playbooks/tls.yml
+	uv --directory $(DEPLOY) run ansible-playbook --syntax-check --inventory localhost, $(DEPLOY_PLAYBOOKS)/database.yml $(DEPLOY_PLAYBOOKS)/webapp.yml $(DEPLOY_PLAYBOOKS)/tls.yml
 
 clean: ## Remove build output, including the backend bin and obj directories
 	rm -rf $(OUT) $(FRONTEND)/dist backend/*/bin backend/*/obj

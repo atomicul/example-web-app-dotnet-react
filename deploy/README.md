@@ -41,7 +41,7 @@ The first run generates two passwords:
 - The `sa` password, kept for later migrations in `/etc/todoapp/database-admin.env`, which only root can read.
 
 SQL Server listens on `127.0.0.1` only. It runs as the Express edition, which is free in production; set
-`mssql_edition` in `playbooks/group_vars/all.yml` before the first run to use a licensed one.
+`mssql_edition` in `src/todoapp_deploy/playbooks/group_vars/all.yml` before the first run to use a licensed one.
 
 ### `setup-webapp`
 
@@ -119,7 +119,7 @@ asking for its password. It refuses to overwrite a file.
 
 | Path | Holds |
 |---|---|
-| `/etc/todoapp/appsettings.Production.json` | The app's settings other than secrets, from `todoapp_settings` in `playbooks/group_vars/all.yml`; each release links to it |
+| `/etc/todoapp/appsettings.Production.json` | The app's settings other than secrets, from `todoapp_settings` in `src/todoapp_deploy/playbooks/group_vars/all.yml`; each release links to it |
 | `/etc/todoapp/database-admin.env` | The `sa` password and connection string, for migrations (root only) |
 | `/etc/todoapp/database.env` | The app's connection string (root only; systemd passes it to the app) |
 | `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's password (root only) and the PFX (readable by the app) |
@@ -139,9 +139,9 @@ the app. To change another setting, such as `TrustedProxies` or `RateLimits` fro
 
 ## Pinned versions
 
-`playbooks/group_vars/all.yml` pins SQL Server and its tools, Docker, the ASP.NET Core runtime, `daprd`, and the
-signing keys of their repositories by checksum. `pyproject.toml`, `uv.lock` and `.python-version` pin Python and the
-Python packages.
+`src/todoapp_deploy/playbooks/group_vars/all.yml` pins SQL Server and its tools, Docker, the ASP.NET Core runtime,
+`daprd`, and the signing keys of their repositories by checksum. `pyproject.toml`, `uv.lock` and `.python-version` pin
+Python and the Python packages.
 The few packages that come from Ubuntu's own archive, such as `unzip` and `libicu74`, follow Ubuntu 24.04's updates.
 
 ## Checks

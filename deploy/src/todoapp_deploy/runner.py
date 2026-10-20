@@ -9,7 +9,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-PROJECT_DIR = Path(__file__).resolve().parents[2]
+PACKAGE_DIR = Path(__file__).resolve().parent
+PLAYBOOKS_DIR = PACKAGE_DIR / "playbooks"
 
 TARGET = re.compile(r"(?P<user>[^@\s]+)@(?P<host>[^@\s]+)")
 VERSION_TAG = re.compile(r"v?\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?")
@@ -47,7 +48,7 @@ def parse_github_repository(remote_url: str) -> str:
 def origin_repository() -> str:
     """The OWNER/REPO of the GitHub repository this project was cloned from, whose releases it deploys."""
     remote_url = subprocess.run(
-        ["git", "remote", "get-url", "origin"], cwd=PROJECT_DIR, capture_output=True, text=True, check=True
+        ["git", "remote", "get-url", "origin"], cwd=PACKAGE_DIR, capture_output=True, text=True, check=True
     ).stdout.strip()
     return parse_github_repository(remote_url)
 
@@ -103,7 +104,7 @@ def run_playbook(
         args.target.user,
         "--extra-vars",
         json.dumps(extra_variables),
-        str(PROJECT_DIR / "playbooks" / playbook),
+        str(PLAYBOOKS_DIR / playbook),
     ]
-    environment = os.environ | {"ANSIBLE_CONFIG": str(PROJECT_DIR / "ansible.cfg")} | (secrets or {})
+    environment = os.environ | {"ANSIBLE_CONFIG": str(PLAYBOOKS_DIR / "ansible.cfg")} | (secrets or {})
     return subprocess.run(command, env=environment).returncode
