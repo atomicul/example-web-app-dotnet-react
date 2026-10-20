@@ -2,7 +2,12 @@ import argparse
 
 import pytest
 
-from todoapp_deploy.webapp import parse_certificate_file, parse_components_directory, parse_settings_file
+from todoapp_deploy.webapp import (
+    parse_certificate_file,
+    parse_components_directory,
+    parse_env_file,
+    parse_settings_file,
+)
 
 
 def test_parse_components_directory_resolves_the_directory(tmp_path, monkeypatch):
@@ -56,3 +61,18 @@ def test_parse_certificate_file_rejects_anything_but_a_file(tmp_path, name):
 
     with pytest.raises(argparse.ArgumentTypeError):
         parse_certificate_file(str(tmp_path / name))
+
+
+def test_parse_env_file_resolves_the_file(tmp_path, monkeypatch):
+    (tmp_path / "todoapp.env").write_text('ConnectionStrings__Default="Server=db"\n')
+    monkeypatch.chdir(tmp_path)
+
+    assert parse_env_file("todoapp.env") == tmp_path.resolve() / "todoapp.env"
+
+
+@pytest.mark.parametrize("name", ["missing.env", "directory"])
+def test_parse_env_file_rejects_anything_but_a_file(tmp_path, name):
+    (tmp_path / "directory").mkdir()
+
+    with pytest.raises(argparse.ArgumentTypeError):
+        parse_env_file(str(tmp_path / name))

@@ -49,8 +49,8 @@ creates the `todoapp` login the app connects with, which can read and write the 
 The first run sets two passwords, taken from environment variables when they are set and generated otherwise:
 
 - The `todoapp` login's password, from `TODOAPP_DATABASE_PASSWORD`. It stores it nowhere. A generated one it **shows
-  once** at the end of the run, in the connection string an app on the same host connects with. `setup-webapp` asks
-  for that connection string, or reads it from `TODOAPP_CONNECTION_STRING`.
+  once** at the end of the run, in the connection string an app on the same host connects with, as a line ready for
+  the file `setup-webapp --env-file` takes.
 - The `sa` password, from `TODOAPP_SA_PASSWORD`, kept for later migrations in `/etc/todoapp/database-admin.env`, which
   only root can read.
 
@@ -69,22 +69,28 @@ service (see [Dapr sidecar](#dapr-sidecar)). It serves plain HTTP until `setup-t
 certificate, and from then on HTTPS on port `443` as well. To terminate HTTPS in a reverse proxy instead, skip
 `setup-tls` and set the API's `TrustedProxies` (see the [root README](../README.md#rate-limiting)).
 
-It only asks for what the host doesn't have yet:
+`--env-file FILE` replaces the deployment's environment variables on the host with a file in systemd's
+[`EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#EnvironmentFile=)
+format, which holds the app's secrets, such as its connection string: the line `setup-database` showed when it set the
+database up on the same host, or one to any other SQL Server.
 
-- The connection string the app connects to its database with: the one `setup-database` showed when it set the
-  database up on the same host, or one to any other SQL Server. Export it as `TODOAPP_CONNECTION_STRING` to skip the
-  prompt.
-- The PFX certificate that encrypts the keys protecting sessions: type the path of a PFX, e.g. one made with
-  [`generate-certificate`](#generate-certificate), then its password. Press Enter instead to store the keys
-  unencrypted; later runs ask again until the host has a certificate.
+```sh
+ConnectionStrings__Default="Server=127.0.0.1,1433;Database=TodoApp;User ID=todoapp;Password=...;TrustServerCertificate=True"
+```
+
+Without it, the host keeps the variables it has. Only root can read them on the host; systemd passes them to the app.
+They override the app's settings, including the ones the deploy sets itself (see `--settings` below), so set none of
+those, nor `ASPNETCORE_ENVIRONMENT` or `DOTNET_ROOT`. Without a connection string, the app answers `/health` with
+`503`, and `journalctl -u todoapp` shows why.
+
+On a host without a Data Protection certificate, it asks for the PFX certificate that encrypts the keys protecting
+sessions: type the path of a PFX, e.g. one made with [`generate-certificate`](#generate-certificate), then its
+password. Press Enter instead to store the keys unencrypted; later runs ask again until the host has a certificate.
 
 `--certificate PFX` gives the certificate without the prompt, with its password from `TODOAPP_CERTIFICATE_PASSWORD`, or
 else asked for. Secrets only ever come from environment variables, never from arguments. The password is checked
 against the PFX before anything on the host changes. Passing the host's PFX again changes nothing; passing another one
 replaces it, which logs every user out, as losing it does: keep the PFX and its password.
-
-To change the connection string on a host that has one, run with `TODOAPP_CONNECTION_STRING` set: whatever it holds
-is installed, and the same one again changes nothing on the host.
 
 `--dapr-components DIR` replaces the sidecar's components on the host with the `*.yaml` and `*.yml` files of a local
 directory, and removes the ones it doesn't have. Without it, the host keeps the components it has.
@@ -102,7 +108,7 @@ directory, and removes the ones it doesn't have. Without it, the host keeps the 
 Without it, the host keeps the settings it has. The file only overrides this deployment's values: a setting every
 environment needs belongs, with its default, in `backend/TodoApi/appsettings.json`, which each release ships. Its
 entries go under the ones the deploy sets itself (Kestrel's endpoints, Data Protection, ACME and Dapr), which
-win, and it holds no secrets: those stay in the `.env` files below.
+win, and it holds no secrets: those go in the file `--env-file` takes.
 
 ### `setup-tls`
 
@@ -165,7 +171,7 @@ which it **shows once**. It refuses to overwrite a file.
 | `/etc/todoapp/appsettings.Production.json` | The app's settings other than secrets: the deployment's, with `todoapp_settings` from `src/todoapp_deploy/playbooks/group_vars/all.yml` on top; each release links to it | `setup-webapp`, rewritten by `setup-tls` | The app |
 | `/etc/todoapp/deployment-settings.json` | The deployment's settings (root only) | `setup-webapp --settings` | `setup-webapp` and `setup-tls`, when they write the app's settings; optional |
 | `/etc/todoapp/database-admin.env` | The `sa` password and connection string, for migrations (root only) | `setup-database`, on its first run | `setup-database`, on later runs |
-| `/etc/todoapp/database.env` | The app's connection string (root only; systemd passes it to the app) | `setup-webapp` | The app, which doesn't start without it |
+| `/etc/todoapp/deployment.env` | The deployment's environment variables, such as the app's connection string (root only; systemd passes them to the app) | `setup-webapp --env-file` | The app, which answers `/health` with `503` without a connection string |
 | `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's password (root only) and the PFX (readable by the app) | `setup-webapp`, when given a PFX | The app, to encrypt its keys; optional |
 | `/etc/todoapp/tls/fullchain.pem`, `privkey.pem` | The HTTPS certificate and its key (readable by the app) | `setup-tls`, through `/usr/local/sbin/todoapp-install-certificate`, which copies each renewal from `/etc/letsencrypt` | The app, which serves HTTPS when `setup-webapp` or `setup-tls` find them; optional |
 | `/etc/todoapp/dapr/components` | The Dapr sidecar's components (only the sidecar's user can read them) | `setup-webapp --dapr-components` | The sidecar; optional |
@@ -177,8 +183,8 @@ which it **shows once**. It refuses to overwrite a file.
 | `/opt/dotnet/<version>` | The ASP.NET Core runtime | `setup-webapp` | The app's service |
 | `/opt/dapr/<version>` | The Dapr sidecar, `daprd` | `setup-webapp` | The sidecar's service |
 
-Environment variables override the JSON file, so the two secrets stay in the `.env` files, which systemd passes to
-the app. To change another setting, such as `TrustedProxies` or `RateLimits` from the
+Secrets stay in the `.env` files, which systemd passes to the app as environment variables, overriding the JSON file.
+To change another setting, such as `TrustedProxies` or `RateLimits` from the
 [root README](../README.md#environment-variables), set it in the file `setup-webapp --settings` takes.
 
 `journalctl -u todoapp` shows the app's logs, and `journalctl -u todoapp-dapr` the sidecar's.

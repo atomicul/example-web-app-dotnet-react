@@ -41,6 +41,8 @@ todoapp_database_login: todoapp
 
 # The deployment's own settings, which setup-webapp --settings copies there; todoapp_settings is combined on top.
 todoapp_deployment_settings: "{{ todoapp_config_dir }}/deployment-settings.json"
+# The deployment's own environment variables, such as its connection string, which setup-webapp --env-file copies there.
+todoapp_deployment_env: "{{ todoapp_config_dir }}/deployment.env"
 
 todoapp_settings:
   Kestrel:

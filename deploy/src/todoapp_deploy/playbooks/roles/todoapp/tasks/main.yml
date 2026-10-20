@@ -34,24 +34,19 @@
     remote_src: true
     creates: "{{ todoapp_install_dir }}/releases/{{ release_tag }}/TodoApi.dll"
 
-- name: Look for the database settings on the host
-  ansible.builtin.stat:
-    path: "{{ todoapp_config_dir }}/database.env"
-  register: todoapp_database_env
-
 - name: Look for the Data Protection certificate on the host
   ansible.builtin.stat:
     path: "{{ todoapp_config_dir }}/dataprotection.pfx"
   register: todoapp_installed_certificate
 
-- name: Read the database connection string from TODOAPP_CONNECTION_STRING
-  ansible.builtin.set_fact:
-    todoapp_connection_string_variable: "{{ lookup('ansible.builtin.env', 'TODOAPP_CONNECTION_STRING') }}"
-  no_log: true
-
-- name: Configure the database connection string
-  ansible.builtin.include_tasks: database.yml
-  when: todoapp_connection_string_variable | length > 0 or not todoapp_database_env.stat.exists
+- name: Copy the deployment's environment variables to the host
+  ansible.builtin.copy:
+    src: "{{ todoapp_env_file_source }}"
+    dest: "{{ todoapp_deployment_env }}"
+    mode: "0600"
+  diff: false
+  when: todoapp_env_file_source | length > 0
+  notify: Restart the app
 
 - name: Configure the Data Protection certificate
   ansible.builtin.include_tasks: certificate.yml
