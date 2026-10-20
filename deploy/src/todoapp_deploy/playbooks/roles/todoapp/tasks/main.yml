@@ -34,6 +34,24 @@
     remote_src: true
     creates: "{{ todoapp_install_dir }}/releases/{{ release_tag }}/TodoApi.dll"
 
+- name: Look for the database settings on the host
+  ansible.builtin.stat:
+    path: "{{ todoapp_config_dir }}/database.env"
+  register: todoapp_database_env
+
+- name: Look for the Data Protection certificate on the host
+  ansible.builtin.stat:
+    path: "{{ todoapp_config_dir }}/dataprotection.pfx"
+  register: todoapp_installed_certificate
+
+- name: Configure the database connection string
+  ansible.builtin.include_tasks: database.yml
+  when: todoapp_change_connection_string | bool or not todoapp_database_env.stat.exists
+
+- name: Configure the Data Protection certificate
+  ansible.builtin.include_tasks: certificate.yml
+  when: todoapp_certificate_source | length > 0 or not todoapp_installed_certificate.stat.exists
+
 - name: Write the app's settings
   ansible.builtin.include_tasks: settings.yml
 
@@ -49,49 +67,6 @@
     dest: "{{ todoapp_install_dir }}/current"
     state: link
   notify: Restart the app
-
-- name: Look for the database settings on the host
-  ansible.builtin.stat:
-    path: "{{ todoapp_config_dir }}/database.env"
-  register: todoapp_database_env
-
-- name: Look for the certificate settings on the host
-  ansible.builtin.stat:
-    path: "{{ todoapp_config_dir }}/certificate.env"
-  register: todoapp_certificate_env
-
-- name: Configure the database connection string
-  ansible.builtin.include_tasks: database.yml
-  when: todoapp_change_connection_string | bool or not todoapp_database_env.stat.exists
-
-- name: Require the given certificate to be the host's, unless it replaces it
-  when: >-
-    todoapp_certificate_source | length > 0 and todoapp_certificate_env.stat.exists
-    and not todoapp_change_certificate | bool
-  block:
-    - name: Look for the given certificate
-      ansible.builtin.stat:
-        path: "{{ todoapp_certificate_source }}"
-      delegate_to: localhost
-      become: false
-      register: todoapp_given_certificate
-
-    - name: Look for the host's certificate
-      ansible.builtin.stat:
-        path: "{{ todoapp_config_dir }}/dataprotection.pfx"
-      register: todoapp_host_certificate
-
-    - name: Require the same certificate
-      ansible.builtin.assert:
-        that: todoapp_given_certificate.stat.checksum == todoapp_host_certificate.stat.checksum | default('')
-        fail_msg: >-
-          {{ todoapp_certificate_source }} isn't the host's certificate. Replacing it logs every user out: pass
-          --change-certificate to replace it.
-        quiet: true
-
-- name: Configure the Data Protection certificate
-  ansible.builtin.include_tasks: certificate.yml
-  when: todoapp_change_certificate | bool or not todoapp_certificate_env.stat.exists
 
 - name: Install the app's service
   ansible.builtin.template:

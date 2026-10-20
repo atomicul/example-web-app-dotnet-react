@@ -12,7 +12,7 @@ CapabilityBoundingSet=CAP_NET_BIND_SERVICE
 WorkingDirectory={{ todoapp_install_dir }}/current
 ExecStart={{ dotnet_root }}/dotnet {{ todoapp_install_dir }}/current/TodoApi.dll
 EnvironmentFile={{ todoapp_config_dir }}/database.env
-EnvironmentFile={{ todoapp_config_dir }}/certificate.env
+EnvironmentFile=-{{ todoapp_config_dir }}/certificate.env
 Environment=ASPNETCORE_ENVIRONMENT=Production
 Environment=DOTNET_ROOT={{ dotnet_root }}
 Restart=on-failure

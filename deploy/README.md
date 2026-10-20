@@ -74,22 +74,17 @@ It only asks for what the host doesn't have yet:
 - The connection string the app connects to its database with: the one `setup-database` showed when it set the
   database up on the same host, or one to any other SQL Server. Export it as `TODOAPP_CONNECTION_STRING` to skip the
   prompt.
-- The PFX certificate that encrypts the app's Data Protection keys: press Enter to generate one, saved locally as its
-  backup, or type the path of an existing PFX. Either way, it then asks for the PFX's password. For a new PFX, press
-  Enter to generate a password, which it **shows once**.
+- The PFX certificate that encrypts the keys protecting sessions: type the path of a PFX, e.g. one made with
+  [`generate-certificate`](#generate-certificate), then its password. Press Enter instead to store the keys
+  unencrypted; later runs ask again until the host has a certificate.
 
-To change either of them on a host that has them, pass `--change-connection-string` or `--change-certificate`.
-Replacing the certificate logs every user out, and losing it does too: keep the PFX and its password.
+`--certificate PFX` gives the certificate without the prompt, with its password from `TODOAPP_CERTIFICATE_PASSWORD`, or
+else asked for. Secrets only ever come from environment variables, never from arguments. The password is checked
+against the PFX before anything on the host changes. Passing the host's PFX again changes nothing; passing another one
+replaces it, which logs every user out, as losing it does: keep the PFX and its password.
 
-To answer the certificate's prompts ahead of time, pass the PFX's path as `--certificate PFX` and export its password
-as `TODOAPP_CERTIFICATE_PASSWORD`, e.g. for a PFX made with [`generate-certificate`](#generate-certificate). Secrets
-only ever come from environment variables, never from arguments. On a host that has a certificate, they are used only
-with `--change-certificate`; without it, the run fails if `--certificate` names a different PFX than the host's, so
-the certificate is never replaced by accident. Passing the same PFX and password again changes nothing on the host,
-even with `--change-certificate`.
-
-The same goes for `TODOAPP_CONNECTION_STRING` and `--change-connection-string`. So another repository can pass both
-`--change-…` flags on every run, with the same PFX and variables, and the host only changes when one of them does.
+To change the connection string on a host that has one, pass `--change-connection-string`. Passing the same
+`TODOAPP_CONNECTION_STRING` again changes nothing on the host.
 
 `--dapr-components DIR` replaces the sidecar's components on the host with the `*.yaml` and `*.yml` files of a local
 directory, and removes the ones it doesn't have. Without it, the host keeps the components it has.
@@ -160,6 +155,7 @@ Setting a provider up is manual. For AWS, for example:
 
 `uv run generate-certificate dataprotection.pfx` writes a self-signed certificate that `setup-webapp` accepts, with the
 password in `TODOAPP_CERTIFICATE_PASSWORD`, or else one it asks for. It refuses to overwrite a file.
+`uv run check-certificate dataprotection.pfx` checks that a PFX opens with its password, taken the same way.
 
 ## On the host
 
@@ -169,7 +165,7 @@ password in `TODOAPP_CERTIFICATE_PASSWORD`, or else one it asks for. It refuses 
 | `/etc/todoapp/deployment-settings.json` | The deployment's settings, from `setup-webapp --settings` (root only) |
 | `/etc/todoapp/database-admin.env` | The `sa` password and connection string, for migrations (root only) |
 | `/etc/todoapp/database.env` | The app's connection string (root only; systemd passes it to the app) |
-| `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's password (root only) and the PFX (readable by the app) |
+| `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's password (root only) and the PFX (readable by the app), when the host has one |
 | `/etc/todoapp/tls/fullchain.pem`, `privkey.pem` | The HTTPS certificate and its key (readable by the app), copied from `/etc/letsencrypt` by `/usr/local/sbin/todoapp-install-certificate` |
 | `/etc/todoapp/dapr/components` | The Dapr sidecar's components (only the sidecar's user can read them) |
 | `/run/todoapp-dapr` | The sidecar's sockets, which only the app's group can open |

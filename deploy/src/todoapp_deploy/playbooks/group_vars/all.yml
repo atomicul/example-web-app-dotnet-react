@@ -47,13 +47,16 @@ todoapp_settings:
     Endpoints:
       Http:
         Url: http://*:{{ todoapp_port }}
-  DataProtection:
-    Certificate:
-      Path: "{{ todoapp_config_dir }}/dataprotection.pfx"
   AcmeChallenge:
     WebRoot: "{{ todoapp_acme_webroot }}"
   Dapr:
     GrpcEndpoint: unix://{{ dapr_socket_dir }}/dapr-{{ dapr_app_id }}-grpc.socket
+
+# Added to todoapp_settings once the host has a Data Protection certificate, which setup-webapp puts there.
+todoapp_certificate_settings:
+  DataProtection:
+    Certificate:
+      Path: "{{ todoapp_config_dir }}/dataprotection.pfx"
 
 # Added to todoapp_settings once the host has a certificate in todoapp_tls_dir, which setup-tls puts there.
 todoapp_https_settings:

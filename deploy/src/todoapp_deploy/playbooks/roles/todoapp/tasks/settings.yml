@@ -17,12 +17,17 @@
   register: todoapp_deployment_settings_content
   when: todoapp_deployment_settings_file.stat.exists
 
+- name: Look for the Data Protection certificate on the host
+  ansible.builtin.stat:
+    path: "{{ todoapp_config_dir }}/dataprotection.pfx"
+  register: todoapp_data_protection_certificate
+
 - name: Look for the HTTPS certificate on the host
   ansible.builtin.stat:
     path: "{{ todoapp_tls_dir }}/fullchain.pem"
   register: todoapp_https_certificate
 
-- name: Write the app's settings over the deployment's, serving HTTPS when the host has a certificate
+- name: Write the app's settings over the deployment's, with the certificates the host has
   ansible.builtin.template:
     src: appsettings.Production.json.j2
     dest: "{{ todoapp_config_dir }}/appsettings.Production.json"

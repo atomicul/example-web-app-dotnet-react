@@ -41,6 +41,15 @@ def generate(path: Path, password: str) -> None:
         file.write(pfx)
 
 
+def opens(path: Path, password: str) -> bool:
+    """Whether the file at path is a PFX that opens with password."""
+    try:
+        pkcs12.load_pkcs12(path.read_bytes(), password.encode())
+    except OSError, ValueError:
+        return False
+    return True
+
+
 def owner_only(path: str, flags: int) -> int:
     return os.open(path, flags, 0o600)
 
@@ -65,3 +74,14 @@ def main() -> None:
 
     generate(args.path, read_password())
     print(f"Wrote {args.path}. Keep a copy of it and its password: the app can't read its keys without them.")
+
+
+def check() -> None:
+    parser = argparse.ArgumentParser(
+        description=f"checks that a PFX certificate opens with its password, from {PASSWORD_VARIABLE} or asked for"
+    )
+    parser.add_argument("path", type=Path, help="the PFX file to check")
+    args = parser.parse_args()
+    password = os.environ.get(PASSWORD_VARIABLE) or getpass.getpass("Password of the PFX: ")
+    if not opens(args.path, password):
+        sys.exit(f"{args.path} isn't a PFX that opens with this password")

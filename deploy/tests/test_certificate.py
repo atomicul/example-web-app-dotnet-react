@@ -3,7 +3,7 @@ import stat
 import pytest
 from cryptography.hazmat.primitives.serialization import pkcs12
 
-from todoapp_deploy.certificate import COMMON_NAME, generate
+from todoapp_deploy.certificate import COMMON_NAME, generate, opens
 
 
 def test_generate_writes_a_pfx_that_opens_with_its_password(tmp_path):
@@ -34,3 +34,22 @@ def test_generate_refuses_to_replace_a_file(tmp_path):
         generate(path, "s3cret")
 
     assert path.read_bytes() == b"in use"
+
+
+def test_opens_with_the_pfx_password(tmp_path):
+    path = tmp_path / "dataprotection.pfx"
+    generate(path, "s3cret")
+
+    assert opens(path, "s3cret")
+    assert not opens(path, "wrong")
+
+
+def test_opens_rejects_a_file_that_is_not_a_pfx(tmp_path):
+    path = tmp_path / "dataprotection.pfx"
+    path.write_bytes(b"not a pfx")
+
+    assert not opens(path, "s3cret")
+
+
+def test_opens_rejects_a_missing_file(tmp_path):
+    assert not opens(tmp_path / "missing.pfx", "s3cret")

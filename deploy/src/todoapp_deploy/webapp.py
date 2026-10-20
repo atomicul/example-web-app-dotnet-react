@@ -6,7 +6,6 @@ import os
 import sys
 from pathlib import Path
 
-from todoapp_deploy.passwords import generate_password
 from todoapp_deploy.runner import add_release_argument, argument_parser, run_playbook
 
 
@@ -44,14 +43,10 @@ def main() -> None:
         help="ask for the database connection string even though the host already has one",
     )
     parser.add_argument(
-        "--change-certificate",
-        action="store_true",
-        help="replace the host's Data Protection certificate, which logs every user out",
-    )
-    parser.add_argument(
         "--certificate",
         type=parse_certificate_file,
-        help="the PFX to install as the Data Protection certificate, with its password in TODOAPP_CERTIFICATE_PASSWORD",
+        help="the PFX to encrypt the keys protecting sessions with, its password in TODOAPP_CERTIFICATE_PASSWORD; "
+        "replacing the host's logs every user out",
     )
     parser.add_argument(
         "--dapr-components",
@@ -66,11 +61,9 @@ def main() -> None:
     args = parser.parse_args()
     variables = {
         "todoapp_change_connection_string": args.change_connection_string,
-        "todoapp_change_certificate": args.change_certificate,
         "todoapp_controller_directory": os.getcwd(),
         "dapr_components_source": str(args.dapr_components or ""),
         "todoapp_settings_source": str(args.settings or ""),
         "todoapp_certificate_source": str(args.certificate or ""),
     }
-    secrets = {"TODOAPP_GENERATED_CERTIFICATE_PASSWORD": generate_password()}
-    sys.exit(run_playbook("webapp.yml", args, variables=variables, secrets=secrets))
+    sys.exit(run_playbook("webapp.yml", args, variables=variables))
