@@ -22,12 +22,7 @@
     path: "{{ todoapp_tls_dir }}/fullchain.pem"
   register: todoapp_https_certificate
 
-- name: Look for the Dapr component of the emails binding on the host
-  ansible.builtin.stat:
-    path: "{{ todoapp_email_component }}"
-  register: todoapp_email_component_file
-
-- name: Write the app's settings over the deployment's, serving HTTPS when the host has a certificate and queueing emails when it has their component
+- name: Write the app's settings over the deployment's, serving HTTPS when the host has a certificate
   ansible.builtin.template:
     src: appsettings.Production.json.j2
     dest: "{{ todoapp_config_dir }}/appsettings.Production.json"

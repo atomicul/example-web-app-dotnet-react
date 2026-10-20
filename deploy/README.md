@@ -89,7 +89,7 @@ directory, and removes the ones it doesn't have. Without it, the host keeps the 
 
 Without it, the host keeps the settings it has. The file only overrides this deployment's values: a setting every
 environment needs belongs, with its default, in `backend/TodoApi/appsettings.json`, which each release ships. Its
-entries go under the ones the deploy sets itself (Kestrel's endpoints, Data Protection, ACME, Dapr and email), which
+entries go under the ones the deploy sets itself (Kestrel's endpoints, Data Protection, ACME and Dapr), which
 win, and it holds no secrets: those stay in the `.env` files below.
 
 ### `setup-tls`
@@ -118,12 +118,13 @@ serves the Dapr API only on Unix sockets in `/run/todoapp-dapr` that the app's g
 them with `Dapr:GrpcEndpoint`.
 
 This project ships no components: which provider's queue or bucket a name leads to, and how the sidecar authenticates
-to it, are yours to decide and to keep, e.g. in a private directory next to the PFX backup. Each feature needs its
-component in a file of the same name, which also turns the feature on:
+to it, are yours to decide and to keep, e.g. in a private directory next to the PFX backup. A feature that uses one
+needs both its component, which `--dapr-components` installs, and the setting that names the component, which turns
+the feature on and which `--settings` passes:
 
-| File | Turns on |
-|---|---|
-| `emails.yaml` | Queueing emails on the output binding named `emails` (`Email:Queue`), in the format the [root README](../README.md#email) describes; without it, the app logs them |
+| Component | Setting | Turns on |
+|---|---|---|
+| An output binding, e.g. named `emails` | `Email:Queue`, set to the binding's name | Queueing emails on it, in the format the [root README](../README.md#email) describes; without the setting, the app logs them |
 
 Setting a provider up is manual. For AWS, for example:
 
@@ -133,7 +134,8 @@ Setting a provider up is manual. For AWS, for example:
    named `emails`. Any secret it needs can come from a secret store component, such as
    [SSM Parameter Store](https://docs.dapr.io/reference/components-reference/supported-secret-stores/aws-parameter-store/),
    in the same directory.
-4. Run `uv run setup-webapp user@host v1.2.3 --dapr-components path/to/components`.
+4. Set `Email:Queue` to the binding's name in your settings file, e.g. `{ "Email": { "Queue": "emails" } }`.
+5. Run `uv run setup-webapp user@host v1.2.3 --dapr-components path/to/components --settings path/to/appsettings.json`.
 
 `journalctl -u todoapp-dapr` shows whether the sidecar loaded the components.
 

@@ -64,10 +64,3 @@ todoapp_https_settings:
         Certificate:
           Path: "{{ todoapp_tls_dir }}/fullchain.pem"
           KeyPath: "{{ todoapp_tls_dir }}/privkey.pem"
-
-# Added to todoapp_settings once the host has the Dapr component of the emails binding, which
-# setup-webapp --dapr-components puts there.
-todoapp_email_component: "{{ dapr_components_dir }}/emails.yaml"
-todoapp_email_settings:
-  Email:
-    Queue: emails

@@ -76,8 +76,9 @@ its own. Every change that uses a cloud service keeps to three rules:
    credentials or secret stores live with whoever operates the host, not here, and setting up the provider's side,
    such as creating a queue or granting the host access to it, is manual.
 
-A new feature therefore brings a stand-in and a Dapr implementation, a setting that picks between them, tests against
-the sidecar, and a `setup-webapp` change that turns the setting on only when the host has the matching component.
+A new feature therefore brings a stand-in and a Dapr implementation, a setting that picks between them, and tests
+against the sidecar. Whoever operates the host turns it on by giving `setup-webapp` both the feature's component and
+its setting (see the deploy's [Dapr sidecar](deploy/README.md#dapr-sidecar)).
 
 ## Authentication
 
