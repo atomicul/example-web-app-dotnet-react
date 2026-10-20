@@ -160,20 +160,22 @@ which it **shows once**. It refuses to overwrite a file.
 
 ## On the host
 
-| Path | Holds |
-|---|---|
-| `/etc/todoapp/appsettings.Production.json` | The app's settings other than secrets: the deployment's, with `todoapp_settings` from `src/todoapp_deploy/playbooks/group_vars/all.yml` on top; each release links to it |
-| `/etc/todoapp/deployment-settings.json` | The deployment's settings, from `setup-webapp --settings` (root only) |
-| `/etc/todoapp/database-admin.env` | The `sa` password and connection string, for migrations (root only) |
-| `/etc/todoapp/database.env` | The app's connection string (root only; systemd passes it to the app) |
-| `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's password (root only) and the PFX (readable by the app), when the host has one |
-| `/etc/todoapp/tls/fullchain.pem`, `privkey.pem` | The HTTPS certificate and its key (readable by the app), copied from `/etc/letsencrypt` by `/usr/local/sbin/todoapp-install-certificate` |
-| `/etc/todoapp/dapr/components` | The Dapr sidecar's components (only the sidecar's user can read them) |
-| `/run/todoapp-dapr` | The sidecar's sockets, which only the app's group can open |
-| `/var/lib/todoapp/acme` | The web root certbot writes ACME challenges to, which the app serves |
-| `/opt/todoapp/releases/<tag>` | Each installed release; `/opt/todoapp/current` links to the one running |
-| `/opt/dotnet/<version>` | The ASP.NET Core runtime |
-| `/opt/dapr/<version>` | The Dapr sidecar, `daprd` |
+| Path | Holds | Created by | Required by |
+|---|---|---|---|
+| `/etc/todoapp/appsettings.Production.json` | The app's settings other than secrets: the deployment's, with `todoapp_settings` from `src/todoapp_deploy/playbooks/group_vars/all.yml` on top; each release links to it | `setup-webapp`, rewritten by `setup-tls` | The app |
+| `/etc/todoapp/deployment-settings.json` | The deployment's settings (root only) | `setup-webapp --settings` | `setup-webapp` and `setup-tls`, when they write the app's settings; optional |
+| `/etc/todoapp/database-admin.env` | The `sa` password and connection string, for migrations (root only) | `setup-database`, on its first run | `setup-database`, on later runs |
+| `/etc/todoapp/database.env` | The app's connection string (root only; systemd passes it to the app) | `setup-webapp` | The app, which doesn't start without it |
+| `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's password (root only) and the PFX (readable by the app) | `setup-webapp`, when given a PFX | The app, to encrypt its keys; optional |
+| `/etc/todoapp/tls/fullchain.pem`, `privkey.pem` | The HTTPS certificate and its key (readable by the app) | `setup-tls`, through `/usr/local/sbin/todoapp-install-certificate`, which copies each renewal from `/etc/letsencrypt` | The app, which serves HTTPS when `setup-webapp` or `setup-tls` find them; optional |
+| `/etc/todoapp/dapr/components` | The Dapr sidecar's components (only the sidecar's user can read them) | `setup-webapp --dapr-components` | The sidecar; optional |
+| `/etc/systemd/system/todoapp.service`, `todoapp-dapr.service` | The app's and the sidecar's services | `setup-webapp` | `setup-tls`, which fails without the app's |
+| `/run/todoapp-dapr` | The sidecar's sockets, which only the app's group can open | `setup-webapp`, and systemd on each boot | The app, to reach the sidecar |
+| `/var/lib/todoapp/acme` | The web root certbot writes ACME challenges to, which the app serves | `setup-tls` | certbot, to get and renew the certificate |
+| `/var/opt/mssql` | SQL Server's data | `setup-database` | The app, when its connection string points at this host |
+| `/opt/todoapp/releases/<tag>` | Each installed release; `/opt/todoapp/current` links to the one running | `setup-webapp` | The app's service |
+| `/opt/dotnet/<version>` | The ASP.NET Core runtime | `setup-webapp` | The app's service |
+| `/opt/dapr/<version>` | The Dapr sidecar, `daprd` | `setup-webapp` | The sidecar's service |
 
 Environment variables override the JSON file, so the two secrets stay in the `.env` files, which systemd passes to
 the app. To change another setting, such as `TrustedProxies` or `RateLimits` from the
