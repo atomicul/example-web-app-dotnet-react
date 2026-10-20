@@ -77,6 +77,21 @@ Replacing the certificate logs every user out, and losing it does too: keep the 
 `--dapr-components DIR` replaces the sidecar's components on the host with the `*.yaml` and `*.yml` files of a local
 directory, and removes the ones it doesn't have. Without it, the host keeps the components it has.
 
+`--settings FILE` replaces the deployment's app settings on the host with a JSON file in the format of the API's
+`appsettings.json`, e.g. its proxies and rate limits:
+
+```json
+{
+  "TrustedProxies": { "Networks": ["10.0.0.0/8"] },
+  "RateLimits": { "Api": { "PermitLimit": 500 } }
+}
+```
+
+Without it, the host keeps the settings it has. The file only overrides this deployment's values: a setting every
+environment needs belongs, with its default, in `backend/TodoApi/appsettings.json`, which each release ships. Its
+entries go under the ones the deploy sets itself (Kestrel's endpoints, Data Protection, ACME, Dapr and email), which
+win, and it holds no secrets: those stay in the `.env` files below.
+
 ### `setup-tls`
 
 Gets a Let's Encrypt certificate for the domain with certbot and serves the app over HTTPS with it, redirecting HTTP to
@@ -131,7 +146,8 @@ asking for its password. It refuses to overwrite a file.
 
 | Path | Holds |
 |---|---|
-| `/etc/todoapp/appsettings.Production.json` | The app's settings other than secrets, from `todoapp_settings` in `src/todoapp_deploy/playbooks/group_vars/all.yml`; each release links to it |
+| `/etc/todoapp/appsettings.Production.json` | The app's settings other than secrets: the deployment's, with `todoapp_settings` from `src/todoapp_deploy/playbooks/group_vars/all.yml` on top; each release links to it |
+| `/etc/todoapp/deployment-settings.json` | The deployment's settings, from `setup-webapp --settings` (root only) |
 | `/etc/todoapp/database-admin.env` | The `sa` password and connection string, for migrations (root only) |
 | `/etc/todoapp/database.env` | The app's connection string (root only; systemd passes it to the app) |
 | `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's password (root only) and the PFX (readable by the app) |
@@ -145,7 +161,7 @@ asking for its password. It refuses to overwrite a file.
 
 Environment variables override the JSON file, so the two secrets stay in the `.env` files, which systemd passes to
 the app. To change another setting, such as `TrustedProxies` or `RateLimits` from the
-[root README](../README.md#environment-variables), add it to `todoapp_settings` and run `setup-webapp` again.
+[root README](../README.md#environment-variables), set it in the file `setup-webapp --settings` takes.
 
 `journalctl -u todoapp` shows the app's logs, and `journalctl -u todoapp-dapr` the sidecar's.
 

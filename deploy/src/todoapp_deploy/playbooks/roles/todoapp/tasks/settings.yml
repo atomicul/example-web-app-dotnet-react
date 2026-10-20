@@ -1,4 +1,22 @@
 ---
+- name: Copy the deployment's settings to the host
+  ansible.builtin.copy:
+    src: "{{ todoapp_settings_source }}"
+    dest: "{{ todoapp_deployment_settings }}"
+    mode: "0600"
+  when: todoapp_settings_source | length > 0
+
+- name: Look for the deployment's settings on the host
+  ansible.builtin.stat:
+    path: "{{ todoapp_deployment_settings }}"
+  register: todoapp_deployment_settings_file
+
+- name: Read the deployment's settings
+  ansible.builtin.slurp:
+    src: "{{ todoapp_deployment_settings }}"
+  register: todoapp_deployment_settings_content
+  when: todoapp_deployment_settings_file.stat.exists
+
 - name: Look for the HTTPS certificate on the host
   ansible.builtin.stat:
     path: "{{ todoapp_tls_dir }}/fullchain.pem"
@@ -9,7 +27,7 @@
     path: "{{ todoapp_email_component }}"
   register: todoapp_email_component_file
 
-- name: Write the app's settings, serving HTTPS when the host has a certificate and queueing emails when it has their component
+- name: Write the app's settings over the deployment's, serving HTTPS when the host has a certificate and queueing emails when it has their component
   ansible.builtin.template:
     src: appsettings.Production.json.j2
     dest: "{{ todoapp_config_dir }}/appsettings.Production.json"

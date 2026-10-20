@@ -1,6 +1,7 @@
 """setup-webapp: installs a release of the app and its Dapr sidecar on a host as systemd services."""
 
 import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -13,6 +14,17 @@ def parse_components_directory(value: str) -> Path:
     path = Path(value).expanduser()
     if not path.is_dir():
         raise argparse.ArgumentTypeError(f"expected a directory of Dapr component YAML files, got {value!r}")
+    return path.resolve()
+
+
+def parse_settings_file(value: str) -> Path:
+    path = Path(value).expanduser()
+    try:
+        settings = json.loads(path.read_text())
+    except OSError, ValueError:
+        settings = None
+    if not isinstance(settings, dict):
+        raise argparse.ArgumentTypeError(f"expected a JSON file of app settings, like appsettings.json, got {value!r}")
     return path.resolve()
 
 
@@ -34,12 +46,18 @@ def main() -> None:
         type=parse_components_directory,
         help="replace the Dapr sidecar's components on the host with the YAML files of this directory",
     )
+    parser.add_argument(
+        "--settings",
+        type=parse_settings_file,
+        help="replace the deployment's app settings on the host with this JSON file, under the ones the deploy sets",
+    )
     args = parser.parse_args()
     variables = {
         "todoapp_change_connection_string": args.change_connection_string,
         "todoapp_change_certificate": args.change_certificate,
         "todoapp_controller_directory": os.getcwd(),
         "dapr_components_source": str(args.dapr_components or ""),
+        "todoapp_settings_source": str(args.settings or ""),
     }
     secrets = {"TODOAPP_GENERATED_CERTIFICATE_PASSWORD": generate_password()}
     sys.exit(run_playbook("webapp.yml", args, variables=variables, secrets=secrets))

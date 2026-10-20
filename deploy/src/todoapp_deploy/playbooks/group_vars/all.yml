@@ -39,6 +39,9 @@ todoapp_tls_dir: "{{ todoapp_config_dir }}/tls"
 todoapp_database: TodoApp
 todoapp_database_login: todoapp
 
+# The deployment's own settings, which setup-webapp --settings copies there; todoapp_settings is combined on top.
+todoapp_deployment_settings: "{{ todoapp_config_dir }}/deployment-settings.json"
+
 todoapp_settings:
   Kestrel:
     Endpoints:

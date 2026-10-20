@@ -1,4 +1,8 @@
-{% set settings = todoapp_settings %}
+{% set settings = {} %}
+{% if todoapp_deployment_settings_file.stat.exists %}
+{% set settings = todoapp_deployment_settings_content.content | ansible.builtin.b64decode | ansible.builtin.from_json %}
+{% endif %}
+{% set settings = settings | ansible.builtin.combine(todoapp_settings, recursive=True) %}
 {% if todoapp_https_certificate.stat.exists %}
 {% set settings = settings | ansible.builtin.combine(todoapp_https_settings, recursive=True) %}
 {% endif %}
