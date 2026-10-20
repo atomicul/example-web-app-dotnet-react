@@ -9,6 +9,7 @@ from todoapp_deploy.runner import (
     parse_version_tag,
     release_variables,
     release_variables_of,
+    vcs_url,
 )
 
 
@@ -41,9 +42,10 @@ def test_parse_version_tag_rejects_anything_else(value):
         "ssh://git@github.com/Owner/Repo.git",
         "https://github.com/Owner/Repo.git",
         "https://github.com/Owner/Repo/",
+        "https://github.com/Owner/Repo",
     ],
 )
-def test_parse_github_repository_reads_ssh_and_https_remotes(remote_url):
+def test_parse_github_repository_reads_ssh_and_https_urls(remote_url):
     assert parse_github_repository(remote_url) == "Owner/Repo"
 
 
@@ -63,3 +65,17 @@ def test_release_variables_lowercase_the_image_and_drop_the_tag_prefix():
 
 def test_release_variables_of_a_script_without_a_release_are_empty():
     assert release_variables_of(argparse.Namespace(target=Target("deploy", "example.com"))) == {}
+
+
+def test_vcs_url_reads_the_repository_a_git_install_came_from():
+    direct_url = {
+        "url": "https://github.com/Owner/Repo",
+        "vcs_info": {"vcs": "git", "commit_id": "6110fa6", "requested_revision": "v1.2.3"},
+        "subdirectory": "deploy",
+    }
+
+    assert vcs_url(direct_url) == "https://github.com/Owner/Repo"
+
+
+def test_vcs_url_of_an_editable_install_is_none():
+    assert vcs_url({"url": "file:///home/me/repo/deploy", "dir_info": {"editable": True}}) is None

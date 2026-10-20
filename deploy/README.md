@@ -5,8 +5,9 @@ the pinned Python, Ansible and every other dependency from `uv.lock`.
 
 ## Requirements
 
-- On this machine: uv, and a clone of the repository whose releases you deploy. The scripts read `OWNER/REPO` from the
-  clone's `origin` remote, so a fork deploys its own GitHub releases and `ghcr.io` images, which must be public.
+- On this machine: uv. The scripts deploy the releases of the GitHub repository they come from: the one uvx installed
+  them from (see [From another repository](#from-another-repository)), or else the `origin` remote of the clone they
+  run in. A fork thus deploys its own GitHub releases and `ghcr.io` images, which must be public.
 - The host: Ubuntu 24.04 on x86_64 with at least 2 GB of RAM, which SQL Server needs, reachable over SSH with a key, as
   a user who can `sudo`. Pass `-K` to any script when sudo asks that user for a password.
 
@@ -28,6 +29,17 @@ To serve HTTPS, point a domain name at the host and, once the app is set up, run
 ```sh
 uv run setup-tls ubuntu@203.0.113.10 todo.example.com --email you@example.com
 ```
+
+### From another repository
+
+The package carries its playbooks, so another repository, such as one holding your infrastructure, runs the scripts
+with uvx and no clone of this one. Install them from the tag of the release they deploy, so the playbooks match it:
+
+```sh
+uvx --from "git+https://github.com/OWNER/REPO@v1.2.3#subdirectory=deploy" setup-webapp ubuntu@203.0.113.10 v1.2.3
+```
+
+`setup-webapp` saves a generated PFX in the directory it runs from: add `*.pfx` to that repository's `.gitignore`.
 
 ### `setup-database`
 

@@ -1,4 +1,4 @@
-"""Runs this project's playbooks against a single host, for the release of this repository given by its tag."""
+"""Runs this package's playbooks against a single host, for a release of the GitHub repository it comes from."""
 
 import argparse
 import json
@@ -7,6 +7,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass
+from importlib.metadata import distribution
 from pathlib import Path
 
 PACKAGE_DIR = Path(__file__).resolve().parent
@@ -38,19 +39,35 @@ def parse_version_tag(value: str) -> str:
     return value
 
 
-def parse_github_repository(remote_url: str) -> str:
-    match = GITHUB_REMOTE.fullmatch(remote_url)
+def parse_github_repository(url: str) -> str:
+    match = GITHUB_REMOTE.fullmatch(url)
     if match is None:
-        raise ValueError(f"the origin remote {remote_url!r} is not a GitHub repository")
+        raise ValueError(f"{url!r} is not a GitHub repository")
     return f"{match['owner']}/{match['repo']}"
 
 
-def origin_repository() -> str:
-    """The OWNER/REPO of the GitHub repository this project was cloned from, whose releases it deploys."""
-    remote_url = subprocess.run(
-        ["git", "remote", "get-url", "origin"], cwd=PACKAGE_DIR, capture_output=True, text=True, check=True
-    ).stdout.strip()
-    return parse_github_repository(remote_url)
+def vcs_url(direct_url: dict) -> str | None:
+    """The repository URL of a PEP 610 direct_url.json, when the package was installed from version control."""
+    return direct_url["url"] if "vcs_info" in direct_url else None
+
+
+def installed_repository_url() -> str | None:
+    """The git repository this package was installed from, e.g. by uvx --from git+https://github.com/OWNER/REPO."""
+    direct_url = distribution("todoapp-deploy").read_text("direct_url.json")
+    return vcs_url(json.loads(direct_url)) if direct_url else None
+
+
+def origin_remote_url() -> str:
+    """The origin remote of the clone this package runs from."""
+    result = subprocess.run(["git", "remote", "get-url", "origin"], cwd=PACKAGE_DIR, capture_output=True, text=True)
+    if result.returncode != 0:
+        raise ValueError("this package wasn't installed from git, nor does it run from a clone with an origin remote")
+    return result.stdout.strip()
+
+
+def deployed_repository() -> str:
+    """The OWNER/REPO whose releases to deploy: the GitHub repository this package was installed or cloned from."""
+    return parse_github_repository(installed_repository_url() or origin_remote_url())
 
 
 def release_variables(repository: str, version_tag: str) -> dict[str, str]:
@@ -80,9 +97,12 @@ def release_variables_of(args: argparse.Namespace) -> dict[str, str]:
     if "version" not in args:
         return {}
     try:
-        repository = origin_repository()
-    except (subprocess.CalledProcessError, ValueError) as error:
-        sys.exit(f"Can't tell which GitHub repository to deploy: {error}")
+        repository = deployed_repository()
+    except ValueError as error:
+        sys.exit(
+            f"Can't tell which GitHub repository to deploy: {error}.\nInstall this package from GitHub, e.g. with "
+            "uvx --from git+https://github.com/OWNER/REPO@v1.2.3#subdirectory=deploy, or run it from a clone."
+        )
     return release_variables(repository, args.version)
 
 
