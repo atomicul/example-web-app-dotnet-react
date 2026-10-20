@@ -83,8 +83,8 @@ else asked for. Secrets only ever come from environment variables, never from ar
 against the PFX before anything on the host changes. Passing the host's PFX again changes nothing; passing another one
 replaces it, which logs every user out, as losing it does: keep the PFX and its password.
 
-To change the connection string on a host that has one, pass `--change-connection-string`. Passing the same
-`TODOAPP_CONNECTION_STRING` again changes nothing on the host.
+To change the connection string on a host that has one, run with `TODOAPP_CONNECTION_STRING` set: whatever it holds
+is installed, and the same one again changes nothing on the host.
 
 `--dapr-components DIR` replaces the sidecar's components on the host with the `*.yaml` and `*.yml` files of a local
 directory, and removes the ones it doesn't have. Without it, the host keeps the components it has.

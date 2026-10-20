@@ -1,9 +1,4 @@
 ---
-- name: Read the database connection string from TODOAPP_CONNECTION_STRING
-  ansible.builtin.set_fact:
-    todoapp_connection_string_variable: "{{ lookup('ansible.builtin.env', 'TODOAPP_CONNECTION_STRING') }}"
-  no_log: true
-
 - name: Ask for the database connection string, unless TODOAPP_CONNECTION_STRING has it
   ansible.builtin.pause:
     prompt: Connection string the app connects to its database with, such as the one setup-database showed

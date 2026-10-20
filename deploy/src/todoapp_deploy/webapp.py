@@ -38,11 +38,6 @@ def main() -> None:
     parser = argument_parser(__doc__.partition(": ")[2])
     add_release_argument(parser)
     parser.add_argument(
-        "--change-connection-string",
-        action="store_true",
-        help="ask for the database connection string even though the host already has one",
-    )
-    parser.add_argument(
         "--certificate",
         type=parse_certificate_file,
         help="the PFX to encrypt the keys protecting sessions with, its password in TODOAPP_CERTIFICATE_PASSWORD; "
@@ -60,7 +55,6 @@ def main() -> None:
     )
     args = parser.parse_args()
     variables = {
-        "todoapp_change_connection_string": args.change_connection_string,
         "todoapp_controller_directory": os.getcwd(),
         "dapr_components_source": str(args.dapr_components or ""),
         "todoapp_settings_source": str(args.settings or ""),
