@@ -29,7 +29,7 @@ builder.Services.AddDaprSidecar(builder.Configuration);
 builder.Services.AddEmails(builder.Configuration);
 builder.Services.AddTrustedProxies(builder.Configuration);
 builder.Services.AddRateLimits(builder.Configuration);
-builder.Services.AddHealthChecks().AddDbContextCheck<AppDbContext>();
+builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("Database");
 
 builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 builder.Services.AddProblemDetails();

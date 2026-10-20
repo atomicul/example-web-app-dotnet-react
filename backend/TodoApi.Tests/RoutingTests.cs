@@ -28,6 +28,20 @@ public class RoutingTests(TodoApiFactory factory)
     }
 
     [Fact]
+    public async Task Health_is_unhealthy_until_the_database_is_migrated_without_saying_why()
+    {
+        var unmigrated = factory.WithSettings(new()
+        {
+            ["ConnectionStrings:Default"] = await factory.CreateEmptyDatabaseAsync("Unmigrated"),
+        });
+
+        var response = await unmigrated.CreateClient().GetAsync("/health", TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
+        Assert.Equal("Unhealthy", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task Unknown_api_route_is_not_found()
     {
         var response = await client.GetAsync("/api/does-not-exist", TestContext.Current.CancellationToken);

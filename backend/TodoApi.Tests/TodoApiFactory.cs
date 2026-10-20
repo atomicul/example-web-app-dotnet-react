@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -52,6 +53,13 @@ public class TodoApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
     public WebApplicationFactory<Program> WithSettings(Dictionary<string, string?> settings) =>
         WithWebHostBuilder(builder =>
             builder.ConfigureAppConfiguration(configuration => configuration.AddInMemoryCollection(settings)));
+
+    /// <summary>Creates an empty database, without migrations, on the same SQL Server, and returns its connection string.</summary>
+    public async Task<string> CreateEmptyDatabaseAsync(string name)
+    {
+        await database.ExecScriptAsync($"CREATE DATABASE [{name}]");
+        return new SqlConnectionStringBuilder(database.GetConnectionString()) { InitialCatalog = name }.ConnectionString;
+    }
 
     public override async ValueTask DisposeAsync()
     {
