@@ -154,7 +154,8 @@ Setting a provider up is manual. For AWS, for example:
 ### `generate-certificate`
 
 `uv run generate-certificate dataprotection.pfx` writes a self-signed certificate that `setup-webapp` accepts, with the
-password in `TODOAPP_CERTIFICATE_PASSWORD`, or else one it asks for. It refuses to overwrite a file.
+password in `TODOAPP_CERTIFICATE_PASSWORD`, or else one it asks for. Press Enter at that prompt to generate a password,
+which it **shows once**. It refuses to overwrite a file.
 `uv run check-certificate dataprotection.pfx` checks that a PFX opens with its password, taken the same way.
 
 ## On the host

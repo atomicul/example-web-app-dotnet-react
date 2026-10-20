@@ -3,7 +3,7 @@ import stat
 import pytest
 from cryptography.hazmat.primitives.serialization import pkcs12
 
-from todoapp_deploy.certificate import COMMON_NAME, generate, opens
+from todoapp_deploy.certificate import COMMON_NAME, generate, opens, read_password
 
 
 def test_generate_writes_a_pfx_that_opens_with_its_password(tmp_path):
@@ -53,3 +53,25 @@ def test_opens_rejects_a_file_that_is_not_a_pfx(tmp_path):
 
 def test_opens_rejects_a_missing_file(tmp_path):
     assert not opens(tmp_path / "missing.pfx", "s3cret")
+
+
+def test_read_password_takes_the_variable(monkeypatch):
+    monkeypatch.setenv("TODOAPP_CERTIFICATE_PASSWORD", "s3cret")
+
+    assert read_password() == "s3cret"
+
+
+def test_read_password_is_none_when_enter_asks_to_generate_one(monkeypatch):
+    monkeypatch.delenv("TODOAPP_CERTIFICATE_PASSWORD", raising=False)
+    monkeypatch.setattr("getpass.getpass", lambda prompt: "")
+
+    assert read_password() is None
+
+
+def test_read_password_exits_when_the_typed_passwords_differ(monkeypatch):
+    monkeypatch.delenv("TODOAPP_CERTIFICATE_PASSWORD", raising=False)
+    answers = iter(["s3cret", "other"])
+    monkeypatch.setattr("getpass.getpass", lambda prompt: next(answers))
+
+    with pytest.raises(SystemExit):
+        read_password()

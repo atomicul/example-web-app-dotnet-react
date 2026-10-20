@@ -13,6 +13,8 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import BestAvailableEncryption, pkcs12
 from cryptography.x509.oid import NameOID
 
+from todoapp_deploy.passwords import generate_password
+
 PASSWORD_VARIABLE = "TODOAPP_CERTIFICATE_PASSWORD"
 COMMON_NAME = "todoapp-dataprotection"
 VALIDITY = timedelta(days=3650)
@@ -54,12 +56,13 @@ def owner_only(path: str, flags: int) -> int:
     return os.open(path, flags, 0o600)
 
 
-def read_password() -> str:
+def read_password() -> str | None:
+    """The password in TODOAPP_CERTIFICATE_PASSWORD, or else one typed twice; None when Enter asks to generate one."""
     if password := os.environ.get(PASSWORD_VARIABLE):
         return password
-    password = getpass.getpass("Password for the PFX: ")
+    password = getpass.getpass("Password for the PFX, or Enter to generate one: ")
     if not password:
-        sys.exit("The password can't be empty")
+        return None
     if getpass.getpass("Repeat the password: ") != password:
         sys.exit("The passwords don't match")
     return password
@@ -72,8 +75,12 @@ def main() -> None:
     if args.path.exists():
         sys.exit(f"{args.path} already exists; replacing a certificate in use logs every user out")
 
-    generate(args.path, read_password())
+    given_password = read_password()
+    password = given_password or generate_password()
+    generate(args.path, password)
     print(f"Wrote {args.path}. Keep a copy of it and its password: the app can't read its keys without them.")
+    if given_password is None:
+        print(f"Its generated password, shown only this once: {password}")
 
 
 def check() -> None:
