@@ -249,6 +249,7 @@ concurrent runs wait for each other, and exits non-zero when it fails. Its outpu
 
 ## Deploying to a host
 
-`deploy/` sets the app and its database up on a single Ubuntu 24.04 host with Ansible, needing only uv. For each
-release, `uv run setup-database user@host --version v1.2.3` installs SQL Server and migrates it with the release's
-image, and `uv run setup-webapp user@host --version v1.2.3` runs the release as a systemd service. See [deploy/README.md](deploy/README.md).
+`deploy/` sets the app up on one or more Ubuntu 24.04 hosts, and its database on one, with Ansible, needing only uv.
+For each release, `uv run setup-database user@host --version v1.2.3` installs SQL Server and migrates it with the
+release's image, and `uv run setup-webapp user@host... --version v1.2.3` runs the release as a systemd service on each
+host. See [deploy/README.md](deploy/README.md).

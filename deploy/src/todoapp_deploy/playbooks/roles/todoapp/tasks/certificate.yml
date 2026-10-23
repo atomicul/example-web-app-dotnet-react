@@ -14,6 +14,7 @@
          | ansible.builtin.path_join if todoapp_certificate_path else '' }}
   vars:
     todoapp_certificate_path: "{{ todoapp_certificate_source or todoapp_certificate_input.user_input | default('') }}"
+  run_once: true
 
 - name: Install the certificate
   when: todoapp_certificate_file | length > 0
@@ -22,6 +23,7 @@
       ansible.builtin.set_fact:
         todoapp_certificate_password_variable: "{{ lookup('ansible.builtin.env', 'TODOAPP_CERTIFICATE_PASSWORD') }}"
       no_log: true
+      run_once: true
 
     - name: Ask for the certificate's password, unless TODOAPP_CERTIFICATE_PASSWORD has it
       ansible.builtin.pause:
@@ -35,6 +37,7 @@
         todoapp_certificate_password: >-
           {{ todoapp_certificate_password_variable or todoapp_certificate_password_input.user_input | default('') }}
       no_log: true
+      run_once: true
 
     - name: Check that the certificate opens with its password
       ansible.builtin.command:

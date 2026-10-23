@@ -1,4 +1,4 @@
-"""Runs this package's playbooks against a single host, for a release of the GitHub repository it comes from."""
+"""Runs this package's playbooks against hosts, for a release of the GitHub repository it comes from."""
 
 import argparse
 import json
@@ -6,6 +6,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 import urllib.request
 from dataclasses import dataclass
 from importlib.metadata import distribution
@@ -33,6 +34,11 @@ def parse_target(value: str) -> Target:
     if match is None:
         raise argparse.ArgumentTypeError(f"expected user@host, got {value!r}")
     return Target(**match.groupdict())
+
+
+def inventory(targets: list[Target]) -> dict:
+    """An Ansible inventory of the targets, each connected to as its own user."""
+    return {"all": {"hosts": {target.host: {"ansible_user": target.user} for target in targets}}}
 
 
 def parse_version_tag(value: str) -> str:
@@ -119,9 +125,15 @@ def release_variables(repository: str, version_tag: str) -> dict[str, str]:
     }
 
 
-def argument_parser(description: str) -> argparse.ArgumentParser:
+def argument_parser(description: str, several_hosts: bool = False) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument("target", type=parse_target, help="the Ubuntu host to set up, as user@host")
+    parser.add_argument(
+        "targets",
+        metavar="target",
+        nargs="+" if several_hosts else 1,
+        type=parse_target,
+        help="the Ubuntu hosts to set up, as user@host" if several_hosts else "the Ubuntu host to set up, as user@host",
+    )
     parser.add_argument(
         "-K", "--ask-become-pass", action="store_true", help="ask for the user's sudo password on the host"
     )
@@ -159,19 +171,20 @@ def run_playbook(
     variables: dict[str, object] | None = None,
     secrets: dict[str, str] | None = None,
 ) -> int:
-    """Runs a playbook against args.target, passing secrets as environment variables so they never reach argv."""
+    """Runs a playbook against args.targets, passing secrets as environment variables so they never reach argv."""
     become = ["--ask-become-pass"] if args.ask_become_pass else []
     extra_variables = release_variables_of(args) | (variables or {})
-    command = [
-        str(Path(sys.executable).parent / "ansible-playbook"),
-        *become,
-        "--inventory",
-        f"{args.target.host},",
-        "--user",
-        args.target.user,
-        "--extra-vars",
-        json.dumps(extra_variables),
-        str(PLAYBOOKS_DIR / playbook),
-    ]
     environment = os.environ | {"ANSIBLE_CONFIG": str(PLAYBOOKS_DIR / "ansible.cfg")} | (secrets or {})
-    return subprocess.run(command, env=environment).returncode
+    with tempfile.NamedTemporaryFile("w", suffix=".json") as inventory_file:
+        json.dump(inventory(args.targets), inventory_file)
+        inventory_file.flush()
+        command = [
+            str(Path(sys.executable).parent / "ansible-playbook"),
+            *become,
+            "--inventory",
+            inventory_file.name,
+            "--extra-vars",
+            json.dumps(extra_variables),
+            str(PLAYBOOKS_DIR / playbook),
+        ]
+        return subprocess.run(command, env=environment).returncode

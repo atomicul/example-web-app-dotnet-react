@@ -1,19 +1,20 @@
 # Deploy
 
-Sets up the todo app and its database on a single Ubuntu host with Ansible. uv is the only requirement: it installs
-the pinned Python, Ansible and every other dependency from `uv.lock`.
+Sets up the todo app on one or more Ubuntu hosts, and its database on one host, with Ansible. uv is the only
+requirement: it installs the pinned Python, Ansible and every other dependency from `uv.lock`.
 
 ## Requirements
 
 - On this machine: uv. The scripts deploy the releases of the GitHub repository they come from: the one uvx installed
   them from (see [From another repository](#from-another-repository)), or else the `origin` remote of the clone they
   run in. A fork thus deploys its own GitHub releases and `ghcr.io` images, which must be public.
-- The host: Ubuntu 24.04 on x86_64 with at least 2 GB of RAM, which SQL Server needs, reachable over SSH with a key, as
-  a user who can `sudo`. Pass `-K` to any script when sudo asks that user for a password.
+- Each host: Ubuntu 24.04 on x86_64 with at least 2 GB of RAM, which SQL Server needs, reachable over SSH with a key,
+  as a user who can `sudo`. Pass `-K` to any script when sudo asks that user for a password; it asks once, for every
+  host of the run.
 
 ## Usage
 
-Run the scripts from `deploy/`, with the host as `user@host`. `setup-database` and `setup-webapp` install the release
+Run the scripts from `deploy/`, with each host as `user@host`. `setup-database` and `setup-webapp` install the release
 `--version` names, e.g. `v1.2.3`, or else the one the package was installed from (see
 [From another repository](#from-another-repository)), or else the latest release. For each release, set the database
 up first, then the app:
@@ -28,6 +29,15 @@ runs doesn't reach only one of them.
 
 Both scripts can be run again: a run only changes what differs from the release and settings it is given, so the same
 two commands with a new `--version` upgrade the host to that release.
+
+`setup-webapp` takes several hosts, e.g. behind a load balancer, and sets them all up in one run, which asks its
+questions once for all of them. Give them the same database in `--env-file`:
+
+```sh
+uv run setup-webapp ubuntu@203.0.113.11 ubuntu@203.0.113.12 --version v1.2.3 --env-file todoapp.env
+```
+
+They share their sessions, whose keys the app keeps in the database, and restart together on an upgrade.
 
 To serve HTTPS, point a domain name at the host and, once the app is set up, run `setup-tls` with that domain:
 

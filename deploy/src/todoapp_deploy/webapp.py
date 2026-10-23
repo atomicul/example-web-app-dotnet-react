@@ -1,4 +1,4 @@
-"""setup-webapp: installs a release of the app and its Dapr sidecar on a host as systemd services."""
+"""setup-webapp: installs a release of the app and its Dapr sidecar on one or more hosts as systemd services."""
 
 import argparse
 import json
@@ -42,7 +42,7 @@ def parse_settings_file(value: str) -> Path:
 
 
 def main() -> None:
-    parser = argument_parser(__doc__.partition(": ")[2])
+    parser = argument_parser(__doc__.partition(": ")[2], several_hosts=True)
     add_release_argument(parser)
     parser.add_argument(
         "--certificate",

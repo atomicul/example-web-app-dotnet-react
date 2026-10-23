@@ -5,7 +5,9 @@ import pytest
 from todoapp_deploy import runner
 from todoapp_deploy.runner import (
     Target,
+    argument_parser,
     installed_tag,
+    inventory,
     parse_github_repository,
     parse_target,
     parse_version_tag,
@@ -66,7 +68,7 @@ def test_release_variables_lowercase_the_image_and_drop_the_tag_prefix():
 
 
 def test_release_variables_of_a_script_without_a_release_are_empty():
-    assert release_variables_of(argparse.Namespace(target=Target("deploy", "example.com"))) == {}
+    assert release_variables_of(argparse.Namespace(targets=[Target("deploy", "example.com")])) == {}
 
 
 def test_vcs_url_reads_the_repository_a_git_install_came_from():
@@ -117,3 +119,29 @@ def test_release_variables_of_default_to_the_installed_or_latest_release(monkeyp
     variables = release_variables_of(argparse.Namespace(version=None))
 
     assert variables["release_tag"] == "v2.0.0"
+
+
+def test_inventory_connects_to_each_host_as_its_user():
+    targets = [Target("ubuntu", "203.0.113.10"), Target("deploy", "203.0.113.11")]
+
+    assert inventory(targets) == {
+        "all": {
+            "hosts": {
+                "203.0.113.10": {"ansible_user": "ubuntu"},
+                "203.0.113.11": {"ansible_user": "deploy"},
+            }
+        }
+    }
+
+
+def test_argument_parser_takes_several_hosts_when_asked():
+    args = argument_parser("", several_hosts=True).parse_args(["ubuntu@a.example", "deploy@b.example"])
+
+    assert args.targets == [Target("ubuntu", "a.example"), Target("deploy", "b.example")]
+
+
+def test_argument_parser_takes_a_single_host_by_default():
+    assert argument_parser("").parse_args(["ubuntu@a.example"]).targets == [Target("ubuntu", "a.example")]
+
+    with pytest.raises(SystemExit):
+        argument_parser("").parse_args(["ubuntu@a.example", "deploy@b.example"])

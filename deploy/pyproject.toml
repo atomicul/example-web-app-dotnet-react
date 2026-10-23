@@ -1,7 +1,7 @@
 [project]
 name = "todoapp-deploy"
 version = "0.1.0"
-description = "Sets up the todo app and its database on a single Ubuntu host with Ansible"
+description = "Sets up the todo app on one or more Ubuntu hosts, and its database on one, with Ansible"
 readme = "README.md"
 requires-python = "==3.14.*"
 dependencies = [
