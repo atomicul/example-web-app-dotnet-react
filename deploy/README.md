@@ -13,16 +13,21 @@ the pinned Python, Ansible and every other dependency from `uv.lock`.
 
 ## Usage
 
-Run the scripts from `deploy/`, with the host as `user@host` and a release tag. For each release, set the database up
-first, then the app:
+Run the scripts from `deploy/`, with the host as `user@host`. `setup-database` and `setup-webapp` install the release
+`--version` names, e.g. `v1.2.3`, or else the one the package was installed from (see
+[From another repository](#from-another-repository)), or else the latest release. For each release, set the database
+up first, then the app:
 
 ```sh
-uv run setup-database ubuntu@203.0.113.10 v1.2.3
-uv run setup-webapp ubuntu@203.0.113.10 v1.2.3
+uv run setup-database ubuntu@203.0.113.10 --version v1.2.3
+uv run setup-webapp ubuntu@203.0.113.10 --version v1.2.3
 ```
 
+Both scripts print the release they install. Pass `--version` to both, so that a release published between the two
+runs doesn't reach only one of them.
+
 Both scripts can be run again: a run only changes what differs from the release and settings it is given, so the same
-two commands upgrade the host to a new release.
+two commands with a new `--version` upgrade the host to that release.
 
 To serve HTTPS, point a domain name at the host and, once the app is set up, run `setup-tls` with that domain:
 
@@ -33,10 +38,11 @@ uv run setup-tls ubuntu@203.0.113.10 todo.example.com --email you@example.com
 ### From another repository
 
 The package carries its playbooks, so another repository, such as one holding your infrastructure, runs the scripts
-with uvx and no clone of this one. Install them from the tag of the release they deploy, so the playbooks match it:
+with uvx and no clone of this one. Install them from the tag of the release they deploy, so the playbooks match it; they then deploy that release
+without `--version`:
 
 ```sh
-uvx --from "git+https://github.com/OWNER/REPO@v1.2.3#subdirectory=deploy" setup-webapp ubuntu@203.0.113.10 v1.2.3
+uvx --from "git+https://github.com/OWNER/REPO@v1.2.3#subdirectory=deploy" setup-webapp ubuntu@203.0.113.10
 ```
 
 `setup-webapp` saves a generated PFX in the directory it runs from: add `*.pfx` to that repository's `.gitignore`.
@@ -153,7 +159,7 @@ Setting a provider up is manual. For AWS, for example:
    [SSM Parameter Store](https://docs.dapr.io/reference/components-reference/supported-secret-stores/aws-parameter-store/),
    in the same directory.
 4. Set `Email:Queue` to the binding's name in your settings file, e.g. `{ "Email": { "Queue": "emails" } }`.
-5. Run `uv run setup-webapp user@host v1.2.3 --dapr-components path/to/components --settings path/to/appsettings.json`.
+5. Run `uv run setup-webapp user@host --version v1.2.3 --dapr-components path/to/components --settings path/to/appsettings.json`.
 
 `journalctl -u todoapp-dapr` shows whether the sidecar loaded the components.
 

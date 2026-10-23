@@ -6,9 +6,11 @@ import os
 import re
 import subprocess
 import sys
+import urllib.request
 from dataclasses import dataclass
 from importlib.metadata import distribution
 from pathlib import Path
+from urllib.error import URLError
 
 PACKAGE_DIR = Path(__file__).resolve().parent
 PLAYBOOKS_DIR = PACKAGE_DIR / "playbooks"
@@ -51,10 +53,28 @@ def vcs_url(direct_url: dict) -> str | None:
     return direct_url["url"] if "vcs_info" in direct_url else None
 
 
+def installed_tag(direct_url: dict) -> str | None:
+    """The release tag of a PEP 610 direct_url.json, when the package was installed from one, e.g. @v1.2.3."""
+    revision = direct_url.get("vcs_info", {}).get("requested_revision", "")
+    return revision if VERSION_TAG.fullmatch(revision) else None
+
+
+def installed_direct_url() -> dict | None:
+    """Where this package was installed from, as the installer recorded it in direct_url.json."""
+    direct_url = distribution("todoapp-deploy").read_text("direct_url.json")
+    return json.loads(direct_url) if direct_url else None
+
+
 def installed_repository_url() -> str | None:
     """The git repository this package was installed from, e.g. by uvx --from git+https://github.com/OWNER/REPO."""
-    direct_url = distribution("todoapp-deploy").read_text("direct_url.json")
-    return vcs_url(json.loads(direct_url)) if direct_url else None
+    direct_url = installed_direct_url()
+    return vcs_url(direct_url) if direct_url else None
+
+
+def installed_release_tag() -> str | None:
+    """The release tag this package was installed from, e.g. by uvx --from git+https://github.com/OWNER/REPO@v1.2.3."""
+    direct_url = installed_direct_url()
+    return installed_tag(direct_url) if direct_url else None
 
 
 def origin_remote_url() -> str:
@@ -68,6 +88,26 @@ def origin_remote_url() -> str:
 def deployed_repository() -> str:
     """The OWNER/REPO whose releases to deploy: the GitHub repository this package was installed or cloned from."""
     return parse_github_repository(installed_repository_url() or origin_remote_url())
+
+
+def latest_release_tag(repository: str) -> str:
+    """The tag of the repository's latest release on GitHub."""
+    request = urllib.request.Request(
+        f"https://api.github.com/repos/{repository}/releases/latest",
+        headers={"Accept": "application/vnd.github+json"},
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        return json.load(response)["tag_name"]
+
+
+def default_version_tag(repository: str) -> str:
+    """The release this package was installed from, so that its playbooks match it, or else the latest release."""
+    if tag := installed_release_tag():
+        return tag
+    try:
+        return latest_release_tag(repository)
+    except URLError as error:
+        sys.exit(f"Can't find the latest release of {repository}: {error}.\nPass the release to deploy with --version.")
 
 
 def release_variables(repository: str, version_tag: str) -> dict[str, str]:
@@ -89,7 +129,12 @@ def argument_parser(description: str) -> argparse.ArgumentParser:
 
 
 def add_release_argument(parser: argparse.ArgumentParser) -> None:
-    parser.add_argument("version", type=parse_version_tag, help="the release tag to install, e.g. v1.2.3")
+    parser.add_argument(
+        "--version",
+        type=parse_version_tag,
+        help="the release tag to install, e.g. v1.2.3; by default the tag this package was installed from, or else "
+        "the latest release",
+    )
 
 
 def release_variables_of(args: argparse.Namespace) -> dict[str, str]:
@@ -103,7 +148,9 @@ def release_variables_of(args: argparse.Namespace) -> dict[str, str]:
             f"Can't tell which GitHub repository to deploy: {error}.\nInstall this package from GitHub, e.g. with "
             "uvx --from git+https://github.com/OWNER/REPO@v1.2.3#subdirectory=deploy, or run it from a clone."
         )
-    return release_variables(repository, args.version)
+    version_tag = args.version or default_version_tag(repository)
+    print(f"Deploying {repository} {version_tag}")
+    return release_variables(repository, version_tag)
 
 
 def run_playbook(

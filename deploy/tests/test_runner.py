@@ -2,8 +2,10 @@ import argparse
 
 import pytest
 
+from todoapp_deploy import runner
 from todoapp_deploy.runner import (
     Target,
+    installed_tag,
     parse_github_repository,
     parse_target,
     parse_version_tag,
@@ -79,3 +81,39 @@ def test_vcs_url_reads_the_repository_a_git_install_came_from():
 
 def test_vcs_url_of_an_editable_install_is_none():
     assert vcs_url({"url": "file:///home/me/repo/deploy", "dir_info": {"editable": True}}) is None
+
+
+def test_installed_tag_reads_the_release_a_git_install_asked_for():
+    direct_url = {"url": "https://github.com/Owner/Repo", "vcs_info": {"vcs": "git", "requested_revision": "v1.2.3"}}
+
+    assert installed_tag(direct_url) == "v1.2.3"
+
+
+@pytest.mark.parametrize(
+    "direct_url",
+    [
+        {"url": "https://github.com/Owner/Repo", "vcs_info": {"vcs": "git", "requested_revision": "main"}},
+        {"url": "https://github.com/Owner/Repo", "vcs_info": {"vcs": "git", "commit_id": "6110fa6"}},
+        {"url": "file:///home/me/repo/deploy", "dir_info": {"editable": True}},
+    ],
+)
+def test_installed_tag_of_a_branch_commit_or_editable_install_is_none(direct_url):
+    assert installed_tag(direct_url) is None
+
+
+def test_release_variables_of_use_the_given_version(monkeypatch):
+    monkeypatch.setattr(runner, "deployed_repository", lambda: "Owner/Repo")
+    monkeypatch.setattr(runner, "default_version_tag", lambda repository: pytest.fail("looked up a default"))
+
+    variables = release_variables_of(argparse.Namespace(version="v1.2.3"))
+
+    assert variables["release_tag"] == "v1.2.3"
+
+
+def test_release_variables_of_default_to_the_installed_or_latest_release(monkeypatch):
+    monkeypatch.setattr(runner, "deployed_repository", lambda: "Owner/Repo")
+    monkeypatch.setattr(runner, "default_version_tag", lambda repository: "v2.0.0")
+
+    variables = release_variables_of(argparse.Namespace(version=None))
+
+    assert variables["release_tag"] == "v2.0.0"
