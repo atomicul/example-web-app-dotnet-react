@@ -7,6 +7,14 @@
     home: /nonexistent
     create_home: false
 
+- name: Create the app's configuration directory, before the sidecar's components directory would create it as the sidecar's
+  ansible.builtin.file:
+    path: "{{ todoapp_config_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
 - name: Run the Dapr sidecar beside the app
   ansible.builtin.include_role:
     name: dapr
