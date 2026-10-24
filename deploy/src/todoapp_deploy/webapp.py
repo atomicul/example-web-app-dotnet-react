@@ -1,4 +1,4 @@
-"""setup-webapp: installs a release of the app and its Dapr sidecar on one or more hosts as systemd services."""
+"""setup-webapp: installs a release of the app on one or more hosts as a systemd service."""
 
 import argparse
 import json
@@ -7,13 +7,6 @@ import sys
 from pathlib import Path
 
 from todoapp_deploy.runner import add_release_argument, argument_parser, run_playbook
-
-
-def parse_components_directory(value: str) -> Path:
-    path = Path(value).expanduser()
-    if not path.is_dir():
-        raise argparse.ArgumentTypeError(f"expected a directory of Dapr component YAML files, got {value!r}")
-    return path.resolve()
 
 
 def parse_certificate_file(value: str) -> Path:
@@ -51,11 +44,6 @@ def main() -> None:
         "replacing the host's logs every user out",
     )
     parser.add_argument(
-        "--dapr-components",
-        type=parse_components_directory,
-        help="replace the Dapr sidecar's components on the host with the YAML files of this directory",
-    )
-    parser.add_argument(
         "--settings",
         type=parse_settings_file,
         help="replace the deployment's app settings on the host with this JSON file, under the ones the deploy sets",
@@ -69,7 +57,6 @@ def main() -> None:
     args = parser.parse_args()
     variables = {
         "todoapp_controller_directory": os.getcwd(),
-        "dapr_components_source": str(args.dapr_components or ""),
         "todoapp_settings_source": str(args.settings or ""),
         "todoapp_env_file_source": str(args.env_file or ""),
         "todoapp_certificate_source": str(args.certificate or ""),

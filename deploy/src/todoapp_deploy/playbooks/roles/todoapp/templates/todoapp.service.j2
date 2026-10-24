@@ -1,7 +1,7 @@
 [Unit]
 Description=Todo app
-Wants=network-online.target todoapp-dapr.service
-After=network-online.target mssql-server.service todoapp-dapr.service
+Wants=network-online.target
+After=network-online.target mssql-server.service
 
 [Service]
 Type=exec

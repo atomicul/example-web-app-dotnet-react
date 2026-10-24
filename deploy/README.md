@@ -80,8 +80,7 @@ SQL Server listens on `127.0.0.1` only. It runs as the Express edition, which is
 ### `setup-webapp`
 
 Installs the ASP.NET Core runtime and the release's zip, and runs the app as the `todoapp` systemd service on port
-`80`, then waits for `/health` to answer `Healthy`. Beside it, it runs the app's Dapr sidecar as the `todoapp-dapr`
-service (see [Dapr sidecar](#dapr-sidecar)). It serves plain HTTP until `setup-tls` gives the host a
+`80`, then waits for `/health` to answer `Healthy`. It serves plain HTTP until `setup-tls` gives the host a
 certificate, and from then on HTTPS on port `443` as well. To terminate HTTPS in a reverse proxy instead, skip
 `setup-tls` and set the API's `TrustedProxies` (see the [root README](../README.md#rate-limiting)).
 
@@ -108,9 +107,6 @@ else asked for. Secrets only ever come from environment variables, never from ar
 against the PFX before anything on the host changes. Passing the host's PFX again changes nothing; passing another one
 replaces it, which logs every user out, as losing it does: keep the PFX and its password.
 
-`--dapr-components DIR` replaces the sidecar's components on the host with the `*.yaml` and `*.yml` files of a local
-directory, and removes the ones it doesn't have. Without it, the host keeps the components it has.
-
 `--settings FILE` replaces the deployment's app settings on the host with a JSON file in the format of the API's
 `appsettings.json`, e.g. its proxies and rate limits:
 
@@ -123,7 +119,7 @@ directory, and removes the ones it doesn't have. Without it, the host keeps the 
 
 Without it, the host keeps the settings it has. The file only overrides this deployment's values: a setting every
 environment needs belongs, with its default, in `backend/TodoApi/appsettings.json`, which each release ships. Its
-entries go under the ones the deploy sets itself (Kestrel's endpoints, Data Protection, ACME and Dapr), which
+entries go under the ones the deploy sets itself (Kestrel's endpoints, Data Protection and ACME), which
 win, and it holds no secrets: those go in the file `--env-file` takes.
 
 ### `setup-tls`
@@ -144,35 +140,6 @@ nothing.
 The app then sends HSTS, which makes browsers that visited it refuse plain HTTP for 30 days: don't remove HTTPS once
 it's served.
 
-### Dapr sidecar
-
-The app reaches cloud services, such as the queue its emails go on, only through a [Dapr](https://dapr.io) sidecar
-(see the [root README](../README.md#cloud-services)). `setup-webapp` runs `daprd` as the `todoapp-dapr` user, which
-serves the Dapr API only on Unix sockets in `/run/todoapp-dapr` that the app's group can open, and points the app at
-them with `Dapr:GrpcEndpoint`.
-
-This project ships no components: which provider's queue or bucket a name leads to, and how the sidecar authenticates
-to it, are yours to decide and to keep, e.g. in a private directory next to the PFX backup. A feature that uses one
-needs both its component, which `--dapr-components` installs, and the setting that names the component, which turns
-the feature on and which `--settings` passes:
-
-| Component | Setting | Turns on |
-|---|---|---|
-| An output binding, e.g. named `emails` | `Email:Queue`, set to the binding's name | Queueing emails on it, in the format the [root README](../README.md#email) describes; without the setting, the app logs them |
-
-Setting a provider up is manual. For AWS, for example:
-
-1. Create the SQS queue and whatever consumes it, e.g. a Lambda that sends each message with SES.
-2. Let the host send to the queue, preferably with an instance profile: the sidecar then needs no keys.
-3. Write `emails.yaml` as an [SQS binding](https://docs.dapr.io/reference/components-reference/supported-bindings/sqs/)
-   named `emails`. Any secret it needs can come from a secret store component, such as
-   [SSM Parameter Store](https://docs.dapr.io/reference/components-reference/supported-secret-stores/aws-parameter-store/),
-   in the same directory.
-4. Set `Email:Queue` to the binding's name in your settings file, e.g. `{ "Email": { "Queue": "emails" } }`.
-5. Run `uv run setup-webapp user@host --version v1.2.3 --dapr-components path/to/components --settings path/to/appsettings.json`.
-
-`journalctl -u todoapp-dapr` shows whether the sidecar loaded the components.
-
 ### `generate-certificate`
 
 `uv run generate-certificate dataprotection.pfx` writes a self-signed certificate that `setup-webapp` accepts, with the
@@ -190,25 +157,22 @@ which it **shows once**. It refuses to overwrite a file.
 | `/etc/todoapp/deployment.env` | The deployment's environment variables, such as the app's connection string (root only; systemd passes them to the app) | `setup-webapp --env-file` | The app, which answers `/health` with `503` without a connection string |
 | `/etc/todoapp/certificate.env`, `dataprotection.pfx` | The certificate's password (root only) and the PFX (readable by the app) | `setup-webapp`, when given a PFX | The app, to encrypt its keys; optional |
 | `/etc/todoapp/tls/fullchain.pem`, `privkey.pem` | The HTTPS certificate and its key (readable by the app) | `setup-tls`, through `/usr/local/sbin/todoapp-install-certificate`, which copies each renewal from `/etc/letsencrypt` | The app, which serves HTTPS when `setup-webapp` or `setup-tls` find them; optional |
-| `/etc/todoapp/dapr/components` | The Dapr sidecar's components (only the sidecar's user can read them) | `setup-webapp --dapr-components` | The sidecar; optional |
-| `/etc/systemd/system/todoapp.service`, `todoapp-dapr.service` | The app's and the sidecar's services | `setup-webapp` | `setup-tls`, which fails without the app's |
-| `/run/todoapp-dapr` | The sidecar's sockets, which only the app's group can open | `setup-webapp`, and systemd on each boot | The app, to reach the sidecar |
+| `/etc/systemd/system/todoapp.service` | The app's service | `setup-webapp` | `setup-tls`, which fails without it |
 | `/var/lib/todoapp/acme` | The web root certbot writes ACME challenges to, which the app serves | `setup-tls` | certbot, to get and renew the certificate |
 | `/var/opt/mssql` | SQL Server's data | `setup-database` | The app, when its connection string points at this host |
 | `/opt/todoapp/releases/<tag>` | Each installed release; `/opt/todoapp/current` links to the one running | `setup-webapp` | The app's service |
 | `/opt/dotnet/<version>` | The ASP.NET Core runtime | `setup-webapp` | The app's service |
-| `/opt/dapr/<version>` | The Dapr sidecar, `daprd` | `setup-webapp` | The sidecar's service |
 
 Secrets stay in the `.env` files, which systemd passes to the app as environment variables, overriding the JSON file.
 To change another setting, such as `TrustedProxies` or `RateLimits` from the
 [root README](../README.md#environment-variables), set it in the file `setup-webapp --settings` takes.
 
-`journalctl -u todoapp` shows the app's logs, and `journalctl -u todoapp-dapr` the sidecar's.
+`journalctl -u todoapp` shows the app's logs, including the emails it would have sent.
 
 ## Pinned versions
 
-`src/todoapp_deploy/playbooks/group_vars/all.yml` pins SQL Server and its tools, Docker, the ASP.NET Core runtime,
-`daprd`, and the signing keys of their repositories by checksum. `pyproject.toml`, `uv.lock` and `.python-version` pin
+`src/todoapp_deploy/playbooks/group_vars/all.yml` pins SQL Server and its tools, Docker, the ASP.NET Core runtime
+and the signing keys of their repositories by checksum. `pyproject.toml`, `uv.lock` and `.python-version` pin
 Python and the Python packages.
 The few packages that come from Ubuntu's own archive, such as `unzip` and `libicu74`, follow Ubuntu 24.04's updates.
 

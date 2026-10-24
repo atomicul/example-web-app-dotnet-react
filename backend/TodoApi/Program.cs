@@ -25,8 +25,7 @@ if (!isGeneratingOpenApiDocument)
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => options.SignIn.RequireConfirmedEmail = true)
     .AddEntityFrameworkStores<AppDbContext>();
-builder.Services.AddDaprSidecar(builder.Configuration);
-builder.Services.AddEmails(builder.Configuration);
+builder.Services.AddEmails();
 builder.Services.AddTrustedProxies(builder.Configuration);
 builder.Services.AddRateLimits(builder.Configuration);
 builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>("Database");

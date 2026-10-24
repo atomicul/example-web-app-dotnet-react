@@ -59,27 +59,11 @@ Production, so it expects the development database to be migrated already, e.g. 
 
 ## Cloud services
 
-Apart from its database, the API reaches cloud services such as queues and storage buckets only through a
-[Dapr](https://dapr.io) sidecar, which runs as a separate process on the same host. The sidecar holds the credentials
-and the mapping from the names the API uses, such as the `emails` binding, to real resources, such as an SQS queue.
-The API connects to it over a Unix socket that only the app's user can open, so the API holds no cloud credentials of
-its own. Every change that uses a cloud service keeps to three rules:
-
-1. **Development needs only the database.** A feature reaches a cloud service through its own interface, such as
-   `IEmailSender`. A stand-in implementation of that interface serves `make dev`, `make run` and the Docker image, e.g.
-   by logging. A setting switches to the Dapr implementation, never the environment, so any build runs without a
-   sidecar until it is configured. The Dapr implementation uses `DaprClient` directly: Dapr is already the abstraction
-   over providers, so it gets no wrapper.
-2. **Dapr implementations are tested against a real sidecar.** The backend tests run daprd in Docker with
-   provider-agnostic components, such as `bindings.localstorage`, and check which building blocks each implementation
-   calls and with what.
-3. **The repository stays provider-agnostic, `deploy/` included.** Component YAMLs that name a provider's resources,
-   credentials or secret stores live with whoever operates the host, not here, and setting up the provider's side,
-   such as creating a queue or granting the host access to it, is manual.
-
-A new feature therefore brings a stand-in and a Dapr implementation, a setting that picks between them, and tests
-against the sidecar. Whoever operates the host turns it on by giving `setup-webapp` both the feature's component and
-its setting (see the deploy's [Dapr sidecar](deploy/README.md#dapr-sidecar)).
+Apart from its database, the API reaches nothing outside itself directly, and the repository names no cloud provider
+and ships no provider's SDK. A feature that needs a service, such as sending emails, reaches it through its own
+interface, such as Identity's `IEmailSender`, and brings a stand-in implementation of it that needs nothing but the
+API, e.g. by logging. The stand-in serves `make dev`, `make run`, the Docker image and the deploy alike, so any build
+needs only the database. A deployment that wants the real service adds its own implementation behind that interface.
 
 ## Authentication
 
@@ -133,26 +117,9 @@ shows an error in the user's language when it translates the code, and as the AP
 
 ## Email
 
-The API doesn't word or send emails itself. When the `Email:Queue` setting names a Dapr output binding (see
-[Cloud services](#cloud-services)), it puts every email on the queue behind that binding, for another service to word
-and send. Without it, as in development, it writes every email to its log instead.
-
-Each message on the queue is a JSON object: what the email is for, the address to send it to, and the link or code it
-carries. Links are plain URLs, not HTML-encoded.
-
-```json
-{ "kind": "ConfirmationLink", "to": "user@example.com", "value": "https://todo.example.com/confirm-email?userId=...&code=..." }
-```
-
-| `kind` | `value` |
-|---|---|
-| `ConfirmationLink` | The link that confirms the address, to the SPA's `/confirm-email` page |
-| `PasswordResetLink` | A link that resets the password; the API's own endpoints don't send it yet |
-| `PasswordResetCode` | The code `POST /api/auth/resetPassword` takes, sent by `POST /api/auth/forgotPassword` |
-
-The API reaches the sidecar at `Dapr:GrpcEndpoint`: `unix:///path/to/dapr-grpc.socket` for a sidecar's gRPC socket on
-the same host, or an address such as `http://127.0.0.1:50001`. Without it, the Dapr client's defaults apply
-(`DAPR_GRPC_ENDPOINT`, or `127.0.0.1` on `DAPR_GRPC_PORT`).
+The API writes every email it would send to its log: the address, the subject and the link or code it carries. Links are
+plain URLs, not HTML-encoded. A deployment that delivers them implements Identity's `IEmailSender` (see
+[Cloud services](#cloud-services)).
 
 ## Rate limiting
 
@@ -225,8 +192,6 @@ list items take their index as the last level. Both commands read the same setti
 | `Kestrel__Endpoints__Https__Certificate__Path`, `…__KeyPath` | none | The PEM certificate chain and private key of that endpoint |
 | `Kestrel__Endpoints__Http__Url` | none | The HTTP address to listen on; Kestrel endpoints replace `ASPNETCORE_HTTP_PORTS`, so set it with an HTTPS endpoint, e.g. `http://*:8080` |
 | `HTTPS_PORT` | the HTTPS endpoint's port | The port HTTP is redirected to, when the container's HTTPS port is published on another one |
-| `Email__Queue` | none | The Dapr output binding to queue emails on, e.g. `emails`; without it, emails are logged (see [Email](#email)) |
-| `Dapr__GrpcEndpoint` | Dapr's defaults | The Dapr sidecar's gRPC endpoint, e.g. `unix:///run/dapr/dapr-grpc.socket` or `http://dapr:50001` |
 | `AcmeChallenge__WebRoot` | none | The web root of an ACME client, whose challenge files the app serves (see [HTTPS](#https)) |
 | `RateLimits__Api__PermitLimit`, `RateLimits__Api__Window` | `100`, `00:01:00` | Requests per client IP per window, for every `/api` request |
 | `RateLimits__Email__PermitLimit`, `RateLimits__Email__Window` | `1`, `00:01:00` | The same, for requests that send an email |

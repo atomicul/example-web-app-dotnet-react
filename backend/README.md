@@ -99,24 +99,22 @@ return todo is null ? TypedResults.NotFound() : TypedResults.Ok(TodoResponse.Fro
 
 ## Cloud services
 
-The root README's [Cloud services](../README.md#cloud-services) section sets the rules; in code, each feature that
-uses one looks like the emails:
+The root README's [Cloud services](../README.md#cloud-services) section sets the rule; in code, each feature that
+uses a service looks like the emails:
 
 - The feature's own interface is the swap point: Identity's `IEmailSender<IdentityUser>`.
-- A stand-in implementation needs nothing but the API (`LoggingEmailSender`), and a Dapr one uses `DaprClient`
-  directly (`DaprEmailSender`).
-- One registration method picks between them by a setting, never by environment (`Emails.AddEmails`, by
-  `Email:Queue`). Behaviour every transport shares wraps them instead of being repeated: `SpaLinkEmailSender` points
-  links at the SPA and hands the email to the keyed transport.
+- The stand-in implementation needs nothing but the API (`LoggingEmailSender`).
+- One registration method registers it, with no setting (`Emails.AddEmails`). Behaviour every transport shares wraps
+  it instead of being repeated: `SpaLinkEmailSender` points links at the SPA and hands the email to the keyed
+  transport.
 
 ## Tests
 
 `TodoApi.Tests` boots the whole API with `WebApplicationFactory` against SQL Server in a Docker container that
 Testcontainers starts and removes for each run, so the tests also apply the real migrations. Every test registers its
 own user, and all data belongs to a user, so tests share the database without resetting it. Identity's emails are
-captured instead of logged, which lets tests follow confirmation links. The tests of what the API sends through Dapr
-run a Dapr sidecar in another container, whose `bindings.localstorage` bindings write every message they get to a
-temporary directory for the tests to read. Run them alone with `dotnet test --solution backend/TodoApp.slnx`.
+captured instead of logged, which lets tests follow confirmation links. Run them alone with
+`dotnet test --solution backend/TodoApp.slnx`.
 
 Tests act as a client would, through the helpers in `TestUsers` and `TodoClient`. A refused request is read with
 `ReadValidationProblemAsync`, which asserts the 400 and returns both the problem as ASP.NET's clients read it and its
