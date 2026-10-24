@@ -1,36 +1,47 @@
-import { useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { type QueryClient, useQueryClient } from '@tanstack/react-query'
+import { useRef, useState } from 'react'
 
-/** How long Tailwind's `animate-spin` takes to turn once. */
-const spinTurn = 1000
+export type RefreshStatus = 'idle' | 'refreshing' | 'refreshed'
 
-/** Waits for a spin that started at `start` to finish its turn, so the arrow stops upright rather than mid-turn. */
-function finishTurn(start: number) {
-  const elapsed = performance.now() - start
-  return new Promise((resolve) =>
-    setTimeout(resolve, spinTurn - (elapsed % spinTurn)),
-  )
+/** How long the check mark shows once a refresh is done. */
+const refreshedFor = 1000
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+/** Refetches the queries of the components on screen, telling whether every one of them succeeded. */
+function refetchActive(queryClient: QueryClient) {
+  return queryClient
+    .refetchQueries({ type: 'active' }, { throwOnError: true })
+    .then(
+      () => true,
+      () => false,
+    )
 }
 
 /**
- * Refetches the queries of the components on screen; `refreshing` holds until they are done, for at least one turn
- * of the spinning arrow, so a fast refetch still shows it happened. Queries of pages left behind are not refetched,
- * since they refetch anyway once their page shows again.
+ * Refetches the queries of the components on screen. `status` is `refreshing` until they are done, then `refreshed`
+ * for a moment when they all succeeded, so a fast refetch still shows it happened. A refresh started meanwhile takes
+ * over the status. Queries of pages left behind are not refetched, since they refetch anyway once their page shows
+ * again.
  */
 export function useRefresh() {
   const queryClient = useQueryClient()
-  const [refreshing, setRefreshing] = useState(false)
+  const [status, setStatus] = useState<RefreshStatus>('idle')
+  const latest = useRef(0)
 
   async function refresh() {
-    setRefreshing(true)
-    const start = performance.now()
-    try {
-      await queryClient.refetchQueries({ type: 'active' })
-    } finally {
-      await finishTurn(start)
-      setRefreshing(false)
+    const run = ++latest.current
+    setStatus('refreshing')
+    if (await refetchActive(queryClient)) {
+      setStatus('refreshed')
+      await wait(refreshedFor)
+    }
+    if (run === latest.current) {
+      setStatus('idle')
     }
   }
 
-  return { refreshing, refresh }
+  return { status, refresh }
 }

@@ -239,7 +239,9 @@ layout lets the user refetch it: by pulling the page down from the top on touch 
 `src/components/pull-to-refresh.tsx`, which is the scrolling section under the header), and with the button in the
 header elsewhere. The button hides on touch screens (Tailwind's `pointer-coarse:` variant) rather than below a width,
 so a tablet pulls and a narrow desktop window keeps the button. Either way, the arrow spins until the refetch is
-done, for at least one turn and always whole ones, so a refetch faster than the eye still shows it happened.
+done, then gives way to a check mark for a second (`RefreshIcon`, `src/components/refresh-icon.tsx`), so the new data
+shows as soon as it arrives and a refetch faster than the eye still shows it happened. A refetch that fails shows no
+check mark: the arrow just stops.
 
 Both go through `useRefresh()` (`src/lib/use-refresh.ts`), which refetches the active queries: those a component on
 screen reads through its hook. A page needs nothing to take part, as long as it follows

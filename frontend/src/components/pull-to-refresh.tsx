@@ -1,5 +1,5 @@
-import { RefreshCwIcon } from 'lucide-react'
 import { type ReactNode, useEffect, useEffectEvent, useState } from 'react'
+import { RefreshIcon } from '@/components/refresh-icon'
 import { useRefresh } from '@/lib/use-refresh'
 import { cn } from '@/lib/utils'
 
@@ -83,17 +83,18 @@ function usePull(
 
 /**
  * Scrolls its children, and refetches what they show when a touch pulls them down from the top past a threshold,
- * as phone apps do. An arrow follows the pull, and spins until the refetch is done.
+ * as phone apps do. An arrow follows the pull, and spins until the refetch is done, giving way to a check mark.
  */
 export function PullToRefresh({ className, children }: PullToRefreshProps) {
   const [element, setElement] = useState<HTMLDivElement | null>(null)
-  const { refreshing, refresh } = useRefresh()
-  const distance = usePull(element, !refreshing, (pulled) => {
+  const { status, refresh } = useRefresh()
+  const busy = status !== 'idle'
+  const distance = usePull(element, !busy, (pulled) => {
     if (pulled >= threshold) {
       void refresh()
     }
   })
-  const offset = refreshing ? threshold : distance
+  const offset = busy ? threshold : distance
 
   return (
     <div ref={setElement} className={cn('relative overflow-y-auto', className)}>
@@ -109,11 +110,12 @@ export function PullToRefresh({ className, children }: PullToRefreshProps) {
           className="bg-background flex items-center justify-center rounded-full border shadow-sm"
           style={{ width: indicatorSize, height: indicatorSize }}
         >
-          <RefreshCwIcon
-            className={cn('size-4', refreshing && 'animate-spin')}
+          <RefreshIcon
+            status={status}
+            className="size-4"
             style={{
               rotate: `${(distance / threshold) * 270}deg`,
-              opacity: refreshing ? 1 : Math.min(distance / threshold, 1),
+              opacity: busy ? 1 : Math.min(distance / threshold, 1),
             }}
           />
         </div>
