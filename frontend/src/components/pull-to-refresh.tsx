@@ -15,7 +15,8 @@ type PullToRefreshProps = {
 
 /**
  * Tracks how far a touch drags `element` down from the top of its scroll, `onRelease` getting the distance once it
- * lets go. Dragging up, or starting below the top, scrolls as usual.
+ * lets go. Dragging up, or starting below the top, scrolls as usual, and a drag that starts out more sideways than
+ * down is left to the browser, as for iOS's swipe back.
  */
 function usePull(
   element: HTMLElement | null,
@@ -31,17 +32,21 @@ function usePull(
       return
     }
     const scroller = element
+    let startX = 0
     let startY: number | null = null
+    let pulling = false
     let pulled = 0
 
     function stop() {
       startY = null
+      pulling = false
       pulled = 0
       setDistance(0)
     }
 
     function start(event: TouchEvent) {
       const atTop = scroller.scrollTop <= 0 && event.touches.length === 1
+      startX = event.touches[0].clientX
       startY = atTop && canStart() ? event.touches[0].clientY : null
     }
 
@@ -49,11 +54,14 @@ function usePull(
       if (startY === null) {
         return
       }
-      const dragged = event.touches[0].clientY - startY
-      if (dragged < 0) {
+      const touch = event.touches[0]
+      const dragged = touch.clientY - startY
+      const sideways = Math.abs(touch.clientX - startX)
+      if (dragged < 0 || (!pulling && sideways > dragged)) {
         stop()
         return
       }
+      pulling = true
       event.preventDefault()
       pulled = Math.min(dragged * resistance, maxPull)
       setDistance(pulled)
