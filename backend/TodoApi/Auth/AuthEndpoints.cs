@@ -23,11 +23,13 @@ public static class AuthEndpoints
         var identity = auth.MapIdentityApi<IdentityUser>();
         identity.Add(LimitEmailSending);
         identity.Add(GuardAccountChanges);
+        identity.Add(GuardTwoFactorSetup);
         identity.Add(SendTwoFactorCodes);
         identity.AddEndpointFilter(ValidationProblems.CodeIdentityErrors);
         auth.MapPost("/logout", Logout).RequireAuthorization();
         auth.MapGet("/manage/pendingEmail", AccountChanges.GetPendingEmail).RequireAuthorization().WithName("GetPendingEmail");
         auth.MapDelete("/manage/pendingEmail", AccountChanges.CancelPendingEmail).RequireAuthorization().WithName("CancelPendingEmail");
+        auth.MapGet("/manage/twoFactorMethod", TwoFactorMethods.GetTwoFactorMethod).RequireAuthorization().WithName("GetTwoFactorMethod");
 
         return app;
     }
@@ -60,6 +62,15 @@ public static class AuthEndpoints
         else if (Is(endpoint, HttpMethods.Get, "/confirmEmail"))
         {
             endpoint.FilterFactories.Add((_, next) => invocation => AccountChanges.GuardEmailConfirmationAsync(invocation, next));
+        }
+    }
+
+    /// <summary>Runs <see cref="TwoFactorMethods.GuardSetupAsync"/> around <c>POST /manage/2fa</c>.</summary>
+    private static void GuardTwoFactorSetup(EndpointBuilder endpoint)
+    {
+        if (Is(endpoint, HttpMethods.Post, "/manage/2fa"))
+        {
+            endpoint.FilterFactories.Add((_, next) => invocation => TwoFactorMethods.GuardSetupAsync(invocation, next));
         }
     }
 

@@ -58,9 +58,24 @@ public static class TestUsers
     }
 
     public static Task<HttpResponseMessage> LoginAsync(
-        this HttpClient client, string email, bool useCookies = false, string password = Password, string? twoFactorCode = null) =>
+        this HttpClient client,
+        string email,
+        bool useCookies = false,
+        string password = Password,
+        string? twoFactorCode = null,
+        string? twoFactorRecoveryCode = null) =>
         client.PostAsJsonAsync(
             $"/api/auth/login?useCookies={useCookies}",
-            new LoginRequest { Email = email, Password = password, TwoFactorCode = twoFactorCode },
+            new LoginRequest
+            {
+                Email = email,
+                Password = password,
+                TwoFactorCode = twoFactorCode,
+                TwoFactorRecoveryCode = twoFactorRecoveryCode,
+            },
             CancellationToken);
+
+    /// <summary>Sets up or turns off the signed-in user's authenticator app through Identity's <c>POST /manage/2fa</c>.</summary>
+    public static Task<HttpResponseMessage> SetUpTwoFactorAsync(this HttpClient client, TwoFactorRequest request) =>
+        client.PostAsJsonAsync("/api/auth/manage/2fa", request, CancellationToken);
 }

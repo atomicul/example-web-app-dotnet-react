@@ -23,5 +23,7 @@ export * from './resendConfirmationEmailRequest';
 export * from './resetPasswordRequest';
 export * from './todoRequest';
 export * from './todoResponse';
+export * from './twoFactorMethod';
+export * from './twoFactorMethodResponse';
 export * from './twoFactorRequest';
 export * from './twoFactorResponse';

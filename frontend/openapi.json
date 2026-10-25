@@ -460,6 +460,38 @@
         ]
       }
     },
+    "/api/auth/manage/twoFactorMethod": {
+      "get": {
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Gets how the signed-in user finishes a login, and whether logins ask for a second factor at all.",
+        "operationId": "GetTwoFactorMethod",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TwoFactorMethodResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Missing or invalid bearer token."
+          }
+        },
+        "security": [
+          {
+            "Bearer": [ ]
+          }
+        ]
+      }
+    },
     "/api/todos": {
       "get": {
         "tags": [
@@ -993,6 +1025,31 @@
           }
         },
         "description": "A todo owned by the current user."
+      },
+      "TwoFactorMethod": {
+        "enum": [
+          "Email",
+          "Authenticator"
+        ],
+        "description": "How a user finishes a login that asks for a second factor."
+      },
+      "TwoFactorMethodResponse": {
+        "required": [
+          "isAvailable",
+          "method"
+        ],
+        "type": "object",
+        "properties": {
+          "isAvailable": {
+            "type": "boolean",
+            "description": "Whether logins ask for a second factor at all; while they don't, the authenticator app can't be set up."
+          },
+          "method": {
+            "description": "The way the user chose, the email unless they set up an authenticator app.",
+            "$ref": "#/components/schemas/TwoFactorMethod"
+          }
+        },
+        "description": "How the signed-in user finishes a login."
       },
       "TwoFactorRequest": {
         "type": "object",

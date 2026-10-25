@@ -135,7 +135,7 @@ public static class AccountChanges
         ((result as INestedHttpResult)?.Result ?? result) is Ok<InfoResponse>;
 
     /// <summary>Signs the user in again when the request came with Identity's cookie; bearer tokens are left as they are.</summary>
-    private static async Task RenewCookieAsync(HttpContext context, SignInManager<IdentityUser> signInManager, IdentityUser user)
+    public static async Task RenewCookieAsync(HttpContext context, SignInManager<IdentityUser> signInManager, IdentityUser user)
     {
         if ((await context.AuthenticateAsync(IdentityConstants.ApplicationScheme)).Succeeded)
         {

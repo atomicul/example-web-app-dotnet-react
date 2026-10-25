@@ -175,10 +175,16 @@ through query hooks (see [Loading data](#loading-data)):
 ```tsx
 export const Route = createFileRoute('/_authenticated/account')({
   loader: ({ context }) =>
-    context.queryClient.query({
-      ...getGetPendingEmailQueryOptions(),
-      staleTime: 'static',
-    }),
+    Promise.all([
+      context.queryClient.query({
+        ...getGetPendingEmailQueryOptions(),
+        staleTime: 'static',
+      }),
+      context.queryClient.query({
+        ...getGetTwoFactorMethodQueryOptions(),
+        staleTime: 'static',
+      }),
+    ]),
   component: AccountPage,
 })
 
@@ -189,6 +195,7 @@ function AccountPage() {
     <Page title={t('account.title')}>
       <EmailForm />
       <PasswordForm />
+      <TwoFactorMethodForm />
     </Page>
   )
 }

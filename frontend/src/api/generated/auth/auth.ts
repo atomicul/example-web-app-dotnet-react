@@ -38,6 +38,7 @@ import type {
   RegisterRequest,
   ResendConfirmationEmailRequest,
   ResetPasswordRequest,
+  TwoFactorMethodResponse,
   TwoFactorRequest,
   TwoFactorResponse
 } from '../model';
@@ -1162,3 +1163,103 @@ export const useCancelPendingEmail = <TError = ErrorType<void>,
       > => {
       return useMutation(getCancelPendingEmailMutationOptions(options), queryClient);
     }
+    export const getGetTwoFactorMethodUrl = () => {
+
+
+
+
+  return `/api/auth/manage/twoFactorMethod`
+}
+
+/**
+ * @summary Gets how the signed-in user finishes a login, and whether logins ask for a second factor at all.
+ */
+export const getTwoFactorMethod = async ( options?: Parameters<typeof fetcher>[1]): Promise<TwoFactorMethodResponse> => {
+
+  return fetcher<TwoFactorMethodResponse>(getGetTwoFactorMethodUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetTwoFactorMethodQueryKey = () => {
+    return [
+    'api','auth','manage','twoFactorMethod'
+    ] as const;
+    }
+
+
+export const getGetTwoFactorMethodQueryOptions = <TData = Awaited<ReturnType<typeof getTwoFactorMethod>>, TError = ErrorType<void>>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTwoFactorMethod>>, TError, TData>>, request?: SecondParameter<typeof fetcher>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetTwoFactorMethodQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getTwoFactorMethod>>> = ({ signal }) => getTwoFactorMethod({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getTwoFactorMethod>>, TError, TData> & { queryKey: DataTag<QueryKey, TData, TError> }
+}
+
+export type GetTwoFactorMethodQueryResult = NonNullable<Awaited<ReturnType<typeof getTwoFactorMethod>>>
+export type GetTwoFactorMethodQueryError = ErrorType<void>
+
+
+export function useGetTwoFactorMethod<TData = Awaited<ReturnType<typeof getTwoFactorMethod>>, TError = ErrorType<void>>(
+  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTwoFactorMethod>>, TError, TData>> & Pick<
+        DefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTwoFactorMethod>>,
+          TError,
+          Awaited<ReturnType<typeof getTwoFactorMethod>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof fetcher>}
+ , queryClient?: QueryClient
+  ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTwoFactorMethod<TData = Awaited<ReturnType<typeof getTwoFactorMethod>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTwoFactorMethod>>, TError, TData>> & Pick<
+        UndefinedInitialDataOptions<
+          Awaited<ReturnType<typeof getTwoFactorMethod>>,
+          TError,
+          Awaited<ReturnType<typeof getTwoFactorMethod>>
+        > , 'initialData'
+      >, request?: SecondParameter<typeof fetcher>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+export function useGetTwoFactorMethod<TData = Awaited<ReturnType<typeof getTwoFactorMethod>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTwoFactorMethod>>, TError, TData>>, request?: SecondParameter<typeof fetcher>}
+ , queryClient?: QueryClient
+  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
+/**
+ * @summary Gets how the signed-in user finishes a login, and whether logins ask for a second factor at all.
+ */
+
+export function useGetTwoFactorMethod<TData = Awaited<ReturnType<typeof getTwoFactorMethod>>, TError = ErrorType<void>>(
+  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getTwoFactorMethod>>, TError, TData>>, request?: SecondParameter<typeof fetcher>}
+ , queryClient?: QueryClient
+ ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
+
+  const queryOptions = getGetTwoFactorMethodQueryOptions(options)
+
+  const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+

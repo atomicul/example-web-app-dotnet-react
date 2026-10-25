@@ -78,12 +78,25 @@ confirms the address; the login page can send a new link. The API sends emails a
 the API's `SpaUrl` setting as their origin, or the API's own origin when it is unset; `make dev` sets it to the Vite dev
 server (`SPA_URL`).
 
-While the `TwoFactor:Enabled` setting is on, as `appsettings.json` has it, every login also needs a code emailed to
-the user. `POST /api/auth/login` with the right password answers `401` with the detail `RequiresTwoFactor` and emails
-a code, and the same request with the code in `twoFactorCode` signs the user in; logging in again without a code
-sends a new one. The SPA's login page asks for the code once the password is right. No browser is remembered, so
-every login asks, and a wrong code counts towards the lockout as a wrong password does. `appsettings.Development.json`
-turns it off, so `make dev` logs in with the password alone; set it to `true` there to try it.
+While the `TwoFactor:Enabled` setting is on, as `appsettings.json` has it, every login also needs a code: one
+emailed to the user, or one shown by their authenticator app, if they set one up. `POST /api/auth/login` with the
+right password answers `401` with the detail `RequiresTwoFactor` and a `twoFactorMethod` member, `Email` or
+`Authenticator`, and the same request with the code in `twoFactorCode` signs the user in. For `Email`, the refusal
+emails a code, and logging in again without a code sends a new one. An authenticator app's user can send one of their
+recovery codes in `twoFactorRecoveryCode` instead; each works once. The SPA's login page asks for the code once the
+password is right. No browser is remembered, so every login asks, and a wrong code counts towards the lockout as a
+wrong password does. `appsettings.Development.json` turns it off, so `make dev` logs in with the password alone; set
+it to `true` there to try it.
+
+Users choose how they get their code on the SPA's `/account` page, while the setting is on.
+`GET /api/auth/manage/twoFactorMethod` says whether it is on and which one the user chose. Identity's
+`POST /api/auth/manage/2fa` sets up the app: `{ "resetSharedKey": true }` answers with a new key, which the SPA shows
+as a QR code, and `{ "enable": true, "twoFactorCode": "…", "resetRecoveryCodes": true }` turns the app on with a code
+from it and answers with ten new recovery codes.
+`{ "enable": false, "resetSharedKey": true, "resetRecoveryCodes": true }` goes back to emailed codes, so the old key
+and recovery codes stop working. The API refuses to turn the app on while
+the setting is off. Any change of the app renews the user's security stamp: the session that made it stays signed in,
+while a pending email change's link stops working, as after a password change.
 
 A user who forgot their password asks for a link on the SPA's `/forgot-password` page, linked from the login page,
 through Identity's `POST /api/auth/forgotPassword`. Identity emails a code only to an account's confirmed email, and
@@ -212,7 +225,7 @@ list items take their index as the last level. Both commands read the same setti
 | `Kestrel__Endpoints__Http__Url` | none | The HTTP address to listen on; Kestrel endpoints replace `ASPNETCORE_HTTP_PORTS`, so set it with an HTTPS endpoint, e.g. `http://*:8080` |
 | `HTTPS_PORT` | the HTTPS endpoint's port | The port HTTP is redirected to, when the container's HTTPS port is published on another one |
 | `AcmeChallenge__WebRoot` | none | The web root of an ACME client, whose challenge files the app serves (see [HTTPS](#https)) |
-| `TwoFactor__Enabled` | `true` | Whether every login also needs a code emailed to the user (see [Authentication](#authentication)) |
+| `TwoFactor__Enabled` | `true` | Whether every login also needs a code, emailed or from an authenticator app (see [Authentication](#authentication)) |
 | `RateLimits__Api__PermitLimit`, `RateLimits__Api__Window` | `100`, `00:01:00` | Requests per client IP per window, for every `/api` request |
 | `RateLimits__Email__PermitLimit`, `RateLimits__Email__Window` | `1`, `00:01:00` | The same, for requests that send an email, counted apart for each kind of email |
 | `ASPNETCORE_HTTP_PORTS` | `8080` | The port the app listens on inside the container |

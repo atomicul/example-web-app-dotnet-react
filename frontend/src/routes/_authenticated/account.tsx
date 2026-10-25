@@ -2,15 +2,25 @@ import { createFileRoute } from '@tanstack/react-router'
 import { useTranslation } from 'react-i18next'
 import { EmailForm } from '@/account/email-form'
 import { PasswordForm } from '@/account/password-form'
-import { getGetPendingEmailQueryOptions } from '@/api/generated'
+import { TwoFactorMethodForm } from '@/account/two-factor-method-form'
+import {
+  getGetPendingEmailQueryOptions,
+  getGetTwoFactorMethodQueryOptions,
+} from '@/api/generated'
 import { Page } from '@/components/page'
 
 export const Route = createFileRoute('/_authenticated/account')({
   loader: ({ context }) =>
-    context.queryClient.query({
-      ...getGetPendingEmailQueryOptions(),
-      staleTime: 'static',
-    }),
+    Promise.all([
+      context.queryClient.query({
+        ...getGetPendingEmailQueryOptions(),
+        staleTime: 'static',
+      }),
+      context.queryClient.query({
+        ...getGetTwoFactorMethodQueryOptions(),
+        staleTime: 'static',
+      }),
+    ]),
   component: AccountPage,
 })
 
@@ -21,6 +31,7 @@ function AccountPage() {
     <Page title={t('account.title')}>
       <EmailForm />
       <PasswordForm />
+      <TwoFactorMethodForm />
     </Page>
   )
 }

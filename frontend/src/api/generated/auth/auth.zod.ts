@@ -142,3 +142,11 @@ export const GetPendingEmailResponse = zod.object({
  */
 export const CancelPendingEmailResponse = zod.void()
 
+/**
+ * @summary Gets how the signed-in user finishes a login, and whether logins ask for a second factor at all.
+ */
+export const GetTwoFactorMethodResponse = zod.object({
+  "isAvailable": zod.boolean().describe('Whether logins ask for a second factor at all; while they don\'t, the authenticator app can\'t be set up.'),
+  "method": zod.enum(['Email', 'Authenticator']).describe('The way the user chose, the email unless they set up an authenticator app.')
+}).describe('How the signed-in user finishes a login.')
+

@@ -27,11 +27,18 @@ conventions that pick routes by method and path, rather than writing them anew:
   runs, because it counts a request only once the endpoint succeeds.
 - The filters in `Auth/AccountChanges.cs` run around `POST /manage/info`, which checks a new email and remembers it
   until it is confirmed, and around `GET /confirmEmail`, which only confirms the email remembered.
-- The filter in `Auth/TwoFactorCodes.cs` runs around `POST /login`, and emails a code when Identity asks for a second
-  factor. `Auth/TwoFactorSignInManager.cs` makes Identity ask every user while `TwoFactor:Enabled` is on, and checks
-  the code with Identity's email provider, as `/login` would otherwise check it with the authenticator app's.
+- The filter in `Auth/TwoFactorCodes.cs` runs around `POST /login`. When Identity asks for a second factor, it names
+  the user's way of giving it in the problem's `twoFactorMethod`, and emails a code to the users who get theirs by
+  email. `Auth/TwoFactorSignInManager.cs` makes Identity ask every user while `TwoFactor:Enabled` is on, and checks
+  the code with the provider of the user's way, as `/login` would otherwise check every code with the authenticator
+  app's.
+- `Auth/TwoFactorMethods.cs` holds that way: Identity's own two-factor flag of the user, which `POST /manage/2fa`
+  turns on once it checks a code from the authenticator app, marks the app, and the email is the rest. Its filter
+  around `POST /manage/2fa` refuses the app while `TwoFactor:Enabled` is off, and renews the session's cookie after a
+  change, as `Auth/AccountChanges.cs` does after a password change, since both renew the security stamp.
 
-Endpoints Identity lacks, such as `GET` and `DELETE /manage/pendingEmail`, are mapped next to them.
+Endpoints Identity lacks, such as `GET` and `DELETE /manage/pendingEmail` and `GET /manage/twoFactorMethod`, are
+mapped next to them.
 
 ## Validation errors
 
@@ -137,7 +144,8 @@ for `TwoFactorSignInManager`.
 Testcontainers starts and removes for each run, so the tests also apply the real migrations. Every test registers its
 own user, and all data belongs to a user, so tests share the database without resetting it. Identity's emails are
 captured instead of logged, which lets tests follow confirmation links. Logins ask for no code unless a test turns
-`TwoFactor:Enabled` on, as `TwoFactorTests` does. Run them alone with
+`TwoFactor:Enabled` on, as `TwoFactorTests` and `AuthenticatorTests` do; the latter compute the authenticator app's
+codes with `Totp`. Run them alone with
 `dotnet test --solution backend/TodoApp.slnx`.
 
 Tests act as a client would, through the helpers in `TestUsers` and `TodoClient`. A refused request is read with
