@@ -16,8 +16,10 @@ public static class RateLimits
     /// <summary>Every API request.</summary>
     public const string Api = "api";
 
+    private const string Email = "Email";
+
     public static IServiceCollection AddRateLimits(this IServiceCollection services, IConfiguration configuration) =>
-        services.AddSingleton<EmailLimits>().AddRateLimiter(options =>
+        services.AddSingleton(_ => new EmailLimits(ReadLimit(configuration, Email))).AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
             options.OnRejected = (context, _) =>
@@ -28,9 +30,9 @@ public static class RateLimits
             options.AddPolicy(Api, PerClient(ReadLimit(configuration, Api)));
         });
 
-    /// <summary>A limiter of its own, outside the rate limiting middleware, with the limit of the named section.</summary>
-    public static PartitionedRateLimiter<HttpContext> CreatePerClientLimiter(IConfiguration configuration, string name) =>
-        PartitionedRateLimiter.Create(PerClient(ReadLimit(configuration, name)));
+    /// <summary>A limiter of its own, outside the rate limiting middleware, with the given limit.</summary>
+    public static PartitionedRateLimiter<HttpContext> CreatePerClientLimiter(FixedWindowRateLimiterOptions limit) =>
+        PartitionedRateLimiter.Create(PerClient(limit));
 
     /// <summary>The 429 a limiter of <see cref="CreatePerClientLimiter"/> answers with when it refuses a lease.</summary>
     public static IResult Rejection(HttpContext context, RateLimitLease lease)

@@ -8,12 +8,12 @@ namespace TodoApi;
 /// Points Identity's emails at the SPA, then hands the email to the transport it wraps.
 /// Confirmation links open the SPA's confirmation page, which calls Identity's endpoint with the same query.
 /// Password reset codes become links to the SPA's reset page, which sends the code with the new password.
-/// The pages live at the <c>SpaUrl</c> setting, or on the API's own origin when the API serves the SPA itself.
+/// The pages live at <c>spaUrl</c>, or on the API's own origin when the API serves the SPA itself.
 /// Links reach the transport HTML-encoded, just as Identity hands them over.
 /// </summary>
 public class SpaLinkEmailSender(
-    [FromKeyedServices(SpaLinkEmailSender.TransportKey)] IEmailSender<IdentityUser> transport,
-    IConfiguration configuration,
+    IEmailSender<IdentityUser> transport,
+    string? spaUrl,
     IHttpContextAccessor httpContextAccessor) : IEmailSender<IdentityUser>
 {
     /// <summary>The service key of the <see cref="IEmailSender{TUser}"/> that delivers the emails.</summary>
@@ -46,8 +46,7 @@ public class SpaLinkEmailSender(
 
     private string ToSpaPage(string apiOrigin, string path, string query)
     {
-        var spaUrl = configuration["SpaUrl"] ?? apiOrigin;
-        var page = new UriBuilder(spaUrl) { Path = path, Query = query }.Uri.AbsoluteUri;
+        var page = new UriBuilder(spaUrl ?? apiOrigin) { Path = path, Query = query }.Uri.AbsoluteUri;
         return HtmlEncoder.Default.Encode(page);
     }
 }

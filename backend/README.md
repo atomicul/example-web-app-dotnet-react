@@ -117,6 +117,20 @@ uses a service looks like the emails:
   it instead of being repeated: `SpaLinkEmailSender` points links at the SPA, turning password reset codes into
   links too, and hands the email to the keyed transport.
 
+## Settings
+
+A class never takes `IConfiguration`: it takes the values it uses, so its constructor says what it is configured with.
+The code that registers it, `Program.cs` or the feature's `AddX` method, reads the settings and builds the class from
+them in the factory it registers:
+
+```csharp
+services.AddSingleton(_ => new EmailLimits(ReadLimit(configuration, Email)))
+```
+
+When the framework builds the class, as Identity does a sign-in manager, register the class in the framework's place
+with `ActivatorUtilities.CreateInstance`, which takes the values and resolves the other services, as `Program.cs` does
+for `TwoFactorSignInManager`.
+
 ## Tests
 
 `TodoApi.Tests` boots the whole API with `WebApplicationFactory` against SQL Server in a Docker container that

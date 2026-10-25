@@ -16,19 +16,17 @@ public enum EmailKind
 }
 
 /// <summary>
-/// Per-client limits on each kind of email, all read from the <c>RateLimits:Email</c> configuration section, so
-/// sending one kind never holds back another. Unlike <see cref="RateLimits.Api"/>, which the rate limiting middleware
-/// counts before the endpoint runs, a request counts only once it succeeds: a refused registration counts towards the
-/// API limit alone. A request that succeeds counts even when Identity sends nothing, as for an unknown email, so the
-/// limit doesn't tell which emails have an account. A login counts only as it sends a two-factor code, through
-/// <see cref="Take"/>, so a wrong password or the login that submits the code is never held back.
+/// Per-client limits on each kind of email, each a fixed window of the same limit, so sending one kind never holds back
+/// another. Unlike <see cref="RateLimits.Api"/>, which the rate limiting middleware counts before the endpoint runs, a
+/// request counts only once it succeeds: a refused registration counts towards the API limit alone. A request that
+/// succeeds counts even when Identity sends nothing, as for an unknown email, so the limit doesn't tell which emails
+/// have an account. A login counts only as it sends a two-factor code, through <see cref="Take"/>, so a wrong password
+/// or the login that submits the code is never held back.
 /// </summary>
-public sealed class EmailLimits(IConfiguration configuration) : IDisposable
+public sealed class EmailLimits(FixedWindowRateLimiterOptions limit) : IDisposable
 {
-    private const string Section = "Email";
-
     private readonly Dictionary<EmailKind, PartitionedRateLimiter<HttpContext>> limiters =
-        Enum.GetValues<EmailKind>().ToDictionary(kind => kind, _ => RateLimits.CreatePerClientLimiter(configuration, Section));
+        Enum.GetValues<EmailKind>().ToDictionary(kind => kind, _ => RateLimits.CreatePerClientLimiter(limit));
 
     /// <summary>
     /// Endpoint filter that answers 429 while the client has no email of the kind left in the window, and otherwise
