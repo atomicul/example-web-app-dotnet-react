@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import type { z } from 'zod'
+import { PostApiAuthLoginBody } from '@/api/generated/index.zod'
 import type { LoginRequest } from '@/api/generated/model'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,30 +11,17 @@ import {
   FieldLabel,
 } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
-import { fieldMessages } from '@/lib/field-messages'
 import { setServerErrors } from '@/lib/server-errors'
 
-type CredentialsFormProps = {
-  schema: z.ZodType<LoginRequest, LoginRequest>
-  /** What to show for a field the schema refuses, in place of zod's message. */
-  messages?: Partial<Record<keyof LoginRequest, string>>
-  submitLabel: string
-  /** `new-password` lets password managers offer to generate one when signing up. */
-  passwordAutoComplete: 'current-password' | 'new-password'
+type LoginFormProps = {
   onSubmit: (credentials: LoginRequest) => Promise<void>
 }
 
-/** Email and password form shared by login and registration; failures show under the fields. */
-export function CredentialsForm({
-  schema,
-  messages = {},
-  submitLabel,
-  passwordAutoComplete,
-  onSubmit,
-}: CredentialsFormProps) {
+/** Email and password form of the login page; failures show under the fields. */
+export function LoginForm({ onSubmit }: LoginFormProps) {
   const { t } = useTranslation()
   const form = useForm<LoginRequest>({
-    resolver: zodResolver(schema, { error: fieldMessages(messages) }),
+    resolver: zodResolver(PostApiAuthLoginBody),
     defaultValues: { email: '', password: '' },
   })
   const { errors, isSubmitting } = form.formState
@@ -68,7 +55,7 @@ export function CredentialsForm({
           <Input
             id="password"
             type="password"
-            autoComplete={passwordAutoComplete}
+            autoComplete="current-password"
             aria-invalid={!!errors.password}
             {...form.register('password')}
           />
@@ -76,7 +63,7 @@ export function CredentialsForm({
         </Field>
         <FieldError errors={[errors.root]} />
         <Button type="submit" disabled={isSubmitting}>
-          {submitLabel}
+          {t('login.submit')}
         </Button>
       </FieldGroup>
     </form>

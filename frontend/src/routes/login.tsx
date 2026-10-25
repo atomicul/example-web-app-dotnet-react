@@ -2,11 +2,10 @@ import { Link, createFileRoute } from '@tanstack/react-router'
 import type { ParseKeys } from 'i18next'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PostApiAuthLoginBody } from '@/api/generated/index.zod'
 import type { LoginRequest, TwoFactorMethod } from '@/api/generated/model'
 import { AuthCard } from '@/auth/auth-card'
-import { CredentialsForm } from '@/auth/credentials-form'
 import { loginFailureReason, twoFactorMethodOf } from '@/auth/login-failure'
+import { LoginForm } from '@/auth/login-form'
 import { publicSearchSchema, redirectWhenSignedIn } from '@/auth/public-route'
 import { ResendConfirmationButton } from '@/auth/resend-confirmation-button'
 import { TwoFactorStep } from '@/auth/two-factor-step'
@@ -92,12 +91,7 @@ function LoginPage() {
       }
     >
       <div className="flex flex-col gap-4">
-        <CredentialsForm
-          schema={PostApiAuthLoginBody}
-          submitLabel={t('login.submit')}
-          passwordAutoComplete="current-password"
-          onSubmit={submit}
-        />
+        <LoginForm onSubmit={submit} />
         {unconfirmedEmail && (
           <ResendConfirmationButton email={unconfirmedEmail} />
         )}

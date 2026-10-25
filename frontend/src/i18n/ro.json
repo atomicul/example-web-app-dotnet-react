@@ -55,6 +55,7 @@
     "submit": "Creează contul",
     "emailRules": "Introdu o adresă de email validă.",
     "passwordRules": "Folosește cel puțin 6 caractere, cu o literă mare, o literă mică, o cifră și un simbol.",
+    "confirmPassword": "Confirmă parola",
     "checkEmail": "Verifică-ți emailul",
     "linkSent": "Ți-am trimis un link de confirmare la {{email}}. Deschide-l ca să-ți activezi contul, apoi autentifică-te.",
     "goToLogIn": "Mergi la autentificare"

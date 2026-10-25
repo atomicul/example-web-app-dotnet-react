@@ -54,6 +54,7 @@
     "submit": "Create account",
     "emailRules": "Enter a valid email address.",
     "passwordRules": "Use at least 6 characters, with an uppercase letter, a lowercase letter, a digit and a symbol.",
+    "confirmPassword": "Confirm password",
     "checkEmail": "Check your email",
     "linkSent": "We sent a confirmation link to {{email}}. Open it to activate your account, then log in.",
     "goToLogIn": "Go to log in"
