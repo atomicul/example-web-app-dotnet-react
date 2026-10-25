@@ -24,7 +24,8 @@ if (!isGeneratingOpenApiDocument)
 
 builder.Services.AddAuthorization();
 builder.Services.AddIdentityApiEndpoints<IdentityUser>(options => options.SignIn.RequireConfirmedEmail = true)
-    .AddEntityFrameworkStores<AppDbContext>();
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddSignInManager<TwoFactorSignInManager>();
 builder.Services.AddEmails();
 builder.Services.AddTrustedProxies(builder.Configuration);
 builder.Services.AddRateLimits(builder.Configuration);

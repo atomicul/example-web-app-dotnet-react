@@ -7,8 +7,11 @@ namespace TodoApi;
 /// Stand-in for a real email service that writes Identity emails to the application log.
 /// Identity HTML-encodes links for embedding in markup, so they are decoded here to stay clickable.
 /// </summary>
-public class LoggingEmailSender(ILogger<LoggingEmailSender> logger) : IEmailSender<IdentityUser>
+public class LoggingEmailSender(ILogger<LoggingEmailSender> logger) : IEmailSender<IdentityUser>, ITwoFactorCodeSender
 {
+    public Task SendTwoFactorCodeAsync(IdentityUser user, string email, string code) =>
+        Log(email, "Your login code", code);
+
     public Task SendConfirmationLinkAsync(IdentityUser user, string email, string confirmationLink) =>
         Log(email, "Confirm your email", WebUtility.HtmlDecode(confirmationLink));
 

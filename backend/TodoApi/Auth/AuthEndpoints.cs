@@ -23,6 +23,7 @@ public static class AuthEndpoints
         var identity = auth.MapIdentityApi<IdentityUser>();
         identity.Add(LimitEmailSending);
         identity.Add(GuardAccountChanges);
+        identity.Add(SendTwoFactorCodes);
         identity.AddEndpointFilter(ValidationProblems.CodeIdentityErrors);
         auth.MapPost("/logout", Logout).RequireAuthorization();
         auth.MapGet("/manage/pendingEmail", AccountChanges.GetPendingEmail).RequireAuthorization().WithName("GetPendingEmail");
@@ -59,6 +60,15 @@ public static class AuthEndpoints
         else if (Is(endpoint, HttpMethods.Get, "/confirmEmail"))
         {
             endpoint.FilterFactories.Add((_, next) => invocation => AccountChanges.GuardEmailConfirmationAsync(invocation, next));
+        }
+    }
+
+    /// <summary>Runs <see cref="TwoFactorCodes.SendAsync"/> around <c>POST /login</c>.</summary>
+    private static void SendTwoFactorCodes(EndpointBuilder endpoint)
+    {
+        if (Is(endpoint, HttpMethods.Post, "/login"))
+        {
+            endpoint.FilterFactories.Add((_, next) => invocation => TwoFactorCodes.SendAsync(invocation, next));
         }
     }
 

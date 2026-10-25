@@ -15,7 +15,8 @@ namespace TodoApi.Tests;
 
 /// <summary>
 /// Runs the API against a migrated SQL Server in Docker, shared by every test in the run. Tests stay isolated by
-/// registering their own users, since all data belongs to a user. Emails are captured instead of logged.
+/// registering their own users, since all data belongs to a user. Emails are captured instead of logged, and logins
+/// ask for no emailed code unless a test turns <c>TwoFactor:Enabled</c> on.
 /// </summary>
 public class TodoApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
@@ -41,9 +42,11 @@ public class TodoApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
             ["SpaUrl"] = SpaUrl,
             ["RateLimits:Api:PermitLimit"] = "100000",
             ["RateLimits:Email:PermitLimit"] = "100000",
+            ["TwoFactor:Enabled"] = "false",
         }));
-        builder.ConfigureTestServices(services =>
-            services.AddKeyedSingleton<IEmailSender<IdentityUser>>(SpaLinkEmailSender.TransportKey, Emails));
+        builder.ConfigureTestServices(services => services
+            .AddKeyedSingleton<IEmailSender<IdentityUser>>(SpaLinkEmailSender.TransportKey, Emails)
+            .AddSingleton<ITwoFactorCodeSender>(Emails));
     }
 
     /// <summary>

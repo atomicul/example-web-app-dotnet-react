@@ -58,9 +58,9 @@ public static class TestUsers
     }
 
     public static Task<HttpResponseMessage> LoginAsync(
-        this HttpClient client, string email, bool useCookies = false, string password = Password) =>
+        this HttpClient client, string email, bool useCookies = false, string password = Password, string? twoFactorCode = null) =>
         client.PostAsJsonAsync(
             $"/api/auth/login?useCookies={useCookies}",
-            new LoginRequest { Email = email, Password = password },
+            new LoginRequest { Email = email, Password = password, TwoFactorCode = twoFactorCode },
             CancellationToken);
 }

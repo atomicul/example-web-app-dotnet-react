@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react'
 
-/** Counts whole seconds down to zero; `start` begins a new count. */
-export function useCooldown() {
-  const [secondsLeft, setSecondsLeft] = useState(0)
+/** Counts whole seconds down to zero, from `initialSeconds` at first; `start` begins a new count. */
+export function useCooldown(initialSeconds = 0) {
+  const [secondsLeft, setSecondsLeft] = useState(initialSeconds)
 
   useEffect(() => {
     if (secondsLeft <= 0) {

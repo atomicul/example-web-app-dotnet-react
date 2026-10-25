@@ -27,6 +27,9 @@ conventions that pick routes by method and path, rather than writing them anew:
   runs, because it counts a request only once the endpoint succeeds.
 - The filters in `Auth/AccountChanges.cs` run around `POST /manage/info`, which checks a new email and remembers it
   until it is confirmed, and around `GET /confirmEmail`, which only confirms the email remembered.
+- The filter in `Auth/TwoFactorCodes.cs` runs around `POST /login`, and emails a code when Identity asks for a second
+  factor. `Auth/TwoFactorSignInManager.cs` makes Identity ask every user while `TwoFactor:Enabled` is on, and checks
+  the code with Identity's email provider, as `/login` would otherwise check it with the authenticator app's.
 
 Endpoints Identity lacks, such as `GET` and `DELETE /manage/pendingEmail`, are mapped next to them.
 
@@ -107,7 +110,8 @@ return todo is null ? TypedResults.NotFound() : TypedResults.Ok(TodoResponse.Fro
 The root README's [Cloud services](../README.md#cloud-services) section sets the rule; in code, each feature that
 uses a service looks like the emails:
 
-- The feature's own interface is the swap point: Identity's `IEmailSender<IdentityUser>`.
+- The feature's own interface is the swap point: Identity's `IEmailSender<IdentityUser>`, and `ITwoFactorCodeSender`
+  for the codes that finish a login, which Identity's interface has no method for.
 - The stand-in implementation needs nothing but the API (`LoggingEmailSender`).
 - One registration method registers it, with no setting (`Emails.AddEmails`). Behaviour every transport shares wraps
   it instead of being repeated: `SpaLinkEmailSender` points links at the SPA, turning password reset codes into
@@ -118,7 +122,8 @@ uses a service looks like the emails:
 `TodoApi.Tests` boots the whole API with `WebApplicationFactory` against SQL Server in a Docker container that
 Testcontainers starts and removes for each run, so the tests also apply the real migrations. Every test registers its
 own user, and all data belongs to a user, so tests share the database without resetting it. Identity's emails are
-captured instead of logged, which lets tests follow confirmation links. Run them alone with
+captured instead of logged, which lets tests follow confirmation links. Logins ask for no code unless a test turns
+`TwoFactor:Enabled` on, as `TwoFactorTests` does. Run them alone with
 `dotnet test --solution backend/TodoApp.slnx`.
 
 Tests act as a client would, through the helpers in `TestUsers` and `TodoClient`. A refused request is read with

@@ -78,6 +78,13 @@ confirms the address; the login page can send a new link. The API sends emails a
 the API's `SpaUrl` setting as their origin, or the API's own origin when it is unset; `make dev` sets it to the Vite dev
 server (`SPA_URL`).
 
+While the `TwoFactor:Enabled` setting is on, as `appsettings.json` has it, every login also needs a code emailed to
+the user. `POST /api/auth/login` with the right password answers `401` with the detail `RequiresTwoFactor` and emails
+a code, and the same request with the code in `twoFactorCode` signs the user in; logging in again without a code
+sends a new one. The SPA's login page asks for the code once the password is right. No browser is remembered, so
+every login asks, and a wrong code counts towards the lockout as a wrong password does. `appsettings.Development.json`
+turns it off, so `make dev` logs in with the password alone; set it to `true` there to try it.
+
 A user who forgot their password asks for a link on the SPA's `/forgot-password` page, linked from the login page,
 through Identity's `POST /api/auth/forgotPassword`. Identity emails a code only to an account's confirmed email, and
 answers the same whether it sent one or not. The API turns the code into a link to the SPA's `/reset-password` page,
@@ -125,16 +132,18 @@ shows an error in the user's language when it translates the code, and as the AP
 ## Email
 
 The API writes every email it would send to its log: the address, the subject and the link or code it carries. Links are
-plain URLs, not HTML-encoded. A deployment that delivers them implements Identity's `IEmailSender` (see
-[Cloud services](#cloud-services)).
+plain URLs, not HTML-encoded. A deployment that delivers them implements Identity's `IEmailSender`, and
+`ITwoFactorCodeSender` for the codes that finish a login (see [Cloud services](#cloud-services)).
 
 ## Rate limiting
 
 Every `/api` request is limited per client IP, and requests that send an email are held to a stricter limit, counted
 apart for each kind of email, so sending one kind never holds back another: confirmation links (registration, resending
-the link and email changes) and password reset links. Only a request that succeeds counts towards its email limit, so
-a refused registration counts towards the request limit alone; one that succeeds counts even when no email goes out,
-as for an unknown address, so the limit doesn't tell which addresses have an account. Each limit is a fixed window
+the link and email changes), password reset links and the codes that finish a login. Only a request that succeeds
+counts towards its email limit, so a refused registration counts towards the request limit alone; one that succeeds
+counts even when no email goes out, as for an unknown address, so the limit doesn't tell which addresses have an
+account. A login counts only when it sends a code, so a wrong password, or the login that submits the code, is never
+held back. Each limit is a fixed window
 set in the API's `RateLimits` setting (`RateLimits:Api`, and `RateLimits:Email` for every kind of email, each a
 `PermitLimit` and a `Window`); the defaults in `appsettings.json` are 100 requests and one email of each kind a
 minute. A rejected request gets a `429 Too Many Requests` with a `Retry-After` header in seconds.
@@ -203,6 +212,7 @@ list items take their index as the last level. Both commands read the same setti
 | `Kestrel__Endpoints__Http__Url` | none | The HTTP address to listen on; Kestrel endpoints replace `ASPNETCORE_HTTP_PORTS`, so set it with an HTTPS endpoint, e.g. `http://*:8080` |
 | `HTTPS_PORT` | the HTTPS endpoint's port | The port HTTP is redirected to, when the container's HTTPS port is published on another one |
 | `AcmeChallenge__WebRoot` | none | The web root of an ACME client, whose challenge files the app serves (see [HTTPS](#https)) |
+| `TwoFactor__Enabled` | `true` | Whether every login also needs a code emailed to the user (see [Authentication](#authentication)) |
 | `RateLimits__Api__PermitLimit`, `RateLimits__Api__Window` | `100`, `00:01:00` | Requests per client IP per window, for every `/api` request |
 | `RateLimits__Email__PermitLimit`, `RateLimits__Email__Window` | `1`, `00:01:00` | The same, for requests that send an email, counted apart for each kind of email |
 | `ASPNETCORE_HTTP_PORTS` | `8080` | The port the app listens on inside the container |

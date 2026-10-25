@@ -20,10 +20,21 @@
     "submit": "Autentifică-te",
     "notAllowed": "Confirmă-ți adresa de email înainte să te autentifici.",
     "lockedOut": "Prea multe încercări eșuate. Încearcă din nou peste câteva minute.",
-    "requiresTwoFactor": "Acest cont folosește autentificarea în doi pași, pe care aplicația nu o suportă încă.",
     "invalidCredentials": "Adresă de email sau parolă incorectă.",
     "forgotCredentials": "Ți-ai uitat datele de autentificare?",
     "resetPassword": "Resetează-ți parola"
+  },
+  "twoFactor": {
+    "title": "Verifică-ți emailul",
+    "description": "Ți-am trimis un cod la {{email}}. Introdu-l ca să termini autentificarea.",
+    "code": "Cod",
+    "codeRequired": "Introdu codul primit pe email.",
+    "submit": "Autentifică-te",
+    "wrongCode": "Codul este greșit sau a expirat. Verifică-l sau cere unul nou.",
+    "resend": "Trimite un cod nou",
+    "resendIn": "Trimite un cod nou în {{seconds}}s",
+    "sent": "Ți-am trimis un cod nou la {{email}}.",
+    "useAnotherAccount": "Folosește alt cont"
   },
   "register": {
     "title": "Creează un cont",

@@ -19,10 +19,21 @@
     "submit": "Log in",
     "notAllowed": "Confirm your email before logging in.",
     "lockedOut": "Too many failed attempts. Try again in a few minutes.",
-    "requiresTwoFactor": "This account uses two-factor authentication, which this app does not support yet.",
     "invalidCredentials": "Invalid email or password.",
     "forgotCredentials": "Forgot the credentials?",
     "resetPassword": "Reset your password"
+  },
+  "twoFactor": {
+    "title": "Check your email",
+    "description": "We sent a code to {{email}}. Enter it to finish logging in.",
+    "code": "Code",
+    "codeRequired": "Enter the code we emailed you.",
+    "submit": "Log in",
+    "wrongCode": "That code is wrong or has expired. Check it, or ask for a new one.",
+    "resend": "Send a new code",
+    "resendIn": "Send a new code in {{seconds}}s",
+    "sent": "We sent a new code to {{email}}.",
+    "useAnotherAccount": "Use another account"
   },
   "register": {
     "title": "Create an account",
