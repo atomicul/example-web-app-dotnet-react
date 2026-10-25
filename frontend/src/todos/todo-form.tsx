@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
+import { CalendarIcon } from 'lucide-react'
+import { useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { CreateTodoBody } from '@/api/generated/index.zod'
 import type { TodoRequest, TodoResponse } from '@/api/generated/model'
@@ -26,6 +27,7 @@ export function TodoForm({ todo, submitLabel, onSubmit }: TodoFormProps) {
     },
   })
   const { errors, isSubmitting } = form.formState
+  const dueDate = useWatch({ control: form.control, name: 'dueDate' })
 
   async function submit(values: TodoRequest) {
     try {
@@ -65,14 +67,25 @@ export function TodoForm({ todo, submitLabel, onSubmit }: TodoFormProps) {
           >
             {t('todos.dueDate')}
           </FieldLabel>
-          <Input
-            id={`due-date-${todo?.id ?? 'new'}`}
-            type="date"
-            aria-invalid={!!errors.dueDate}
-            {...form.register('dueDate', {
-              setValueAs: (value) => value || null,
-            })}
-          />
+          <div className="relative">
+            <Input
+              id={`due-date-${todo?.id ?? 'new'}`}
+              type="date"
+              aria-invalid={!!errors.dueDate}
+              {...form.register('dueDate', {
+                setValueAs: (value) => value || null,
+              })}
+            />
+            <div
+              aria-hidden
+              className="pointer-events-none absolute inset-0 hidden items-center justify-between px-2.5 text-base supports-[-webkit-touch-callout:none]:flex md:text-sm"
+            >
+              <span className="text-muted-foreground">
+                {!dueDate && t('todos.dueDate')}
+              </span>
+              <CalendarIcon className="size-4" />
+            </div>
+          </div>
           <FieldError errors={[errors.dueDate]} />
         </Field>
         <Button type="submit" disabled={isSubmitting}>

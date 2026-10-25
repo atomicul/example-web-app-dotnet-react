@@ -83,6 +83,11 @@ const form = useForm({ resolver: zodResolver(CreateTodoBody), defaultValues })
   root error, which the form shows under its fields. The mutation sets `meta.handlesErrors`, so it isn't toasted too.
 - When a page explains a failure in its own words, as login does for unconfirmed or locked-out accounts, it throws a
   `FormError` with the message, which `setServerErrors` shows on the root error.
+- `Input` turns off the browser's own look of a field (`appearance-none`), as iOS otherwise draws a date field wider
+  than its container and taller than the other fields. iOS also leaves an empty date field blank, without the
+  format and calendar icon other browsers show, so the todo form draws "Due date" and a calendar icon over its date
+  field on iOS alone
+  (`supports-[-webkit-touch-callout:none]:`, a property only iOS supports).
 
 ## Translations
 
