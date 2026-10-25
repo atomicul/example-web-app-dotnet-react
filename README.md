@@ -174,6 +174,11 @@ it with gzip and brotli, and the API serves the list with `MapStaticAssets`, com
 it, with an ETag of each file's content. A file added to `wwwroot` after publishing isn't served. Every other path that
 isn't a file, outside `/api`, gets the SPA's `index.html`, whose router shows the page.
 
+Vite names every file it builds under `assets/` after its content, so a new release changes the names of the files it
+changes, and the API tells browsers to keep files under `/assets` for a year without asking again
+(`Cache-Control: max-age=31536000, immutable`). Only such files may go there: a file whose content changes under the
+same name, as those in the SPA's `public/` folder keep theirs, would stay as browsers first saw it.
+
 ## HTTPS
 
 The app serves HTTPS itself when Kestrel has an `Https` endpoint, e.g. in `appsettings.Production.json`:
