@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Web;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Identity.Data;
 
@@ -44,6 +45,17 @@ public static class TestUsers
     /// <summary>Changes the signed-in user's email or password through Identity's <c>POST /manage/info</c>.</summary>
     public static Task<HttpResponseMessage> ChangeInfoAsync(this HttpClient client, InfoRequest request) =>
         client.PostAsJsonAsync("/api/auth/manage/info", request, CancellationToken);
+
+    public static Task<HttpResponseMessage> ForgotPasswordAsync(this HttpClient client, string email) =>
+        client.PostAsJsonAsync("/api/auth/forgotPassword", new ForgotPasswordRequest { Email = email }, CancellationToken);
+
+    /// <summary>Sets a new password with the email and code of a link to the SPA's password reset page.</summary>
+    public static Task<HttpResponseMessage> ResetPasswordAsync(this HttpClient client, Uri resetLink, string newPassword)
+    {
+        var query = HttpUtility.ParseQueryString(resetLink.Query);
+        var request = new ResetPasswordRequest { Email = query["email"]!, ResetCode = query["code"]!, NewPassword = newPassword };
+        return client.PostAsJsonAsync("/api/auth/resetPassword", request, CancellationToken);
+    }
 
     public static Task<HttpResponseMessage> LoginAsync(
         this HttpClient client, string email, bool useCookies = false, string password = Password) =>

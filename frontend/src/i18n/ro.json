@@ -21,7 +21,9 @@
     "notAllowed": "Confirmă-ți adresa de email înainte să te autentifici.",
     "lockedOut": "Prea multe încercări eșuate. Încearcă din nou peste câteva minute.",
     "requiresTwoFactor": "Acest cont folosește autentificarea în doi pași, pe care aplicația nu o suportă încă.",
-    "invalidCredentials": "Adresă de email sau parolă incorectă."
+    "invalidCredentials": "Adresă de email sau parolă incorectă.",
+    "forgotCredentials": "Ți-ai uitat datele de autentificare?",
+    "resetPassword": "Resetează-ți parola"
   },
   "register": {
     "title": "Creează un cont",
@@ -44,6 +46,27 @@
     "backToLogIn": "Înapoi la autentificare",
     "changed": "Email schimbat",
     "changedDescription": "Contul tău folosește acum {{email}}. De acum înainte, autentifică-te cu el."
+  },
+  "forgotPassword": {
+    "title": "Resetează-ți parola",
+    "description": "Introdu adresa de email și îți vom trimite un link ca să alegi o parolă nouă.",
+    "submit": "Trimite linkul",
+    "remembered": "Ți-ai amintit-o?",
+    "logIn": "Autentifică-te",
+    "checkEmail": "Verifică-ți emailul",
+    "linkSent": "Dacă {{email}} aparține unui cont, i-am trimis un link ca să alegi o parolă nouă.",
+    "backToLogIn": "Înapoi la autentificare"
+  },
+  "resetPassword": {
+    "title": "Alege o parolă nouă",
+    "description": "Alege o parolă nouă pentru {{email}}.",
+    "submit": "Resetează parola",
+    "reset": "Parolă resetată",
+    "resetDescription": "Parola ți-a fost schimbată. Autentifică-te cu cea nouă.",
+    "logIn": "Autentifică-te",
+    "invalid": "Link invalid sau expirat",
+    "invalidDescription": "Acest link nu mai funcționează. Cere unul nou ca să-ți resetezi parola.",
+    "newLink": "Primește un link nou"
   },
   "resendConfirmation": {
     "resend": "Retrimite emailul de confirmare",

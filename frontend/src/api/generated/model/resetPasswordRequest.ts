@@ -9,5 +9,10 @@
 export interface ResetPasswordRequest {
   email: string;
   resetCode: string;
+  /**
+     * Use at least 6 characters, with an uppercase letter, a lowercase letter, a digit and a symbol.
+     * @minLength 6
+     * @pattern ^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])
+     */
   newPassword: string;
 }

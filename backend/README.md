@@ -82,7 +82,7 @@ it, so run it after changing an endpoint or a contract. When something the API e
 default, a transformer writes it there:
 
 - `Auth/CredentialRulesSchemaTransformer.cs` writes the email and password rules of Identity's `IdentityOptions` into
-  the schemas of the requests that set them, `RegisterRequest` and `InfoRequest`.
+  the schemas of the requests that set them, `RegisterRequest`, `InfoRequest` and `ResetPasswordRequest`.
 - `Validation/ValidationIssuesSchemaTransformer.cs` documents the `issues` member of validation problems.
 - `BearerSecurityTransformer.cs` adds the bearer scheme and marks the operations that require it.
 
@@ -105,8 +105,8 @@ uses a service looks like the emails:
 - The feature's own interface is the swap point: Identity's `IEmailSender<IdentityUser>`.
 - The stand-in implementation needs nothing but the API (`LoggingEmailSender`).
 - One registration method registers it, with no setting (`Emails.AddEmails`). Behaviour every transport shares wraps
-  it instead of being repeated: `SpaLinkEmailSender` points links at the SPA and hands the email to the keyed
-  transport.
+  it instead of being repeated: `SpaLinkEmailSender` points links at the SPA, turning password reset codes into
+  links too, and hands the email to the keyed transport.
 
 ## Tests
 

@@ -8,36 +8,41 @@ namespace TodoApi.Auth;
 
 /// <summary>
 /// Describes the rules Identity applies to a new email and password in the schemas of the requests that set them,
-/// <see cref="RegisterRequest"/> and <see cref="InfoRequest"/>, so clients can check them before sending: the
-/// characters a user name (the email) may use, and the password requirements.
+/// <see cref="RegisterRequest"/>, <see cref="InfoRequest"/> and <see cref="ResetPasswordRequest"/>, so clients can
+/// check them before sending: the characters a user name (the email) may use, and the password requirements.
 /// <see cref="PasswordOptions.RequiredUniqueChars"/> can't be written as a pattern and is left to the server.
 /// </summary>
 public class CredentialRulesSchemaTransformer(IOptions<IdentityOptions> identityOptions) : IOpenApiSchemaTransformer
 {
-    /// <summary>The email and password properties of each request that sets them.</summary>
-    private static readonly Dictionary<Type, (string Email, string Password)> CredentialProperties = new()
+    /// <summary>The new email, if any, and the new password properties of each request that sets them.</summary>
+    private static readonly Dictionary<Type, (string? Email, string Password)> CredentialProperties = new()
     {
         [typeof(RegisterRequest)] = ("email", "password"),
         [typeof(InfoRequest)] = ("newEmail", "newPassword"),
+        [typeof(ResetPasswordRequest)] = (null, "newPassword"),
     };
 
     public Task TransformAsync(OpenApiSchema schema, OpenApiSchemaTransformerContext context, CancellationToken cancellationToken)
     {
-        if (!CredentialProperties.TryGetValue(context.JsonTypeInfo.Type, out var names)
-            || schema.Properties?[names.Email] is not OpenApiSchema email
-            || schema.Properties[names.Password] is not OpenApiSchema password)
+        if (!CredentialProperties.TryGetValue(context.JsonTypeInfo.Type, out var names) || schema.Properties is not { } properties)
         {
             return Task.CompletedTask;
         }
 
-        var allowedCharacters = identityOptions.Value.User.AllowedUserNameCharacters;
-        email.Pattern = EmailPattern(allowedCharacters);
-        email.Description = EmailDescription(allowedCharacters);
+        if (names.Email is not null && properties[names.Email] is OpenApiSchema email)
+        {
+            var allowedCharacters = identityOptions.Value.User.AllowedUserNameCharacters;
+            email.Pattern = EmailPattern(allowedCharacters);
+            email.Description = EmailDescription(allowedCharacters);
+        }
 
-        var passwordOptions = identityOptions.Value.Password;
-        password.MinLength = passwordOptions.RequiredLength;
-        password.Pattern = PasswordPattern(passwordOptions);
-        password.Description = PasswordDescription(passwordOptions);
+        if (properties[names.Password] is OpenApiSchema password)
+        {
+            var passwordOptions = identityOptions.Value.Password;
+            password.MinLength = passwordOptions.RequiredLength;
+            password.Pattern = PasswordPattern(passwordOptions);
+            password.Description = PasswordDescription(passwordOptions);
+        }
         return Task.CompletedTask;
     }
 

@@ -72,10 +72,16 @@ export const PostApiAuthForgotPasswordBody = zod.object({
 
 export const PostApiAuthForgotPasswordResponse = zod.unknown()
 
+export const postApiAuthResetPasswordBodyNewPasswordMin = 6;
+
+
+export const postApiAuthResetPasswordBodyNewPasswordRegExp = new RegExp('^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])');
+
+
 export const PostApiAuthResetPasswordBody = zod.object({
   "email": zod.string(),
   "resetCode": zod.string(),
-  "newPassword": zod.string()
+  "newPassword": zod.string().min(postApiAuthResetPasswordBodyNewPasswordMin).regex(postApiAuthResetPasswordBodyNewPasswordRegExp).describe('Use at least 6 characters, with an uppercase letter, a lowercase letter, a digit and a symbol.')
 })
 
 export const PostApiAuthResetPasswordResponse = zod.unknown()

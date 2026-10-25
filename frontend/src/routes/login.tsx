@@ -60,12 +60,20 @@ function LoginPage() {
       title={t('login.title')}
       description={t('login.description')}
       footer={
-        <p>
-          {t('login.newHere')}{' '}
-          <Link to="/register" search={search} className="underline">
-            {t('login.createAccount')}
-          </Link>
-        </p>
+        <div className="flex flex-col gap-1">
+          <p>
+            {t('login.newHere')}{' '}
+            <Link to="/register" search={search} className="underline">
+              {t('login.createAccount')}
+            </Link>
+          </p>
+          <p>
+            {t('login.forgotCredentials')}{' '}
+            <Link to="/forgot-password" search={search} className="underline">
+              {t('login.resetPassword')}
+            </Link>
+          </p>
+        </div>
       }
     >
       <div className="flex flex-col gap-4">

@@ -20,7 +20,9 @@
     "notAllowed": "Confirm your email before logging in.",
     "lockedOut": "Too many failed attempts. Try again in a few minutes.",
     "requiresTwoFactor": "This account uses two-factor authentication, which this app does not support yet.",
-    "invalidCredentials": "Invalid email or password."
+    "invalidCredentials": "Invalid email or password.",
+    "forgotCredentials": "Forgot the credentials?",
+    "resetPassword": "Reset your password"
   },
   "register": {
     "title": "Create an account",
@@ -43,6 +45,27 @@
     "backToLogIn": "Back to log in",
     "changed": "Email changed",
     "changedDescription": "Your account now uses {{email}}. Log in with it from now on."
+  },
+  "forgotPassword": {
+    "title": "Reset your password",
+    "description": "Enter your email and we will send you a link to choose a new password.",
+    "submit": "Send link",
+    "remembered": "Remembered it?",
+    "logIn": "Log in",
+    "checkEmail": "Check your email",
+    "linkSent": "If {{email}} belongs to an account, we sent it a link to choose a new password.",
+    "backToLogIn": "Back to log in"
+  },
+  "resetPassword": {
+    "title": "Choose a new password",
+    "description": "Pick a new password for {{email}}.",
+    "submit": "Reset password",
+    "reset": "Password reset",
+    "resetDescription": "Your password has been changed. Log in with the new one.",
+    "logIn": "Log in",
+    "invalid": "Link invalid or expired",
+    "invalidDescription": "This link no longer works. Ask for a new one to reset your password.",
+    "newLink": "Get a new link"
   },
   "resendConfirmation": {
     "resend": "Resend confirmation email",

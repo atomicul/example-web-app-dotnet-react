@@ -926,7 +926,10 @@
             "type": "string"
           },
           "newPassword": {
-            "type": "string"
+            "minLength": 6,
+            "pattern": "^(?=.*[A-Z])(?=.*[a-z])(?=.*[0-9])(?=.*[^a-zA-Z0-9])",
+            "type": "string",
+            "description": "Use at least 6 characters, with an uppercase letter, a lowercase letter, a digit and a symbol."
           }
         }
       },

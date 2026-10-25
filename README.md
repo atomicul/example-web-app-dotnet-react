@@ -78,9 +78,16 @@ confirms the address; the login page can send a new link. The API sends emails a
 the API's `SpaUrl` setting as their origin, or the API's own origin when it is unset; `make dev` sets it to the Vite dev
 server (`SPA_URL`).
 
-Identity's `IdentityOptions` decide which emails and passwords registration and account changes accept. The API writes
-those rules into the `RegisterRequest` and `InfoRequest` schemas of its OpenAPI document, so after changing them,
-`make api` updates the SPA's checks. The
+A user who forgot their password asks for a link on the SPA's `/forgot-password` page, linked from the login page,
+through Identity's `POST /api/auth/forgotPassword`. Identity emails a code only to an account's confirmed email, and
+answers the same whether it sent one or not. The API turns the code into a link to the SPA's `/reset-password` page,
+with the same origin as confirmation links, which sets the new password with `POST /api/auth/resetPassword`. The link
+works once, for a day at most, and stops working when the password changes. Like a password change, a reset ends
+every session of the user within 30 minutes.
+
+Identity's `IdentityOptions` decide which emails and passwords registration, account changes and password resets
+accept. The API writes those rules into the `RegisterRequest`, `InfoRequest` and `ResetPasswordRequest` schemas of its
+OpenAPI document, so after changing them, `make api` updates the SPA's checks. The
 SPA explains the rules in its own words, which don't follow them: after changing the password rules, also update
 `register.passwordRules` in its catalogs (see the SPA's [Forms](frontend/README.md#forms)).
 
@@ -97,7 +104,7 @@ Signed-in users change their email and password on the SPA's `/account` page, th
   the user ends within 30 minutes, when Identity next checks its security stamp. Confirming a new email ends them
   the same way.
 
-Every page of the SPA except login, registration and email confirmation requires a session.
+Every page of the SPA except login, registration, email confirmation and password reset requires a session.
 
 The app keeps the keys that protect its cookies, bearer tokens and emailed links in the database, so sessions survive
 restarts and redeploys and are shared by every instance. Without a certificate, the keys are stored unencrypted, so
