@@ -163,6 +163,11 @@ Pages are files under `src/routes`, which TanStack Router turns into routes; tho
 session. Their paths form a tree: a page's parent is its path without the last segment, so `/account/email` sits
 under `/account`, which sits under `/`. Nest a new page's path under the page it is opened from and goes back to.
 
+The layouts fill the screen (`h-svh`, `min-h-svh`) and scroll inside it, never the page itself. The viewport's
+`interactive-widget=resizes-content` in `index.html` shrinks the screen above the on-screen keyboard while it is open,
+so the layouts fit above it rather than scrolling under it. Safari on iOS ignores it and lays the keyboard over the
+page, which then scrolls by the keyboard's height.
+
 Every page but the top one is laid out by `Page` (`src/components/page.tsx`): a back button to its parent and its
 title, then its content. Pages fetch what they show in their route's `loader`, as `/account` does, and read it
 through query hooks (see [Loading data](#loading-data)):
