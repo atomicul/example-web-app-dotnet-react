@@ -20,9 +20,14 @@ public static async Task<Results<Ok<TodoResponse>, NotFound>> GetById(int id, Ap
 ```
 
 Identity's own endpoints come from `MapIdentityApi`, under `/api/auth`. `Auth/AuthEndpoints.cs` adjusts them with
-conventions that pick routes by method and path, rather than writing them anew: the stricter rate limit of those that
-send an email, and the filters in `Auth/AccountChanges.cs`: around `POST /manage/info`, which checks a new email and
-remembers it until it is confirmed, and around `GET /confirmEmail`, which only confirms the email remembered.
+conventions that pick routes by method and path, rather than writing them anew:
+
+- The endpoints that send an email get the stricter limit of the kind of email they send, from `EmailLimits.cs`. It is
+  an endpoint filter rather than a policy of the rate limiting middleware, which counts a request before the endpoint
+  runs, because it counts a request only once the endpoint succeeds.
+- The filters in `Auth/AccountChanges.cs` run around `POST /manage/info`, which checks a new email and remembers it
+  until it is confirmed, and around `GET /confirmEmail`, which only confirms the email remembered.
+
 Endpoints Identity lacks, such as `GET` and `DELETE /manage/pendingEmail`, are mapped next to them.
 
 ## Validation errors

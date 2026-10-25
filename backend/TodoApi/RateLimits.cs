@@ -1,12 +1,12 @@
 using System.Globalization;
 using System.Threading.RateLimiting;
-using Microsoft.AspNetCore.RateLimiting;
 
 namespace TodoApi;
 
 /// <summary>
 /// Per-client request limits, keyed by remote IP address, each a fixed window read from the
-/// <c>RateLimits:{policy}</c> configuration section.
+/// <c>RateLimits:{name}</c> configuration section: <see cref="Api"/> for every API request, and the
+/// <see cref="EmailLimits"/> for requests that send an email.
 /// A rejected request gets a 429 with a <c>Retry-After</c> header in seconds.
 /// </summary>
 public static class RateLimits
@@ -16,33 +16,42 @@ public static class RateLimits
     /// <summary>Every API request.</summary>
     public const string Api = "api";
 
-    /// <summary>Requests that send an email.</summary>
-    public const string Email = "email";
-
     public static IServiceCollection AddRateLimits(this IServiceCollection services, IConfiguration configuration) =>
-        services.AddRateLimiter(options =>
+        services.AddSingleton<EmailLimits>().AddRateLimiter(options =>
         {
             options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            options.OnRejected = WriteRetryAfter;
+            options.OnRejected = (context, _) =>
+            {
+                WriteRetryAfter(context.HttpContext, context.Lease);
+                return ValueTask.CompletedTask;
+            };
             options.AddPolicy(Api, PerClient(ReadLimit(configuration, Api)));
-            options.AddPolicy(Email, PerClient(ReadLimit(configuration, Email)));
         });
 
-    private static FixedWindowRateLimiterOptions ReadLimit(IConfiguration configuration, string policy) =>
-        configuration.GetRequiredSection($"{Section}:{policy}").Get<FixedWindowRateLimiterOptions>()!;
+    /// <summary>A limiter of its own, outside the rate limiting middleware, with the limit of the named section.</summary>
+    public static PartitionedRateLimiter<HttpContext> CreatePerClientLimiter(IConfiguration configuration, string name) =>
+        PartitionedRateLimiter.Create(PerClient(ReadLimit(configuration, name)));
+
+    /// <summary>The 429 a limiter of <see cref="CreatePerClientLimiter"/> answers with when it refuses a lease.</summary>
+    public static IResult Rejection(HttpContext context, RateLimitLease lease)
+    {
+        WriteRetryAfter(context, lease);
+        return TypedResults.StatusCode(StatusCodes.Status429TooManyRequests);
+    }
+
+    private static FixedWindowRateLimiterOptions ReadLimit(IConfiguration configuration, string name) =>
+        configuration.GetRequiredSection($"{Section}:{name}").Get<FixedWindowRateLimiterOptions>()!;
 
     private static Func<HttpContext, RateLimitPartition<string>> PerClient(FixedWindowRateLimiterOptions limit) =>
         context => RateLimitPartition.GetFixedWindowLimiter(
             context.Connection.RemoteIpAddress?.ToString() ?? string.Empty,
             _ => limit);
 
-    private static ValueTask WriteRetryAfter(OnRejectedContext context, CancellationToken _)
+    private static void WriteRetryAfter(HttpContext context, RateLimitLease lease)
     {
-        if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+        if (lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
         {
-            context.HttpContext.Response.Headers.RetryAfter =
-                Math.Ceiling(retryAfter.TotalSeconds).ToString(CultureInfo.InvariantCulture);
+            context.Response.Headers.RetryAfter = Math.Ceiling(retryAfter.TotalSeconds).ToString(CultureInfo.InvariantCulture);
         }
-        return ValueTask.CompletedTask;
     }
 }

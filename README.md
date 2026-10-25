@@ -130,11 +130,14 @@ plain URLs, not HTML-encoded. A deployment that delivers them implements Identit
 
 ## Rate limiting
 
-Every `/api` request is limited per client IP, and requests that send an email (registration, resending the
-confirmation link, forgotten passwords and email changes) are held to a stricter limit. Each limit is a fixed window set
-in the API's `RateLimits` setting (`RateLimits:Api` and `RateLimits:Email`, each a `PermitLimit` and a `Window`); the
-defaults in `appsettings.json` are 100 requests and one email a minute. A rejected request gets a
-`429 Too Many Requests` with a `Retry-After` header in seconds.
+Every `/api` request is limited per client IP, and requests that send an email are held to a stricter limit, counted
+apart for each kind of email, so sending one kind never holds back another: confirmation links (registration, resending
+the link and email changes) and password reset links. Only a request that succeeds counts towards its email limit, so
+a refused registration counts towards the request limit alone; one that succeeds counts even when no email goes out,
+as for an unknown address, so the limit doesn't tell which addresses have an account. Each limit is a fixed window
+set in the API's `RateLimits` setting (`RateLimits:Api`, and `RateLimits:Email` for every kind of email, each a
+`PermitLimit` and a `Window`); the defaults in `appsettings.json` are 100 requests and one email of each kind a
+minute. A rejected request gets a `429 Too Many Requests` with a `Retry-After` header in seconds.
 
 Behind a reverse proxy, the client IP and scheme come from its `X-Forwarded-For` and `X-Forwarded-Proto` headers,
 but only when the proxy is trusted: loopback always is, and `TrustedProxies:Addresses` (IP addresses) and
@@ -201,7 +204,7 @@ list items take their index as the last level. Both commands read the same setti
 | `HTTPS_PORT` | the HTTPS endpoint's port | The port HTTP is redirected to, when the container's HTTPS port is published on another one |
 | `AcmeChallenge__WebRoot` | none | The web root of an ACME client, whose challenge files the app serves (see [HTTPS](#https)) |
 | `RateLimits__Api__PermitLimit`, `RateLimits__Api__Window` | `100`, `00:01:00` | Requests per client IP per window, for every `/api` request |
-| `RateLimits__Email__PermitLimit`, `RateLimits__Email__Window` | `1`, `00:01:00` | The same, for requests that send an email |
+| `RateLimits__Email__PermitLimit`, `RateLimits__Email__Window` | `1`, `00:01:00` | The same, for requests that send an email, counted apart for each kind of email |
 | `ASPNETCORE_HTTP_PORTS` | `8080` | The port the app listens on inside the container |
 | `ASPNETCORE_ENVIRONMENT` | `Production` | The environment; keep `Production` in deployments |
 | `Logging__LogLevel__Default` | `Information` | The minimum log level |

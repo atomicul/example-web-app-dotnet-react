@@ -1,14 +1,20 @@
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.AspNetCore.Identity.Data;
 using TodoApi.Validation;
 
 namespace TodoApi.Auth;
 
 public static class AuthEndpoints
 {
-    private static readonly string[] EmailSendingRoutes =
-        ["/register", "/resendConfirmationEmail", "/forgotPassword", "/manage/info"];
+    /// <summary>The Identity endpoints that send an email, the kind each sends, and which requests send one.</summary>
+    private static readonly (string Route, EmailKind Kind, Func<EndpointFilterInvocationContext, object?, bool> SendsEmail)[] EmailSendingRoutes =
+    [
+        ("/register", EmailKind.Confirmation, Succeeded),
+        ("/resendConfirmationEmail", EmailKind.Confirmation, Succeeded),
+        ("/manage/info", EmailKind.Confirmation, ChangedEmail),
+        ("/forgotPassword", EmailKind.PasswordReset, Succeeded),
+    ];
 
     public static IEndpointRouteBuilder MapAuth(this IEndpointRouteBuilder app)
     {
@@ -25,17 +31,20 @@ public static class AuthEndpoints
         return app;
     }
 
-    /// <summary>
-    /// Puts the Identity endpoints that send an email under the stricter email limit.
-    /// <c>POST /manage/info</c> sends one when the user changes their email.
-    /// </summary>
+    /// <summary>Puts the Identity endpoints that send an email under the stricter limit of the kind they send.</summary>
     private static void LimitEmailSending(EndpointBuilder endpoint)
     {
-        if (EmailSendingRoutes.Any(route => Is(endpoint, HttpMethods.Post, route)))
+        foreach (var (route, kind, sendsEmail) in EmailSendingRoutes.Where(sending => Is(endpoint, HttpMethods.Post, sending.Route)))
         {
-            endpoint.Metadata.Add(new EnableRateLimitingAttribute(RateLimits.Email));
+            endpoint.FilterFactories.Add((_, next) => invocation => EmailLimits.LimitAsync(invocation, next, kind, sendsEmail));
         }
     }
+
+    private static bool Succeeded(EndpointFilterInvocationContext _, object? result) => EmailLimits.IsSuccess(result);
+
+    /// <summary><c>POST /manage/info</c> sends an email only when it changes the email, not the password alone.</summary>
+    private static bool ChangedEmail(EndpointFilterInvocationContext invocation, object? result) =>
+        EmailLimits.IsSuccess(result) && !string.IsNullOrEmpty(invocation.Arguments.OfType<InfoRequest>().Single().NewEmail);
 
     /// <summary>
     /// Runs <see cref="AccountChanges.GuardInfoAsync"/> around <c>POST /manage/info</c> and
