@@ -179,6 +179,10 @@ changes, and the API tells browsers to keep files under `/assets` for a year wit
 (`Cache-Control: max-age=31536000, immutable`). Only such files may go there: a file whose content changes under the
 same name, as those in the SPA's `public/` folder keep theirs, would stay as browsers first saw it.
 
+The browser asks whether `index.html`, which names the files of its release, changed on every load
+(`Cache-Control: no-cache`), whichever path it is served for. The API answers `304 Not Modified` while the release
+stays the same, so a new release reaches every user on their next load.
+
 ## HTTPS
 
 The app serves HTTPS itself when Kestrel has an `Https` endpoint, e.g. in `appsettings.Production.json`:

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.StaticAssets;
+using Microsoft.AspNetCore.StaticFiles;
 
 namespace TodoApi;
 
@@ -6,7 +7,7 @@ namespace TodoApi;
 /// Serves the SPA that <c>make build</c> puts in <c>wwwroot</c>: its files as the SDK listed and compressed them when
 /// publishing the API, and its <c>index.html</c> for every other path that isn't a file, for the SPA's router.
 /// Vite names every file it builds under <c>assets/</c> after its content, so browsers keep those for a year without
-/// asking again.
+/// asking again, while they ask whether <c>index.html</c>, which names them, changed on every load.
 /// </summary>
 public static class Spa
 {
@@ -16,7 +17,7 @@ public static class Spa
     {
         app.Use(CacheHashedAssetsForever);
         app.MapStaticAssets();
-        app.MapFallbackToFile("index.html");
+        app.MapFallbackToFile("index.html", new StaticFileOptions { OnPrepareResponse = RevalidateOnEveryLoad });
         return app;
     }
 
@@ -38,4 +39,11 @@ public static class Spa
 
         return next(context);
     }
+
+    /// <summary>
+    /// Without a lifetime, browsers would keep the page for a while of their own choosing, and could load a release
+    /// whose files are gone after a deploy.
+    /// </summary>
+    private static void RevalidateOnEveryLoad(StaticFileResponseContext context) =>
+        context.Context.Response.Headers.CacheControl = "no-cache";
 }
