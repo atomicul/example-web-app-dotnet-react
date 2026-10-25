@@ -97,7 +97,10 @@ export function PullToRefresh({ className, children }: PullToRefreshProps) {
   const offset = busy ? threshold : distance
 
   return (
-    <div ref={setElement} className={cn('relative overflow-y-auto', className)}>
+    <div
+      ref={setElement}
+      className={cn('relative overflow-y-auto overscroll-contain', className)}
+    >
       <div
         aria-hidden
         className={cn(
