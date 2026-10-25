@@ -40,7 +40,7 @@ the `Dockerfile` together, then run `make api` and commit the regenerated client
 | `make reset-dev-database` | Deletes the `todoapp-db-data` volume, so the next run starts from an empty, freshly migrated database |
 | `make migration NAME=AddTags` | Adds an EF Core migration to `backend/TodoApi/Data/Migrations` after a model change |
 | `make api` | Builds the API, copies its OpenAPI document to `frontend/openapi.json` and regenerates the frontend client |
-| `make build` | Publishes the API to `out/` with the built SPA in `out/wwwroot`; `VERSION=1.2.3` stamps the API assembly version |
+| `make build` | Builds the SPA into `backend/TodoApi/wwwroot`, then publishes the API with it to `out/` (see [Serving the SPA](#serving-the-spa)); `VERSION=1.2.3` stamps the API assembly version |
 | `make run` | Builds, then serves the API and the SPA together on `:5080` |
 | `make check` | Formatting, build, lint, type checks and tests for every project, and fails on model changes without a migration |
 
@@ -165,6 +165,14 @@ Behind a reverse proxy, the client IP and scheme come from its `X-Forwarded-For`
 but only when the proxy is trusted: loopback always is, and `TrustedProxies:Addresses` (IP addresses) and
 `TrustedProxies:Networks` (CIDR ranges) add more. Set them before deploying behind one, or every client shares the
 proxy's limit.
+
+## Serving the SPA
+
+The API serves the SPA's built files, which `make build` and the Docker image put in the API's `wwwroot` before
+publishing it; `make build` leaves them there until `make clean`. Publishing lists every file there and compresses
+it with gzip and brotli, and the API serves the list with `MapStaticAssets`, compressed for the browsers that accept
+it, with an ETag of each file's content. A file added to `wwwroot` after publishing isn't served. Every other path that
+isn't a file, outside `/api`, gets the SPA's `index.html`, whose router shows the page.
 
 ## HTTPS
 

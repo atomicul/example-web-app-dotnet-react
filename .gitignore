@@ -483,3 +483,4 @@ $RECYCLE.BIN/
 
 # Assembled publish output (make build)
 /out/
+/backend/TodoApi/wwwroot/

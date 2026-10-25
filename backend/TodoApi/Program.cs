@@ -77,7 +77,6 @@ if (app.Environment.IsDevelopment())
         app.Logger.LogInformation("Swagger UI: {SwaggerUrls}", string.Join(", ", app.Urls.Select(url => $"{url}/swagger"))));
 }
 
-app.UseStaticFiles();
 app.UseRateLimiter();
 
 app.MapHealthChecks("/health");
@@ -88,6 +87,6 @@ api.AddEndpointFilterFactory(ValidationProblems.ValidateRequests);
 api.MapAuth();
 api.MapTodos();
 api.MapFallback(() => TypedResults.NotFound());
-app.MapFallbackToFile("index.html");
+app.MapSpa();
 
 app.Run();

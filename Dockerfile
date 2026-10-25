@@ -16,6 +16,7 @@ COPY backend/Directory.Build.props backend/Directory.Packages.props backend/
 COPY backend/TodoApi/TodoApi.csproj backend/TodoApi/
 RUN dotnet tool restore && dotnet restore backend/TodoApi
 COPY backend/TodoApi/ backend/TodoApi/
+COPY --from=frontend /src/dist backend/TodoApi/wwwroot/
 RUN dotnet publish backend/TodoApi -c Release -o /app --no-restore -p:OpenApiGenerateDocuments=false ${VERSION:+-p:Version=$VERSION}
 RUN dotnet ef migrations bundle --project backend/TodoApi --configuration Release --no-build --output /migrate
 
@@ -24,7 +25,6 @@ ENV ASPNETCORE_ENVIRONMENT=Production
 WORKDIR /app
 COPY --from=backend /app ./
 COPY --from=backend /migrate /usr/local/bin/migrate
-COPY --from=frontend /src/dist wwwroot/
 USER $APP_UID
 EXPOSE 8080
 CMD ["dotnet", "TodoApi.dll"]

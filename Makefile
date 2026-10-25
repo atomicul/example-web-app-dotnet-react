@@ -63,12 +63,11 @@ api: ## Regenerate the frontend client from the API OpenAPI document
 	cp $(API_PROJECT)/obj/openapi.json $(FRONTEND)/openapi.json
 	pnpm -C $(FRONTEND) generate:api
 
-build: ## Publish the API to out/ with the built SPA in out/wwwroot
-	rm -rf $(OUT)
-	dotnet publish $(API_PROJECT) -c Release -o $(OUT) $(if $(VERSION),-p:Version=$(VERSION))
+build: ## Build the SPA into the API's wwwroot, then publish the API with it to out/
+	rm -rf $(OUT) $(API_PROJECT)/wwwroot
 	pnpm -C $(FRONTEND) build
-	mkdir -p $(OUT)/wwwroot
-	cp -R $(FRONTEND)/dist/. $(OUT)/wwwroot/
+	cp -R $(FRONTEND)/dist $(API_PROJECT)/wwwroot
+	dotnet publish $(API_PROJECT) -c Release -o $(OUT) $(if $(VERSION),-p:Version=$(VERSION))
 
 run: build ## Build, then serve the API and the SPA together
 	cd $(OUT) && ConnectionStrings__Default="$(DB_CONNECTION)" dotnet TodoApi.dll --urls $(API_URL)
@@ -88,5 +87,5 @@ check: ## Run formatting, build, pending migration, lint, type checks and tests 
 	uv --directory $(DEPLOY) run ansible-lint
 	uv --directory $(DEPLOY) run ansible-playbook --syntax-check --inventory localhost, $(DEPLOY_PLAYBOOKS)/database.yml $(DEPLOY_PLAYBOOKS)/webapp.yml $(DEPLOY_PLAYBOOKS)/tls.yml
 
-clean: ## Remove build output, including the backend bin and obj directories
-	rm -rf $(OUT) $(FRONTEND)/dist backend/*/bin backend/*/obj
+clean: ## Remove build output, including the API's wwwroot and the backend bin and obj directories
+	rm -rf $(OUT) $(FRONTEND)/dist $(API_PROJECT)/wwwroot backend/*/bin backend/*/obj
