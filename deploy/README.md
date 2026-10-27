@@ -7,7 +7,9 @@ requirement: it installs the pinned Python, Ansible and every other dependency f
 
 - On this machine: uv. The scripts deploy the releases of the GitHub repository they come from: the one uvx installed
   them from (see [From another repository](#from-another-repository)), or else the `origin` remote of the clone they
-  run in. A fork thus deploys its own GitHub releases and `ghcr.io` images, which must be public.
+  run in. A fork thus deploys its own GitHub releases and `ghcr.io` images. The images must be public; the releases
+  of a private repository need the [GitHub CLI](https://cli.github.com) on this machine (see
+  [`setup-webapp`](#setup-webapp)).
 - Each host: Ubuntu 24.04 on x86_64 with at least 2 GB of RAM, which SQL Server needs, reachable over SSH with a key,
   as a user who can `sudo`. Pass `-K` to any script when sudo asks that user for a password; it asks once, for every
   host of the run.
@@ -83,6 +85,10 @@ Installs the ASP.NET Core runtime and the release's zip, and runs the app as the
 `80`, then waits for `/health` to answer `Healthy`. It serves plain HTTP until `setup-tls` gives the host a
 certificate, and from then on HTTPS on port `443` as well. To terminate HTTPS in a reverse proxy instead, skip
 `setup-tls` and set the API's `TrustedProxies` (see the [root README](../README.md#rate-limiting)).
+
+Each host downloads the release's zip from GitHub. GitHub answers `404` to hosts for the releases of a private
+repository, so this machine then downloads the zip once with the GitHub CLI and copies it to the hosts: install `gh`
+and log in with `gh auth login` as a user who can read the repository. Any other failure to download stops the run.
 
 `--env-file FILE` replaces the deployment's environment variables on the host with a file in systemd's
 [`EnvironmentFile`](https://www.freedesktop.org/software/systemd/man/latest/systemd.exec.html#EnvironmentFile=)

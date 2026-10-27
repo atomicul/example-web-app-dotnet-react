@@ -1,0 +1,64 @@
+---
+- name: Download the release from GitHub, as the release {{ release_tag }}
+  ansible.builtin.get_url:
+    url: https://github.com/{{ github_repository }}/releases/download/{{ release_tag }}/{{ todoapp_release_archive }}
+    dest: "{{ todoapp_release_zip }}"
+    mode: "0644"
+  register: todoapp_release_github
+  failed_when: todoapp_release_github.failed and todoapp_release_github.status_code | default(none) != 404
+
+- name: Download the release on this machine with the GitHub CLI, as GitHub hides it from the host
+  when: todoapp_release_github.status_code | default(none) == 404
+  block:
+    - name: Create a directory on this machine to download the release to
+      ansible.builtin.tempfile:
+        state: directory
+        prefix: todoapp-release.
+      delegate_to: localhost
+      become: false
+      run_once: true
+      register: todoapp_release_download
+
+    - name: Download the release with the GitHub CLI
+      ansible.builtin.command:
+        argv:
+          - gh
+          - release
+          - download
+          - "{{ release_tag }}"
+          - --repo
+          - "{{ github_repository }}"
+          - --pattern
+          - "{{ todoapp_release_archive }}"
+          - --dir
+          - "{{ todoapp_release_download.path }}"
+      delegate_to: localhost
+      become: false
+      run_once: true
+      register: todoapp_release_gh
+      changed_when: true
+      failed_when: false
+
+    - name: Require the GitHub CLI to have downloaded the release
+      ansible.builtin.assert:
+        that: todoapp_release_gh.rc == 0
+        fail_msg: >-
+          The host can't download {{ github_repository }} {{ release_tag }} from GitHub, and neither can the
+          GitHub CLI on this machine; install gh and log in, with gh auth login, as a user who can read the
+          repository: {{ todoapp_release_gh.stderr or todoapp_release_gh.msg }}
+        quiet: true
+
+    - name: Copy the release to the host
+      ansible.builtin.copy:
+        src: "{{ todoapp_release_download.path }}/{{ todoapp_release_archive }}"
+        dest: "{{ todoapp_release_zip }}"
+        mode: "0644"
+  always:
+    - name: Remove the release's download from this machine
+      ansible.builtin.file:
+        path: "{{ todoapp_release_download.path }}"
+        state: absent
+      delegate_to: localhost
+      become: false
+      run_once: true
+      when: todoapp_release_download.path is defined

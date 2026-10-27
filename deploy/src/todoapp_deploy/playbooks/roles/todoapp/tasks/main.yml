@@ -25,15 +25,12 @@
     state: directory
     mode: "0755"
 
-- name: Download the release {{ release_tag }}
-  ansible.builtin.get_url:
-    url: https://github.com/{{ github_repository }}/releases/download/{{ release_tag }}/{{ github_repository | basename }}-{{ release_tag }}.zip
-    dest: "{{ todoapp_install_dir }}/releases/{{ release_tag }}.zip"
-    mode: "0644"
+- name: Download the release, on this machine when the host can't
+  ansible.builtin.include_tasks: release.yml
 
 - name: Unpack the release
   ansible.builtin.unarchive:
-    src: "{{ todoapp_install_dir }}/releases/{{ release_tag }}.zip"
+    src: "{{ todoapp_release_zip }}"
     dest: "{{ todoapp_install_dir }}/releases/{{ release_tag }}"
     remote_src: true
     creates: "{{ todoapp_install_dir }}/releases/{{ release_tag }}/TodoApi.dll"
