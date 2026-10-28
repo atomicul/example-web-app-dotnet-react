@@ -25,8 +25,14 @@
     state: directory
     mode: "0755"
 
+- name: Look for the release on the host
+  ansible.builtin.stat:
+    path: "{{ todoapp_install_dir }}/releases/{{ release_tag }}/TodoApi.dll"
+  register: todoapp_installed_release
+
 - name: Download the release, on this machine when the host can't
   ansible.builtin.include_tasks: release.yml
+  when: not todoapp_installed_release.stat.exists
 
 - name: Unpack the release
   ansible.builtin.unarchive:
